@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prueba de Pedido</title>
+    <link rel="stylesheet" href="apple-ui.css">
+    <style>
+        body { background: #1e1e1e; color: #e0e0e0; }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #232323;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 6px 30px #000a;
+        }
+        h1 { color: #e0e0e0; text-align: center; }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #bfbfbf;
+            font-weight: 500;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #2a2a2a;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3794ff;
+            box-shadow: 0 0 0 2px rgba(55, 148, 255, 0.2);
+        }
+        button {
+            background: #3794ff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #2970cc;
+        }
+        .test-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .test-btn {
+            flex: 1;
+            padding: 10px;
+            background: #333;
+            border: 1px solid #555;
+            color: #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .test-btn.active {
+            background: #3794ff;
+            border-color: #3794ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Prueba del Sistema de Pedidos</h1>
+        
+        <div class="test-buttons">
+            <button class="test-btn active" onclick="cargarFormularioSimple()">
+                Formulario Simple
+            </button>
+            <button class="test-btn" onclick="cargarFormularioAvanzado()">
+                Formulario Avanzado
+            </button>
+        </div>
+
+        <form id="formPrueba" method="POST" action="procesar_orden.php" enctype="multipart/form-data">
+            <div id="contenedorFormulario">
+                <!-- El contenido se carga dinámicamente -->
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function cargarFormularioSimple() {
+            document.querySelectorAll('.test-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('contenedorFormulario').innerHTML = `
+                <div class="form-group">
+                    <label for="pedido">Pedido (texto libre):</label>
+                    <textarea name="pedido" id="pedido" rows="3" placeholder="Ejemplo: 2 Camisetas L, 1 Pantalón M" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monto">Monto a pagar:</label>
+                    <input type="number" name="monto" id="monto" placeholder="50000" value="75000" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nombre">Nombre completo:</label>
+                    <input type="text" name="nombre" id="nombre" placeholder="Juan Pérez" value="Prueba Usuario" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="direccion">Dirección de envío:</label>
+                    <input type="text" name="direccion" id="direccion" placeholder="Calle 123 #45-67" value="Calle Prueba 123" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="tel" name="telefono" id="telefono" placeholder="3001234567" value="3001234567" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="correo">Correo electrónico:</label>
+                    <input type="email" name="correo" id="correo" placeholder="correo@ejemplo.com" value="prueba@test.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="persona_recibe">Persona que recibe:</label>
+                    <input type="text" name="persona_recibe" id="persona_recibe" placeholder="Juan Pérez" value="Prueba Usuario" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="horarios">Horarios de entrega:</label>
+                    <input type="text" name="horarios" id="horarios" placeholder="Lun a Vie 9am-6pm" value="Lun a Vie 9am-6pm" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="metodo_pago">Método de pago:</label>
+                    <select name="metodo_pago" id="metodo_pago" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="Nequi" selected>Nequi</option>
+                        <option value="Transfiya">Transfiya</option>
+                        <option value="Bancolombia">Bancolombia</option>
+                        <option value="Provincial">Provincial</option>
+                        <option value="PSE">PSE</option>
+                        <option value="Contra entrega">Contra entrega</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comprobante">Comprobante de pago (opcional):</label>
+                    <input type="file" name="comprobante" id="comprobante" accept="image/*,application/pdf">
+                </div>
+                
+                <button type="submit">🚀 Procesar Pedido Simple</button>
+            `;
+        }
+
+        function cargarFormularioAvanzado() {
+            document.querySelectorAll('.test-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('contenedorFormulario').innerHTML = `
+                <div class="form-group">
+                    <label for="pedido_id">ID del pedido (simulado):</label>
+                    <input type="number" name="pedido_id" id="pedido_id" value="1" required>
+                    <small style="color: #888; font-size: 12px;">* En el sistema real, esto vendría de productos_pedido</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monto">Monto a pagar:</label>
+                    <input type="number" name="monto" id="monto" placeholder="50000" value="120000" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nombre">Nombre completo:</label>
+                    <input type="text" name="nombre" id="nombre" placeholder="Juan Pérez" value="Cliente Avanzado" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="direccion">Dirección de envío:</label>
+                    <input type="text" name="direccion" id="direccion" placeholder="Calle 123 #45-67" value="Avenida Avanzada 456" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="tel" name="telefono" id="telefono" placeholder="3001234567" value="3009876543" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="correo">Correo electrónico:</label>
+                    <input type="email" name="correo" id="correo" placeholder="correo@ejemplo.com" value="avanzado@test.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="persona_recibe">Persona que recibe:</label>
+                    <input type="text" name="persona_recibe" id="persona_recibe" placeholder="Juan Pérez" value="Cliente Avanzado" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="horarios">Horarios de entrega:</label>
+                    <input type="text" name="horarios" id="horarios" placeholder="Lun a Vie 9am-6pm" value="Cualquier horario" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="metodo_pago">Método de pago:</label>
+                    <select name="metodo_pago" id="metodo_pago" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="Nequi">Nequi</option>
+                        <option value="Transfiya">Transfiya</option>
+                        <option value="Bancolombia" selected>Bancolombia</option>
+                        <option value="Provincial">Provincial</option>
+                        <option value="PSE">PSE</option>
+                        <option value="Contra entrega">Contra entrega</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comprobante">Comprobante de pago (opcional):</label>
+                    <input type="file" name="comprobante" id="comprobante" accept="image/*,application/pdf">
+                </div>
+                
+                <button type="submit">🚀 Procesar Pedido Avanzado</button>
+            `;
+        }
+
+        // Cargar formulario simple por defecto
+        cargarFormularioSimple();
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Sistema de Pedidos - Estructura DB</title>
+    <style>
+        body {
+            background: #1e1e1e;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-container {
+            background: #2d2d2d;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #3794ff;
+            margin-bottom: 20px;
+        }
+        input, textarea, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background: #383838;
+            color: #e0e0e0;
+            font-size: 16px;
+        }
+        button {
+            background: #3794ff;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #2567d9;
+        }
+        .info {
+            background: #1a3a5c;
+            border-left: 4px solid #3794ff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Prueba del Sistema de Pedidos</h1>
+    
+    <div class="info">
+        <strong>Información:</strong> Esta página prueba el procesamiento de pedidos con la estructura correcta de base de datos.<br>
+        Tabla principal: <code>pedidos_detal</code><br>
+        Tabla de productos: <code>pedidos_detalle</code>
+    </div>
+
+    <!-- Formulario Simple (index.php style) -->
+    <div class="form-container">
+        <h2>📝 Formulario Simple (como index.php)</h2>
+        <form method="POST" action="procesar_orden.php" enctype="multipart/form-data">
+            <textarea name="pedido" rows="3" placeholder="Describa su pedido: producto, talla, cantidad..." required>2 camisetas Nike talla M, 1 gorra Adidas</textarea>
+            
+            <input type="number" name="monto" placeholder="Monto total" value="85000" required>
+            
+            <input type="text" name="nombre" placeholder="Nombre completo" value="Juan Pérez" required>
+            
+            <input type="text" name="direccion" placeholder="Dirección de entrega" value="Carrera 7 #123-45, Bogotá" required>
+            
+            <input type="tel" name="telefono" placeholder="Teléfono" value="3001234567" required>
+            
+            <input type="email" name="correo" placeholder="Correo electrónico" value="juan.perez@example.com" required>
+            
+            <input type="text" name="persona_recibe" placeholder="Persona que recibe" value="Juan Pérez" required>
+            
+            <input type="text" name="horarios" placeholder="Horarios de recepción" value="Lunes a viernes 9am-6pm" required>
+            
+            <select name="metodo_pago" required>
+                <option value="">Seleccione método de pago</option>
+                <option value="Nequi" selected>Nequi</option>
+                <option value="Transfiya">Transfiya</option>
+                <option value="Bancolombia">Bancolombia</option>
+                <option value="Provincial">Provincial</option>
+                <option value="PSE">PSE</option>
+                <option value="Contra entrega">Contra entrega</option>
+            </select>
+            
+            <input type="file" name="comprobante" accept="image/*,application/pdf">
+            <small style="color: #aaa;">Opcional: Comprobante de pago</small>
+            
+            <button type="submit">🚀 Procesar Pedido Simple</button>
+        </form>
+    </div>
+
+    <!-- Formulario Avanzado (orden_pedido.php style) -->
+    <div class="form-container">
+        <h2>🛒 Formulario Avanzado (como orden_pedido.php)</h2>
+        <form method="POST" action="procesar_orden.php" enctype="multipart/form-data">
+            <input type="hidden" name="pedido_id" value="999">
+            <input type="hidden" name="pedido_texto" value="Pedido estructurado: 2 camisetas Nike ($40.000 c/u), 1 gorra Adidas ($5.000)">
+            
+            <input type="number" name="monto" placeholder="Monto total" value="85000" required>
+            
+            <input type="text" name="nombre" placeholder="Nombre completo" value="María García" required>
+            
+            <input type="text" name="direccion" placeholder="Dirección de entrega" value="Calle 100 #15-20, Medellín" required>
+            
+            <input type="tel" name="telefono" placeholder="Teléfono" value="3109876543" required>
+            
+            <input type="email" name="correo" placeholder="Correo electrónico" value="maria.garcia@example.com" required>
+            
+            <input type="text" name="persona_recibe" placeholder="Persona que recibe" value="María García" required>
+            
+            <input type="text" name="horarios" placeholder="Horarios de recepción" value="Sábados y domingos 10am-4pm" required>
+            
+            <select name="metodo_pago" required>
+                <option value="">Seleccione método de pago</option>
+                <option value="Nequi">Nequi</option>
+                <option value="Transfiya">Transfiya</option>
+                <option value="Bancolombia" selected>Bancolombia</option>
+                <option value="Provincial">Provincial</option>
+                <option value="PSE">PSE</option>
+                <option value="Contra entrega">Contra entrega</option>
+            </select>
+            
+            <input type="file" name="comprobante" accept="image/*,application/pdf">
+            <small style="color: #aaa;">Opcional: Comprobante de pago</small>
+            
+            <button type="submit">🛒 Procesar Pedido Avanzado</button>
+        </form>
+    </div>
+
+    <div class="info">
+        <strong>Notas:</strong><br>
+        • El formulario simple envía el pedido como texto libre<br>
+        • El formulario avanzado debería buscar productos en pedidos_detalle (ID 999)<br>
+        • Si no encuentra productos, usará el texto de respaldo<br>
+        • Los datos se guardarán en la tabla pedidos_detal
+    </div>
+</body>
+</html>
