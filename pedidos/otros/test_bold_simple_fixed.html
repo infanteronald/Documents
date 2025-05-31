@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bold Simple - Sequoia Speed</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .test-button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            margin: 10px 5px; 
+            font-weight: 600;
+        }
+        .test-button:hover { background: #0056b3; }
+        .bold-container { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px dashed #ddd; 
+            text-align: center; 
+            min-height: 100px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .log { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            font-size: 12px; 
+            max-height: 300px; 
+            overflow-y: auto; 
+            margin-top: 20px;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Bold Simple - Sequoia Speed</h1>
+        <p>Página de prueba para verificar integración Bold sin complicaciones</p>
+        
+        <div>
+            <button class="test-button" onclick="testBasicBold()">Probar Bold Básico</button>
+            <button class="test-button" onclick="testBoldWithAmount()">Probar con Monto ($50,000)</button>
+            <button class="test-button" onclick="clearTest()">Limpiar</button>
+        </div>
+        
+        <div id="bold-container" class="bold-container">
+            <p style="color: #666;">Haga clic en un botón de prueba para cargar Bold</p>
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function clearTest() {
+            document.getElementById('bold-container').innerHTML = '<p style="color: #666;">Haga clic en un botón de prueba para cargar Bold</p>';
+            document.getElementById('log').innerHTML = '';
+            log('Test limpiado', 'info');
+        }
+
+        function testBasicBold() {
+            log('Iniciando test Bold básico...', 'info');
+            const container = document.getElementById('bold-container');
+            container.innerHTML = '<p>Cargando Bold básico...</p>';
+            
+            const orderId = 'TEST-BASIC-' + Date.now();
+            
+            try {
+                const script = document.createElement('script');
+                script.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
+                script.setAttribute('data-bold-button', 'dark-L');
+                script.setAttribute('data-api-key', '0yRP5iNsgcqoOGTaNLrzKNBLHbAaEOxhJPmLJpMevCg');
+                script.setAttribute('data-description', 'Test Básico Sequoia Speed - ' + orderId);
+                script.setAttribute('data-order-id', orderId);
+                script.setAttribute('data-currency', 'COP');
+                script.setAttribute('data-render-mode', 'embedded');
+                
+                script.onload = function() {
+                    log('✅ Script Bold cargado correctamente', 'success');
+                };
+                
+                script.onerror = function() {
+                    log('❌ Error cargando script Bold', 'error');
+                    container.innerHTML = '<p style="color: red;">Error cargando Bold</p>';
+                };
+                
+                container.innerHTML = '';
+                container.appendChild(script);
+                
+                log('Orden generada: ' + orderId, 'info');
+                
+            } catch (error) {
+                log('❌ Error en test básico: ' + error.message, 'error');
+                container.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testBoldWithAmount() {
+            log('Iniciando test Bold con monto...', 'info');
+            const container = document.getElementById('bold-container');
+            container.innerHTML = '<p>Generando hash de seguridad...</p>';
+            
+            const orderId = 'TEST-AMOUNT-' + Date.now();
+            const amount = 50000;
+            
+            try {
+                // Generar hash
+                log('Solicitando hash para monto: $' + amount.toLocaleString(), 'info');
+                
+                const hashResponse = await fetch('bold_hash.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        amount: amount,
+                        currency: 'COP'
+                    })
+                });
+                
+                log('Respuesta hash status: ' + hashResponse.status, 'info');
+                
+                if (!hashResponse.ok) {
+                    const errorText = await hashResponse.text();
+                    throw new Error('Error generando hash: ' + hashResponse.status + ' - ' + errorText);
+                }
+                
+                const hashData = await hashResponse.json();
+                log('Hash generado correctamente', 'success');
+                
+                if (!hashData.success) {
+                    throw new Error(hashData.error || 'Error en respuesta de hash');
+                }
+                
+                // Crear botón Bold con hash
+                container.innerHTML = '<p>Inicializando Bold con monto...</p>';
+                
+                const script = document.createElement('script');
+                script.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
+                script.setAttribute('data-bold-button', 'dark-L');
+                script.setAttribute('data-api-key', hashData.data.api_key);
+                script.setAttribute('data-description', 'Test con Monto Sequoia Speed - ' + orderId);
+                script.setAttribute('data-order-id', orderId);
+                script.setAttribute('data-currency', 'COP');
+                script.setAttribute('data-amount', amount.toString());
+                script.setAttribute('data-integrity-signature', hashData.data.integrity_signature);
+                script.setAttribute('data-render-mode', 'embedded');
+                
+                script.onload = function() {
+                    log('✅ Bold con monto cargado correctamente', 'success');
+                    log('Monto: $' + amount.toLocaleString() + ' COP', 'info');
+                };
+                
+                script.onerror = function() {
+                    log('❌ Error cargando Bold con monto', 'error');
+                    container.innerHTML = '<p style="color: red;">Error cargando Bold</p>';
+                };
+                
+                container.innerHTML = '';
+                container.appendChild(script);
+                
+                log('Orden con monto generada: ' + orderId, 'info');
+                
+            } catch (error) {
+                log('❌ Error en test con monto: ' + error.message, 'error');
+                container.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        // Escuchar eventos de Bold
+        window.addEventListener('message', function(event) {
+            if (event.origin !== 'https://checkout.bold.co') return;
+            
+            log('📩 Evento Bold recibido: ' + event.data.type, 'info');
+            log('Datos del evento: ' + JSON.stringify(event.data), 'info');
+            
+            switch (event.data.type) {
+                case 'PAYMENT_SUCCESS':
+                    log('✅ ¡PAGO EXITOSO!', 'success');
+                    break;
+                case 'PAYMENT_ERROR':
+                case 'PAYMENT_FAILED':
+                    log('❌ Pago fallido: ' + (event.data.message || 'Sin mensaje'), 'error');
+                    break;
+                case 'PAYMENT_CANCELLED':
+                    log('🚫 Pago cancelado por el usuario', 'info');
+                    break;
+                case 'PAYMENT_PENDING':
+                    log('⏳ Pago pendiente', 'info');
+                    break;
+                default:
+                    log('ℹ️ Evento: ' + event.data.type, 'info');
+            }
+        });
+
+        // Log inicial
+        log('Página de test Bold cargada', 'success');
+    </script>
+</body>
+</html>

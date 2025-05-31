@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Test - Pedido Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f7;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea, select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .note {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007AFF;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test - Formulario Simple de Pedidos</h1>
+        
+        <div class="note">
+            <strong>Nota:</strong> Esta es una página de prueba para verificar que el sistema de pedidos funciona correctamente con la estructura de base de datos actual.
+        </div>
+        
+        <form method="POST" action="procesar_orden.php" enctype="multipart/form-data">
+            <label for="pedido">Descripción del Pedido:</label>
+            <textarea name="pedido" id="pedido" placeholder="Ejemplo: 2 Camisetas Nike talla M, 1 Pantalón Adidas talla L" required></textarea>
+            
+            <label for="monto">Monto Total:</label>
+            <input type="number" name="monto" id="monto" placeholder="150000" step="100" required>
+            
+            <label for="nombre">Nombre Completo:</label>
+            <input type="text" name="nombre" id="nombre" placeholder="Juan Pérez" required>
+            
+            <label for="direccion">Dirección de Envío:</label>
+            <input type="text" name="direccion" id="direccion" placeholder="Calle 123 #45-67, Barrio Los Pinos" required>
+            
+            <label for="telefono">Teléfono:</label>
+            <input type="tel" name="telefono" id="telefono" placeholder="3001234567" required>
+            
+            <label for="correo">Correo Electrónico:</label>
+            <input type="email" name="correo" id="correo" placeholder="juan@email.com" required>
+            
+            <label for="persona_recibe">Persona que Recibe:</label>
+            <input type="text" name="persona_recibe" id="persona_recibe" placeholder="Juan Pérez o María González" required>
+            
+            <label for="horarios">Horarios de Entrega:</label>
+            <input type="text" name="horarios" id="horarios" placeholder="Lunes a Viernes 9AM - 6PM" required>
+            
+            <label for="metodo_pago">Método de Pago:</label>
+            <select name="metodo_pago" id="metodo_pago" required>
+                <option value="">Seleccionar método de pago</option>
+                <option value="Nequi">Nequi</option>
+                <option value="Transfiya">Transfiya</option>
+                <option value="Bancolombia">Bancolombia</option>
+                <option value="Provincial">Provincial</option>
+                <option value="PSE">PSE</option>
+                <option value="Contra entrega">Contra entrega</option>
+            </select>
+            
+            <label for="comprobante">Comprobante de Pago (Opcional):</label>
+            <input type="file" name="comprobante" id="comprobante" accept="image/*,application/pdf">
+            
+            <button type="submit">🚀 Enviar Pedido de Prueba</button>
+        </form>
+    </div>
+</body>
+</html>

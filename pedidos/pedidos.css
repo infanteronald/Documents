@@ -1,0 +1,334 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+body {
+  background: linear-gradient(120deg, #171717 0%, #232323 100%);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #f3f3f3;
+  min-height: 100vh;
+}
+.sticky-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(30,30,30,0.96);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 2px 14px #0002;
+  border-bottom: 2px solid #222;
+  padding: 20px 8px 11px 10px;
+  text-align: center;
+}
+h1 {
+  margin: 0 0 7px 0;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #ededed;
+  letter-spacing: 1.2px;
+}
+.filtros {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.filtros select, .search-inp {
+  background: #232323;
+  color: #f3f3f3;
+  border: 1.3px solid #353535;
+  font-size: 1rem;
+  border-radius: 10px;
+  padding: 9px 15px;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 2px 8px #0002;
+  transition: border .13s, background .11s;
+}
+.filtros select:focus, .search-inp:focus {
+  border: 1.7px solid #888;
+  background: #1a1a1a;
+}
+.panel-container {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 24px 0 28px 0;
+}
+.tabla-pedidos {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #1a1a1a;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 40px #0005;
+  margin-top: 30px;
+}
+.tabla-pedidos th, .tabla-pedidos td {
+  padding: 15px 9px;
+  text-align: left;
+  border-bottom: 1.3px solid #232323;
+}
+.tabla-pedidos th {
+  background: #222;
+  color: #ececec;
+  font-size: 1.03rem;
+  font-weight: 800;
+  letter-spacing: .5px;
+  border-bottom: 2px solid #282828;
+}
+.tabla-pedidos tr:last-child td {
+  border-bottom: none;
+}
+.tabla-pedidos tr {
+  transition: background 0.13s;
+}
+.tabla-pedidos tr:hover {
+  background: #232323;
+}
+
+/* ESTADOS ELEGANTES Y COLORES PEDIDOS */
+.estado-pill {
+  display: inline-block;
+  font-size: .98rem;
+  font-weight: 600;
+  border-radius: 14px;
+  padding: 7px 18px;
+  background: #343434;
+  color: #ececec;
+  letter-spacing: .3px;
+  box-shadow: 0 1px 4px #0002;
+}
+.estado-pill.anulado   { background: #f3d9d9; color: #d32f2f; font-weight: 800; }
+.estado-pill.enviado   { background: #d2f5d2; color: #2ecc40;  font-weight: 800; }
+.estado-pill.sin_enviar{ background: #fcf6c3; color: #dab600;  font-weight: 800; }
+
+.btn-neon, .btn-glass {
+  border: none;
+  font-size: 1.01rem;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 7px;
+  margin-bottom: 2px;
+  background: #323232;
+  color: #ededed;
+  box-shadow: 0 1px 7px #0003;
+  border: 1.2px solid #434343;
+  transition: background .16s, box-shadow .13s, color .10s, transform .08s, border .12s;
+  letter-spacing: .4px;
+}
+
+.btn-neon:hover, .btn-glass:hover {
+  background: #444;
+  color: #fff;
+  border: 1.2px solid #bbb;
+  box-shadow: 0 3px 10px #1113;
+  transform: scale(1.03);
+}
+
+.paginacion {
+  margin: 22px 0 0 0;
+  text-align: center;
+}
+.paginacion a {
+  display: inline-block;
+  color: #ededed;
+  background: #252525;
+  border-radius: 7px;
+  margin: 0 5px;
+  padding: 9px 14px;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 1.01rem;
+  border: 1.4px solid #353535;
+  transition: background 0.13s, color 0.12s;
+  box-shadow: 0 2px 8px #0001;
+}
+.paginacion a.active, .paginacion a:hover {
+  background: #ededed;
+  color: #181818;
+  border: 1.4px solid #888;
+}
+
+/* MODAL */
+.modal-detalle-bg {
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(24,24,24,0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 11111;
+}
+.modal-detalle {
+  background: #222;
+  padding: 35px 22px 25px 22px;
+  border-radius: 18px;
+  max-width: 440px;
+  min-width: 300px;
+  box-shadow: 0 4px 32px #0009;
+  color: #efefef;
+  position: relative;
+  font-size: 1rem;
+  animation: modalPop .24s;
+}
+@keyframes modalPop {
+  0% { transform: scale(0.96); opacity:0;}
+  100% {transform: scale(1); opacity:1;}
+}
+.cerrar-modal {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.6rem;
+  cursor: pointer;
+  font-weight: 800;
+  transition: color .15s;
+}
+.cerrar-modal:hover { color: #d32f2f; }
+.detalle-label {
+  color: #bdbdbd;
+  font-size: .93rem;
+  font-weight: 600;
+}
+.detalle-valor {
+  color: #ededed;
+  font-size: 1.06rem;
+  margin-bottom: 5px;
+}
+.detalle-separador {
+  border-bottom: 1px solid #2a2a2a;
+  margin: 12px 0;
+}
+.detalle-link, .detalle-link:visited {
+  color: #2d89ef;
+  text-decoration: underline;
+  font-weight: 700;
+}
+.detalle-link:hover {
+  color: #005ab5;
+}
+.nota-area {
+  width: 100%;
+  min-height: 55px;
+  background: #191919;
+  color: #f3f3f3;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.nota-btn {
+  margin-top: 7px;
+  background: #444;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 7px 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .13s, color .13s;
+}
+.nota-btn:hover {
+  background: #232323;
+  color: #fff;
+}
+@media (max-width: 900px) {
+  .panel-container { padding: 7vw 2vw; }
+  .tabla-pedidos, .tabla-pedidos thead, .tabla-pedidos tbody, .tabla-pedidos tr, .tabla-pedidos th, .tabla-pedidos td {
+      display: block;
+      width: 100%;
+  }
+  .tabla-pedidos thead {
+      display: none;
+  }
+  .tabla-pedidos tr {
+      margin-bottom: 18px;
+      border-radius: 13px;
+      background: #222;
+      box-shadow: 0 2px 9px #0003;
+      border-bottom: none;
+      padding: 0 0 7px 0;
+  }
+  .tabla-pedidos td {
+      padding: 12px 8px;
+      text-align: left;
+      border-bottom: none;
+      font-size: 1.01rem;
+      position: relative;
+  }
+  .tabla-pedidos td:before {
+      content: attr(data-label);
+      font-weight: bold;
+      color: #ededed;
+      display: block;
+      margin-bottom: 4px;
+      font-size: .95rem;
+  }
+  .modal-detalle {
+    min-width: 90vw;
+    max-width: 97vw;
+    font-size: .97rem;
+    padding: 25px 6vw 16px 6vw;
+  }
+[... aquí va TODO tu archivo original pedidos.css SIN el viejo @media (max-width: 900px) ...]
+
+/* BLOQUE FINAL AÑADIDO (mantiene modo tarjeta solo en portrait) */
+@media (max-width: 900px) and (orientation: portrait) {
+  .panel-container { padding: 7vw 2vw; }
+
+  .tabla-pedidos,
+  .tabla-pedidos thead,
+  .tabla-pedidos tbody,
+  .tabla-pedidos tr,
+  .tabla-pedidos th,
+  .tabla-pedidos td {
+    display: block;
+    width: 100%;
+  }
+
+  .tabla-pedidos thead {
+    display: none;
+  }
+
+  .tabla-pedidos tr {
+    margin-bottom: 18px;
+    border-radius: 13px;
+    background: #222;
+    box-shadow: 0 2px 9px #0003;
+    border-bottom: none;
+    padding: 0 0 7px 0;
+  }
+
+  .tabla-pedidos td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: none;
+    font-size: 1.01rem;
+    position: relative;
+  }
+
+  .tabla-pedidos td:before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #ededed;
+    display: block;
+    margin-bottom: 4px;
+    font-size: .95rem;
+  }
+
+  .modal-detalle {
+    min-width: 90vw;
+    max-width: 97vw;
+    font-size: .97rem;
+    padding: 25px 6vw 16px 6vw;
+  }
+}

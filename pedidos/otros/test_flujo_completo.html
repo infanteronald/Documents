@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prueba Flujo Completo - Pedido → Comprobante</title>
+    <style>
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #232323;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #3794ff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #bfbfbf;
+            font-weight: 500;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3794ff;
+            box-shadow: 0 0 0 2px rgba(55, 148, 255, 0.2);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #3794ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2b7ce6;
+        }
+        .info {
+            background: #2a2a2a;
+            border-left: 4px solid #3794ff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .info h3 {
+            margin: 0 0 10px 0;
+            color: #3794ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test: Pedido → Comprobante</h1>
+        
+        <div class="info">
+            <h3>Flujo de prueba:</h3>
+            <p>1. Llenar formulario de pedido</p>
+            <p>2. Procesar pedido → guardado en BD + email</p>
+            <p>3. Redirección automática a comprobante.php</p>
+            <p>4. Mostrar comprobante imprimible</p>
+        </div>
+
+        <form action="procesar_orden.php" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="pedido">Descripción del pedido:</label>
+                <textarea name="pedido" id="pedido" required>Zapatos deportivos Nike talla 42
+Camiseta Adidas talla L
+Pantalón jogger talla M</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="monto">Monto total:</label>
+                <input type="number" name="monto" id="monto" value="250000" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="nombre">Nombre completo:</label>
+                <input type="text" name="nombre" id="nombre" value="Juan Pérez Gómez" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="direccion">Dirección de envío:</label>
+                <input type="text" name="direccion" id="direccion" value="Calle 123 #45-67, Barrio Centro" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="telefono">Teléfono:</label>
+                <input type="tel" name="telefono" id="telefono" value="3001234567" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="correo">Correo electrónico:</label>
+                <input type="email" name="correo" id="correo" value="juan.perez@example.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="persona_recibe">Persona que recibe:</label>
+                <input type="text" name="persona_recibe" id="persona_recibe" value="Juan Pérez" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="horarios">Horarios de entrega:</label>
+                <input type="text" name="horarios" id="horarios" value="Lunes a Viernes 8am-6pm" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="metodo_pago">Método de pago:</label>
+                <select name="metodo_pago" id="metodo_pago" required>
+                    <option value="">Seleccionar método</option>
+                    <option value="Nequi" selected>Nequi</option>
+                    <option value="Transfiya">Transfiya</option>
+                    <option value="Bancolombia">Bancolombia</option>
+                    <option value="Provincial">Provincial</option>
+                    <option value="PSE">PSE</option>
+                    <option value="Contra entrega">Contra entrega</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="comprobante">Comprobante de pago (opcional):</label>
+                <input type="file" name="comprobante" id="comprobante" accept="image/*,application/pdf">
+            </div>
+            
+            <button type="submit">🚀 Procesar Pedido y Ver Comprobante</button>
+        </form>
+    </div>
+</body>
+</html>
