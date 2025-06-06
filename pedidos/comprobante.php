@@ -55,8 +55,8 @@ if ($orden_id) {
     }
     
     $stmt->close();
-    
-    // Obtener detalles individuales si existen - USAR SOLO LAS COLUMNAS QUE NECESITAS
+      // Obtener detalles individuales si existen - USAR SOLO LAS COLUMNAS QUE NECESITAS
+    $total_calculado = 0;
     $sql_det = "SELECT nombre, precio, cantidad FROM pedido_detalle WHERE pedido_id = ?";
     $stmt_det = $conn->prepare($sql_det);
     if ($stmt_det) {
@@ -71,12 +71,17 @@ if ($orden_id) {
                     'precio' => $det_precio,
                     'cantidad' => $det_cantidad
                 ];
+                // Calcular el total sumando cada producto
+                $total_calculado += ($det_precio * $det_cantidad);
             }
         } else {
             echo "<!-- DEBUG: Error en consulta detalles: " . $stmt_det->error . " -->";
         }
         $stmt_det->close();
     }
+    
+    // Si tenemos detalles individuales, usar el total calculado, sino usar el monto de la tabla principal
+    $monto_final = ($total_calculado > 0) ? $total_calculado : $orden['monto'];
 }
 
 if (!$orden) {
@@ -92,6 +97,8 @@ echo " -->";
 echo "<!-- DEBUG DETALLES: ";
 print_r($detalles);
 echo " -->";
+
+echo "<!-- DEBUG MONTOS: Total calculado: $total_calculado, Monto original: " . ($orden['monto'] ?? 0) . ", Monto final: $monto_final -->";
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -306,11 +313,10 @@ echo " -->";
             <div><?= nl2br(htmlspecialchars($orden['pedido'])) ?></div>
         </div>
         <?php endif; ?>
-        
-        <div class="seccion">
+          <div class="seccion">
             <div class="seccion-titulo">PAGO</div>
             <div><strong>Método:</strong> <?= htmlspecialchars($orden['metodo_pago'] ?? 'N/A') ?></div>
-            <div class="total-final">TOTAL: $<?= number_format($orden['monto'] ?? 0, 0, ',', '.') ?></div>
+            <div class="total-final">TOTAL: $<?= number_format($monto_final, 0, ',', '.') ?></div>
         </div>
         
         <?php if (!empty($orden['comentario'])): ?>

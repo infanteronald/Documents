@@ -60,7 +60,7 @@ if ($pedido_id) {
       background: var(--vscode-bg);
       color: var(--vscode-text);
       margin: 0;
-      padding: 0;
+      padding: 20px;
       min-height: 100vh;
     }
 
@@ -68,7 +68,6 @@ if ($pedido_id) {
       max-width: 600px;
       margin: 0 auto;
       padding: var(--space-lg);
-      box-sizing: border-box;
     }
 
     /* Logo y título */
@@ -100,14 +99,13 @@ if ($pedido_id) {
     /* Campos del formulario */
     textarea, input[type="text"], input[type="number"], input[type="email"], input[type="tel"], input[type="file"], select {
       width: 100%;
-      max-width: 100%;
       background: var(--vscode-bg);
       border: 1px solid var(--vscode-border);
       border-radius: var(--radius-sm);
       color: var(--vscode-text);
       margin-bottom: var(--space-md);
-      font-size: 0.7rem !important;
-      padding: 6px !important;
+      font-size: 0.9rem;
+      padding: 12px;
       font-family: inherit;
       box-sizing: border-box;
     }
@@ -123,10 +121,10 @@ if ($pedido_id) {
       background: var(--apple-blue);
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 12px 24px;
       border-radius: var(--radius-md);
       font-weight: 600;
-      font-size: 0.7rem !important;
+      font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.2s;
       width: 100%;
@@ -151,7 +149,7 @@ if ($pedido_id) {
       background: var(--vscode-sidebar);
       border-radius: var(--radius-sm);
       overflow: hidden;
-      font-size: 0.7rem;
+      font-size: 0.8rem;
     }
 
     th {
@@ -178,10 +176,10 @@ if ($pedido_id) {
       background: #25D366;
       color: white;
       text-decoration: none;
-      padding: 8px var(--space-md);
+      padding: 12px var(--space-md);
       border-radius: var(--radius-md);
       margin-top: var(--space-lg);
-      font-size: 0.7rem !important;
+      font-size: 0.9rem;
       font-weight: 600;
       transition: all 0.2s;
     }
@@ -202,13 +200,13 @@ if ($pedido_id) {
       padding: var(--space-md);
       border-radius: var(--radius-sm);
       margin-bottom: var(--space-md);
-      font-size: 0.68rem !important;
+      font-size: 0.85rem;
     }
 
     .label-archivo {
       display: block;
       margin-bottom: var(--space-xs);
-      font-size: 0.7rem !important;
+      font-size: 0.9rem;
       color: var(--vscode-text-muted);
     }
 
@@ -278,25 +276,6 @@ if ($pedido_id) {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
-    /* Media queries para dispositivos móviles */
-    @media (max-width: 768px) {
-      .container {
-        max-width: 95%;
-        padding: var(--space-md);
-      }
-      
-      textarea, input, select, button {
-        font-size: 16px !important; /* Evita zoom en iOS */
-      }
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        max-width: 98%;
-        padding: var(--space-sm);
-      }
-    }
   </style>
 </head>
 <body>
@@ -306,16 +285,16 @@ if ($pedido_id) {
   <form id="formPedido" method="POST" enctype="multipart/form-data" action="procesar_orden.php">
     <?php if ($pedido_id && $detalles): ?>
       <!-- Pedido guardado desde orden_pedido.php -->
-      <div style="margin-bottom:8px; background:rgba(0, 122, 255, 0.1); padding:12px; border-radius:8px; border:1px solid var(--apple-blue);">
-        <p style="margin:0 0 8px 0; font-weight:600; color:var(--apple-blue);">📦 Pedido #<?= $pedido_id ?> - Completa los datos de envío</p>
+      <div style="margin-bottom:16px; background:rgba(0, 122, 255, 0.1); padding:16px; border-radius:8px; border:1px solid var(--apple-blue);">
+        <p style="margin:0 0 12px 0; font-weight:600; color:var(--apple-blue);">📦 Pedido #<?= $pedido_id ?> - Completa los datos de envío</p>
         <div class="tabla-responsive">
-          <table style="margin:0 auto; font-size:0.7rem;">
+          <table style="margin:0 auto;">
             <thead>
               <tr>
                 <th>Producto</th>
-                <th style="width: 50px; text-align:center;">Cant</th>
-                <th>Precio</th>
-                <th>Total</th>
+                <th style="width: 60px; text-align:center;">Cant</th>
+                <th style="text-align:right;">Precio</th>
+                <th style="text-align:right;">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -343,6 +322,7 @@ if ($pedido_id) {
         value="$<?= number_format($monto, 0, ',', '.') ?>"
         readonly
         required>
+        
     <?php elseif ($pedido_id): ?>
       <div style="color:#ff4d4d;text-align:center;margin:20px 0;">
         No se encontraron detalles para este pedido.
@@ -357,6 +337,7 @@ if ($pedido_id) {
         value="$<?= number_format($monto, 0, ',', '.') ?>"
         readonly
         required>
+        
     <?php else: ?>
       <!-- Sin número de pedido, el usuario puede ingresar el monto manualmente -->
       <textarea name="pedido" rows="3" placeholder="Indique su pedido. Indicar producto, tallas y cantidades" required></textarea>

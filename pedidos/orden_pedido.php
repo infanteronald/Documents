@@ -30,7 +30,7 @@ while ($row = $res_cat->fetch_assoc()) {
         .btn, select, input {
             touch-action: manipulation;
         }
-
+ 
         /* VSCode Theme Variables */
         :root {
             --vscode-bg: #1e1e1e;
@@ -1122,7 +1122,7 @@ while ($row = $res_cat->fetch_assoc()) {
         <h3>Total: $<span id="total">0</span></h3>
     </div>
     <div id="finalizar-pedido" style="margin-top:30px; text-align:center;">
-        <button class="btn" onclick="finalizarPedido()">Continuar con datos de envío</button>
+        <button class="btn" onclick="finalizarPedido()">Finalizar</button>
     </div>
     <div id="pedido-url" style="display:none; margin-top:20px; text-align:center;">
         <p>Tu pedido ha sido generado. Comparte este enlace:</p>
@@ -1444,61 +1444,80 @@ function finalizarPedido() {
         return;
     }
     
-    // Crear texto del pedido con tallas
-    let textoPedido = 'PEDIDO CON TALLAS:\n\n';
+    // Calcular el total
     let total = 0;
-    
     carrito.forEach(item => {
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
-        textoPedido += `• ${item.nombre}`;
-        if (item.isCustom) {
-            textoPedido += ` (PERSONALIZADO)`;
-        }
-        textoPedido += `\n`;
-        textoPedido += `  Talla: ${item.talla}\n`;
-        textoPedido += `  Cantidad: ${item.cantidad}\n`;
-        textoPedido += `  Precio: $${Number(item.precio).toLocaleString()}\n`;
-        textoPedido += `  Subtotal: $${Number(subtotal).toLocaleString()}\n\n`;
+        total += item.precio * item.cantidad;
     });
     
-    textoPedido += `TOTAL: $${Number(total).toLocaleString()}`;
+    // Preparar datos para enviar al endpoint
+    const carritoParaEnviar = carrito.map(item => ({
+        id: parseInt(item.id) || 0, // Asegurar que el ID sea un entero
+        nombre: item.nombre,
+        precio: parseFloat(item.precio),
+        cantidad: parseInt(item.cantidad),
+        talla: item.talla || 'N/A',
+        personalizado: item.isCustom || false
+    }));
     
-    // Redirigir a index.php con el pedido y productos personalizados
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'index.php';
+    // Mostrar mensaje de procesamiento
+    mostrarMensaje('Guardando pedido...', 'success');
+    const finalizarBtn = document.querySelector('#finalizar-pedido .btn');
+    finalizarBtn.disabled = true;
+    finalizarBtn.textContent = 'Procesando...';
     
-    const pedidoInput = document.createElement('input');
-    pedidoInput.type = 'hidden';
-    pedidoInput.name = 'pedido_prefilled';
-    pedidoInput.value = textoPedido;
+    // Enviar al endpoint guardar_pedido.php
+    fetch('guardar_pedido.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            carrito: carritoParaEnviar,
+            monto: total
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Pedido guardado exitosamente, mostrar la URL
+            mostrarUrlPedido(data.pedido_id);
+        } else {
+            mostrarMensaje('Error al guardar el pedido: ' + (data.error || 'Error desconocido'), 'error');
+            finalizarBtn.disabled = false;
+            finalizarBtn.textContent = 'Finalizar';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error de conexión al guardar el pedido', 'error');
+        finalizarBtn.disabled = false;
+        finalizarBtn.textContent = 'Finalizar';
+    });
+}
+
+function mostrarUrlPedido(pedidoId) {
+    // Ocultar el botón de finalizar
+    document.getElementById('finalizar-pedido').style.display = 'none';
     
-    const montoInput = document.createElement('input');
-    montoInput.type = 'hidden';
-    montoInput.name = 'monto_prefilled';
-    montoInput.value = total;
+    // Generar la URL del pedido
+    const baseUrl = window.location.origin + window.location.pathname.replace('orden_pedido.php', 'index.php');
+    const pedidoUrl = `${baseUrl}?pedido=${pedidoId}`;
     
-    // Agregar carrito completo (incluyendo productos personalizados)
-    const carritoInput = document.createElement('input');
-    carritoInput.type = 'hidden';
-    carritoInput.name = 'carrito_data';
-    carritoInput.value = JSON.stringify(carrito);
+    // Mostrar la sección de URL
+    const urlSection = document.getElementById('pedido-url');
+    const urlInput = document.getElementById('pedido-link');
     
-    // Agregar productos personalizados que necesitan ser creados en DB
-    if (productosPersonalizados.length > 0) {
-        const customProductsInput = document.createElement('input');
-        customProductsInput.type = 'hidden';
-        customProductsInput.name = 'productos_personalizados';
-        customProductsInput.value = JSON.stringify(productosPersonalizados);
-        form.appendChild(customProductsInput);
-    }
+    urlInput.value = pedidoUrl;
+    urlSection.style.display = 'block';
     
-    form.appendChild(pedidoInput);
-    form.appendChild(montoInput);
-    form.appendChild(carritoInput);
-    document.body.appendChild(form);
-    form.submit();
+    // Mensaje de éxito
+    mostrarMensaje('¡Pedido guardado exitosamente! Puedes compartir el enlace generado.', 'success');
+    
+    // Limpiar el carrito
+    carrito = [];
+    productosPersonalizados = [];
+    actualizarCarrito();
 }
 
 function mostrarMensaje(texto, tipo) {

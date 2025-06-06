@@ -102,10 +102,16 @@ if ($stmt_detalle_pedido === false) {
 
 foreach ($carrito as $item) {
     // Verificar si es un producto personalizado
-    $producto_id = isset($item['personalizado']) && $item['personalizado'] ? 0 : $item['id'];
+    $es_personalizado = isset($item['personalizado']) && $item['personalizado'];
+    $producto_id = $es_personalizado ? 0 : intval($item['id'] ?? 0);
+    
+    // Log para debugging
+    error_log("Procesando item: " . print_r($item, true));
+    error_log("Es personalizado: " . ($es_personalizado ? 'SÍ' : 'NO'));
+    error_log("producto_id asignado: " . $producto_id);
     
     // Si es un producto personalizado, primero debemos agregarlo a la tabla de productos
-    if (isset($item['personalizado']) && $item['personalizado']) {
+    if ($es_personalizado) {
         // Verificar si ya existe un producto con el mismo nombre
         $checkStmt = $conn->prepare("SELECT id FROM productos WHERE nombre = ? LIMIT 1");
         if ($checkStmt === false) {
@@ -114,7 +120,7 @@ foreach ($carrito as $item) {
             // Respuesta JSON para el cliente
             echo json_encode(['success' => false, 'error' => 'Error interno del servidor (código 1).']);
             exit;
-        }        $checkStmt->bind_param("s", $item['nombre']);
+        }$checkStmt->bind_param("s", $item['nombre']);
         $checkStmt->execute();
         if ($checkStmt->error) {
             // Log del error para el administrador del servidor
@@ -176,13 +182,15 @@ foreach ($carrito as $item) {
             $producto_id = $existing_product_id;
         }
         $checkStmt->close();
-    }      // Agregamos el detalle del pedido
-    $talla = isset($item['talla']) ? $item['talla'] : 'N/A';
+    }    // Agregamos el detalle del pedido
+    $talla = isset($item['talla']) ? trim($item['talla']) : 'N/A';
+    $precio_decimal = floatval($item['precio']);
+    $cantidad_int = intval($item['cantidad']);
     
     // Log para debugging del detalle
-    error_log("Insertando detalle - pedido_id: $pedido_id, producto_id: $producto_id, nombre: {$item['nombre']}, precio: {$item['precio']}, cantidad: {$item['cantidad']}, talla: $talla");
+    error_log("Insertando detalle - pedido_id: $pedido_id, producto_id: $producto_id, nombre: {$item['nombre']}, precio: $precio_decimal, cantidad: $cantidad_int, talla: $talla");
     
-    $stmt_detalle_pedido->bind_param("iisdis", $pedido_id, $producto_id, $item['nombre'], $item['precio'], $item['cantidad'], $talla);
+    $stmt_detalle_pedido->bind_param("iisdis", $pedido_id, $producto_id, $item['nombre'], $precio_decimal, $cantidad_int, $talla);
     if ($stmt_detalle_pedido->execute() === false) {
         error_log("Error al ejecutar la inserción en pedido_detalle para producto '{$item['nombre']}': " . $stmt_detalle_pedido->error);
         echo json_encode(['success' => false, 'error' => "Error interno del servidor (código DET_EXEC_FAIL) al procesar producto: {$item['nombre']}."]);
