@@ -1,0 +1,77 @@
+# Archivos Críticos de Producción - NO MOVER
+# Estos archivos deben permanecer en la raíz del proyecto
+
+## WEBHOOK Y CONFIGURACIÓN (CRÍTICOS)
+bold_webhook_enhanced.php          # 🔥 WEBHOOK PRINCIPAL - ACTIVO EN BOLD DASHBOARD
+dual_mode_config.php               # Configuración del webhook al 100%
+conexion.php                       # Configuración de base de datos
+smtp_config.php                    # Configuración SMTP
+
+## SISTEMA DE PAGOS
+bold_payment.php                   # Procesamiento de pagos Bold
+bold_confirmation.php              # Confirmaciones de pago
+bold_hash.php                      # Generación hash Bold
+bold_notification_system.php       # Sistema de notificaciones
+
+## SISTEMA PRINCIPAL
+index.php                          # Página principal del sistema
+guardar_pedido.php                 # Guardar pedidos
+procesar_orden.php                 # Procesar órdenes
+orden_pedido.php                   # Gestión de órdenes
+listar_pedidos.php                 # Listado de pedidos
+ver_detalle_pedido.php             # Detalles de pedidos
+
+## PROCESAMIENTO
+actualizar_estado.php              # Actualizar estados
+archivar_pedido.php                # Archivado de pedidos
+restaurar_pedido.php               # Restaurar pedidos
+agregar_nota.php                   # Agregar notas
+procesar_pago_manual.php           # Pagos manuales
+
+## REPORTES Y COMPROBANTES
+generar_pdf.php                    # Generación de PDFs
+comprobante.php                    # Comprobantes de pago
+exportar_excel.php                 # Exportación Excel
+check_payment_status.php           # Verificar estados de pago
+
+## GESTIÓN DE ARCHIVOS
+subir_guia.php                     # Subir guías de envío
+ver_guia.php                       # Ver guías
+
+## ESTILOS Y SCRIPTS
+pedidos.css                        # Estilos principales
+script.js                          # JavaScript principal
+pedidos.js                         # JS específico pedidos
+estilos.css                        # Estilos adicionales
+styles.css                         # Estilos generales
+
+## ARCHIVOS DE SOPORTE
+logo.png                           # Logo de la empresa
+qr.jpg                             # Código QR
+apple-ui.css                       # Estilos Apple UI
+sequoia-unified.css                # Estilos unificados Sequoia
+payment_ux_enhanced.css            # Estilos UX mejorados
+payment_ux_enhanced.js             # JavaScript UX mejorado
+
+## DIRECTORIOS DE DATOS
+logs/                              # Logs del sistema
+comprobantes/                      # Comprobantes generados
+uploads/                           # Archivos subidos
+guias/                            # Guías de envío
+pedidos/                          # Datos de pedidos
+backups/                          # Respaldos del sistema
+
+## DESARROLLO (SEPARADO)
+development/                       # TODO LO DE DESARROLLO ESTÁ AQUÍ
+otros/                            # Archivos adicionales de desarrollo
+
+## ESTADO ACTUAL
+# ✅ Bold Dashboard configurado → bold_webhook_enhanced.php
+# ✅ Sistema 100% migrado y operativo
+# ✅ SSH configurado para pruebas remotas
+# ✅ Archivos organizados por función (producción/desarrollo)
+
+## IMPORTANTE
+# NO mover archivos listados arriba fuera de la raíz
+# NO modificar bold_webhook_enhanced.php sin testing previo
+# Para desarrollo usar archivos en /development/

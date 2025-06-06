@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Live Debug - Bold Payment Function</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #3a3a3a;
+            border-radius: 6px;
+        }
+        button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        #bold-payment-container {
+            border: 2px solid #007aff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+            min-height: 100px;
+            background: #2a2a2a;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #28a745; }
+        .error { background: #dc3545; }
+        .warning { background: #ffc107; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Live Debug - Bold Payment Function</h1>
+        
+        <div class="test-section">
+            <h2>🎯 Prueba Directa de initializeBoldPayment()</h2>
+            <p>Esta prueba ejecutará la función directamente y mostrará todos los logs en tiempo real.</p>
+            
+            <button onclick="testInitializeBoldPayment()">🚀 Ejecutar initializeBoldPayment()</button>
+            <button onclick="clearConsole()">🧹 Limpiar Console</button>
+            <button onclick="showGlobalState()">🌍 Ver Estado Global</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Estado de la Función</h3>
+            <div id="function-status" class="status warning">⏳ Sin ejecutar</div>
+        </div>
+
+        <div class="test-section">
+            <h3>💳 Contenedor Bold Payment</h3>
+            <div id="bold-payment-container">
+                <div style="text-align: center; color: #888;">
+                    Container vacío - esperando inicialización
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Console Output</h3>
+            <div id="console-output" class="console-output">Esperando ejecución...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Simulación de Datos del Formulario</h3>
+            <form id="test-form" style="display: none;">
+                <input type="hidden" name="monto" value="50000">
+                <input type="hidden" name="correo" value="test@sequoiaspeed.com">
+                <input type="hidden" name="nombre" value="Usuario Test">
+                <input type="hidden" name="telefono" value="3001234567">
+                <input type="hidden" name="direccion" value="Calle Test 123">
+                <select id="metodo_pago" name="metodo_pago">
+                    <option value="card">Tarjeta de Crédito</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Capturar todos los console.log y mostrarlos en pantalla
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        let consoleOutput = '';
+        
+        function updateConsoleOutput(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '📝';
+            consoleOutput += `[${timestamp}] ${prefix} ${message}\n`;
+            document.getElementById('console-output').textContent = consoleOutput;
+            document.getElementById('console-output').scrollTop = document.getElementById('console-output').scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            updateConsoleOutput(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            updateConsoleOutput(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            updateConsoleOutput(args.join(' '), 'warn');
+        };
+
+        function clearConsole() {
+            consoleOutput = '';
+            document.getElementById('console-output').textContent = 'Console limpiado...';
+        }
+
+        function showGlobalState() {
+            console.log('=== ESTADO GLOBAL ===');
+            console.log('window.initializeBoldPayment existe:', typeof window.initializeBoldPayment);
+            console.log('document.getElementById existe:', typeof document.getElementById);
+            console.log('Container bold-payment-container:', document.getElementById('bold-payment-container'));
+            console.log('Formulario test:', document.getElementById('test-form'));
+            console.log('Campo metodo_pago:', document.getElementById('metodo_pago'));
+            console.log('=== FIN ESTADO GLOBAL ===');
+        }
+
+        function testInitializeBoldPayment() {
+            const statusDiv = document.getElementById('function-status');
+            statusDiv.textContent = '⏳ Ejecutando...';
+            statusDiv.className = 'status warning';
+            
+            console.log('🔥 =================================');
+            console.log('🔥 INICIANDO PRUEBA DIRECTA');
+            console.log('🔥 =================================');
+            
+            try {
+                // Verificar si la función existe
+                if (typeof initializeBoldPayment !== 'function') {
+                    console.error('❌ ERROR: initializeBoldPayment no es una función');
+                    console.error('❌ Tipo actual:', typeof initializeBoldPayment);
+                    statusDiv.textContent = '❌ Función no encontrada';
+                    statusDiv.className = 'status error';
+                    return;
+                }
+                
+                console.log('✅ Función initializeBoldPayment encontrada');
+                console.log('🚀 Ejecutando initializeBoldPayment()...');
+                
+                // Ejecutar la función y capturar el resultado
+                const result = initializeBoldPayment();
+                
+                console.log('📊 Resultado de la función:', result);
+                console.log('📊 Tipo del resultado:', typeof result);
+                
+                if (result === true) {
+                    statusDiv.textContent = '✅ Función ejecutada exitosamente - Retornó TRUE';
+                    statusDiv.className = 'status success';
+                } else if (result === false) {
+                    statusDiv.textContent = '❌ Función ejecutada - Retornó FALSE';
+                    statusDiv.className = 'status error';
+                } else if (result === undefined) {
+                    statusDiv.textContent = '⚠️ Función ejecutada - Retornó UNDEFINED';
+                    statusDiv.className = 'status warning';
+                } else {
+                    statusDiv.textContent = `🤔 Función ejecutada - Retornó: ${result}`;
+                    statusDiv.className = 'status warning';
+                }
+                
+            } catch (error) {
+                console.error('❌ ERROR durante la ejecución:', error);
+                console.error('❌ Mensaje:', error.message);
+                console.error('❌ Stack:', error.stack);
+                statusDiv.textContent = '❌ Error durante la ejecución';
+                statusDiv.className = 'status error';
+            }
+            
+            console.log('🔥 =================================');
+            console.log('🔥 PRUEBA COMPLETADA');
+            console.log('🔥 =================================');
+        }
+
+        // Función initializeBoldPayment copiada directamente del archivo principal
+        function initializeBoldPayment() {
+            console.log('🚀 initializeBoldPayment() INICIADA');
+            console.log('🕐 Timestamp:', new Date().toISOString());
+            
+            // Capturar errores globales durante la ejecución
+            window.addEventListener('error', function(e) {
+                console.error('❌ ERROR GLOBAL durante initializeBoldPayment:', e.message, 'en', e.filename, 'línea', e.lineno);
+            });
+            
+            try {
+                console.log('🔧 PASO 1: Intentando obtener container...');
+                
+                const container = document.getElementById('bold-payment-container');
+                console.log('🔍 Container encontrado:', container);
+                
+                if (!container) {
+                    console.error('❌ Container Bold no encontrado - RETORNANDO FALSE');
+                    return false;
+                }
+                
+                console.log('✅ Container Bold encontrado y verificado');
+
+                // Mostrar información del pago
+                console.log('🔧 PASO 2: Intentando mostrar loading...');
+                container.innerHTML = '<div style="text-align: center; padding: 16px; color: #007aff;">Preparando pago seguro...</div>';
+                console.log('✅ Loading mostrado exitosamente');
+
+                // Generar ID único para la orden
+                console.log('🔧 PASO 3: Generando ID de orden...');
+                const orderId = 'SEQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                console.log('✅ ID orden generado:', orderId);
+            
+                // Obtener el monto del pedido con manejo seguro
+                console.log('🔧 PASO 4: Obteniendo monto...');
+                let monto = 50000; // Valor fijo para prueba
+                console.log('✅ Monto para prueba:', monto, 'Tipo:', typeof monto);
+                
+                // Obtener el método de pago seleccionado
+                console.log('🔧 PASO 5: Obteniendo método de pago...');
+                const metodoPago = document.getElementById('metodo_pago').value;
+                console.log('✅ Método de pago:', metodoPago);
+                
+                console.log('🔧 PASO 6: Preparando Bold con método:', metodoPago, 'monto:', monto);
+                
+                console.log('💰 Monto final para Bold:', monto);
+                
+                console.log('🔄 Iniciando proceso de preparación Bold...');
+                // Obtener datos del cliente del formulario
+                const customerData = {
+                    email: 'test@sequoiaspeed.com',
+                    fullName: 'Usuario Test',
+                    phone: '3001234567',
+                    dialCode: '+57'
+                };
+                console.log('👤 Datos del cliente:', customerData);
+
+                // Datos de dirección de facturación
+                const billingAddress = {
+                    address: 'Calle Test 123',
+                    city: 'Bogotá',
+                    state: 'Cundinamarca',
+                    country: 'CO'
+                };
+                console.log('📍 Dirección de facturación:', billingAddress);
+
+                // Crear URL para la ventana de pago
+                const paymentParams = new URLSearchParams({
+                    order_id: orderId,
+                    amount: monto,
+                    method: metodoPago,
+                    customer_data: JSON.stringify(customerData),
+                    billing_address: JSON.stringify(billingAddress)
+                });
+
+                const paymentUrl = 'bold_payment.php?' + paymentParams.toString();
+                console.log('🔗 URL de pago generada:', paymentUrl);
+                
+                // Mostrar botón para abrir ventana de pago
+                console.log('🎨 Creando botón de pago...');
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <button type="button" onclick="alert('Botón funcionando! URL: ${paymentUrl}')" 
+                                style="background: #007aff; color: white; border: none; 
+                                       padding: 12px 24px; border-radius: 6px; 
+                                       font-weight: 600; font-size: 0.9rem; cursor: pointer;
+                                       transition: all 0.2s;">
+                            🔒 Abrir Pago Seguro (PRUEBA)
+                        </button>
+                        <p style="margin: 8px 0 0 0; font-size: 0.8rem; color: #888;">
+                            Botón de prueba - Orden: ${orderId}
+                        </p>
+                    </div>
+                `;
+                
+                console.log('✅ Botón de pago creado exitosamente');
+
+                // Guardar información del pedido para uso posterior
+                window.currentOrderData = {
+                    orderId: orderId,
+                    amount: monto,
+                    method: metodoPago,
+                    customer: customerData,
+                    billing: billingAddress
+                };
+                
+                console.log('💾 Datos del pedido guardados:', window.currentOrderData);
+                console.log('🎉 initializeBoldPayment() COMPLETADA EXITOSAMENTE');
+                console.log('🕐 Timestamp final:', new Date().toISOString());
+                
+                return true; // Retornar éxito
+
+            } catch (error) {
+                console.error('❌ ERROR CAPTURADO en initializeBoldPayment:', error);
+                console.error('❌ Mensaje:', error.message);
+                console.error('❌ Stack trace:', error.stack);
+                console.error('❌ Timestamp error:', new Date().toISOString());
+                
+                const container = document.getElementById('bold-payment-container');
+                if (container) {
+                    container.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 16px;">Error al inicializar el pago. Intente nuevamente.</div>';
+                }
+                return false; // Retornar error
+            }
+        }
+
+        // Inicializar la prueba
+        console.log('📋 Página de prueba cargada - Lista para ejecutar tests');
+        showGlobalState();
+    </script>
+</body>
+</html>

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Simulador de Webhook Bold - Test Completo</title>
+    <style>
+        :root {
+            --vscode-bg: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-border: #3e3e42;
+            --vscode-text: #cccccc;
+            --vscode-text-muted: #999999;
+            --apple-blue: #007aff;
+            --success-green: #28a745;
+            --error-red: #dc3545;
+            --warning-orange: #fd7e14;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--vscode-bg);
+            color: var(--vscode-text);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--apple-blue);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--vscode-text-muted);
+            font-size: 1.1rem;
+        }
+        
+        .test-section {
+            background: var(--vscode-sidebar);
+            border: 1px solid var(--vscode-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h3 {
+            color: var(--apple-blue);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .test-button {
+            background: var(--apple-blue);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .test-button:hover {
+            background: #0056d3;
+            transform: translateY(-1px);
+        }
+        
+        .test-button.success {
+            background: var(--success-green);
+        }
+        
+        .test-button.error {
+            background: var(--error-red);
+        }
+        
+        .test-button.warning {
+            background: var(--warning-orange);
+        }
+        
+        .result-area {
+            background: rgba(0, 122, 255, 0.1);
+            border: 1px solid var(--apple-blue);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .webhook-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid var(--success-green);
+            border-radius: 8px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success-green);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .code-block {
+            background: var(--vscode-bg);
+            border: 1px solid var(--vscode-border);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.8rem;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: var(--vscode-bg);
+            border: 1px solid var(--vscode-border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--apple-blue);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--vscode-text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Simulador de Webhook Bold</h1>
+            <p class="subtitle">Test completo del flujo de pagos PSE, Bancolombia y Tarjeta</p>
+        </div>
+        
+        <!-- Estado del Webhook -->
+        <div class="webhook-status">
+            <div class="status-dot"></div>
+            <strong>Webhook Status:</strong>
+            <span id="webhook-status">Verificando...</span>
+        </div>
+        
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="total-tests">0</div>
+                <div class="stat-label">Tests Ejecutados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successful-tests">0</div>
+                <div class="stat-label">Tests Exitosos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failed-tests">0</div>
+                <div class="stat-label">Tests Fallidos</div>
+            </div>
+        </div>
+        
+        <!-- Test de Hash Generator -->
+        <div class="test-section">
+            <h3>🔐 Test Generador de Hash</h3>
+            <p>Verificar que el generador de hash funcione correctamente con las llaves de producción.</p>
+            <div class="button-grid">
+                <button class="test-button" onclick="testHashGenerator()">🧪 Test Hash Básico</button>
+                <button class="test-button" onclick="testHashWithDifferentAmounts()">💰 Test Múltiples Montos</button>
+                <button class="test-button" onclick="testHashValidation()">✅ Test Validación</button>
+            </div>
+            <div id="hash-results" class="result-area">
+                <div>Haz clic en un botón para probar el generador de hash...</div>
+            </div>
+        </div>
+        
+        <!-- Test de Webhook -->
+        <div class="test-section">
+            <h3>🔗 Test Webhook Bold</h3>
+            <p>Simular webhooks de Bold para verificar el procesamiento correcto.</p>
+            <div class="button-grid">
+                <button class="test-button success" onclick="simulateSuccessfulPayment()">✅ Pago Exitoso</button>
+                <button class="test-button error" onclick="simulateFailedPayment()">❌ Pago Fallido</button>
+                <button class="test-button warning" onclick="simulatePendingPayment()">⏳ Pago Pendiente</button>
+                <button class="test-button" onclick="simulateInvalidWebhook()">🚫 Webhook Inválido</button>
+            </div>
+            <div id="webhook-results" class="result-area">
+                <div>Selecciona un tipo de webhook para simular...</div>
+            </div>
+        </div>
+        
+        <!-- Test de Métodos de Pago -->
+        <div class="test-section">
+            <h3>💳 Test Métodos de Pago</h3>
+            <p>Probar la integración completa de cada método de pago Bold.</p>
+            <div class="button-grid">
+                <button class="test-button" onclick="testPSEFlow()">🏦 Flujo PSE Bold</button>
+                <button class="test-button" onclick="testBancolombiaFlow()">🟡 Flujo Bancolombia</button>
+                <button class="test-button" onclick="testCreditCardFlow()">💳 Flujo Tarjeta</button>
+                <button class="test-button" onclick="testAllMethods()">🚀 Test Todos</button>
+            </div>
+            <div id="payment-results" class="result-area">
+                <div>Selecciona un método de pago para probar...</div>
+            </div>
+        </div>
+        
+        <!-- Test de Integración -->
+        <div class="test-section">
+            <h3>🔄 Test de Integración Completa</h3>
+            <p>Ejecutar el flujo completo desde generación de hash hasta webhook.</p>
+            <div class="button-grid">
+                <button class="test-button" onclick="runCompleteFlow()">🎯 Flujo Completo</button>
+                <button class="test-button" onclick="runStressTest()">⚡ Test de Carga</button>
+                <button class="test-button" onclick="runSecurityTest()">🔒 Test Seguridad</button>
+                <button class="test-button" onclick="clearAllResults()">🧹 Limpiar Todo</button>
+            </div>
+            <div id="integration-results" class="result-area">
+                <div>Ejecuta un test de integración...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let totalTests = 0;
+        let successfulTests = 0;
+        let failedTests = 0;
+
+        // Función de logging
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            const typeIcon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            
+            container.innerHTML += `<div>[${timestamp}] ${typeIcon} ${message}</div>`;
+            container.scrollTop = container.scrollHeight;
+            
+            console.log(`[Bold Test] ${message}`);
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            document.getElementById('total-tests').textContent = totalTests;
+            document.getElementById('successful-tests').textContent = successfulTests;
+            document.getElementById('failed-tests').textContent = failedTests;
+        }
+
+        // Verificar estado del webhook
+        async function checkWebhookStatus() {
+            try {
+                const response = await fetch('/bold_webhook_test.php');
+                const statusElement = document.getElementById('webhook-status');
+                
+                if (response.ok) {
+                    statusElement.textContent = 'Webhook Test Activo ✅';
+                    statusElement.style.color = 'var(--success-green)';
+                } else {
+                    statusElement.textContent = 'Webhook Test Inactivo ❌';
+                    statusElement.style.color = 'var(--error-red)';
+                }
+            } catch (error) {
+                document.getElementById('webhook-status').textContent = 'Error de Conexión ⚠️';
+                document.getElementById('webhook-status').style.color = 'var(--warning-orange)';
+            }
+        }
+
+        // Test del generador de hash
+        async function testHashGenerator() {
+            totalTests++;
+            log('hash-results', 'Iniciando test del generador de hash...', 'info');
+            
+            try {
+                const testData = {
+                    order_id: `TEST-HASH-${Date.now()}`,
+                    amount: 50000,
+                    currency: 'COP'
+                };
+                
+                const response = await fetch('/bold_hash.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('hash-results', `✅ Hash generado exitosamente`, 'success');
+                    log('hash-results', `Order ID: ${result.data.order_id}`, 'info');
+                    log('hash-results', `Amount: ${result.data.amount}`, 'info');
+                    log('hash-results', `Hash: ${result.data.integrity_signature.substring(0, 32)}...`, 'info');
+                    successfulTests++;
+                } else {
+                    throw new Error(result.error || 'Error desconocido');
+                }
+                
+            } catch (error) {
+                log('hash-results', `❌ Error: ${error.message}`, 'error');
+                failedTests++;
+            }
+            
+            updateStats();
+        }
+
+        // Test con múltiples montos
+        async function testHashWithDifferentAmounts() {
+            totalTests++;
+            log('hash-results', 'Probando hash con múltiples montos...', 'info');
+            
+            const amounts = [10000, 25000, 50000, 100000, 500000];
+            let passed = 0;
+            
+            for (const amount of amounts) {
+                try {
+                    const testData = {
+                        order_id: `TEST-AMOUNT-${amount}-${Date.now()}`,
+                        amount: amount,
+                        currency: 'COP'
+                    };
+                    
+                    const response = await fetch('/bold_hash.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(testData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        log('hash-results', `✅ $${amount.toLocaleString()}: Hash OK`, 'success');
+                        passed++;
+                    } else {
+                        log('hash-results', `❌ $${amount.toLocaleString()}: ${result.error}`, 'error');
+                    }
+                    
+                } catch (error) {
+                    log('hash-results', `❌ $${amount.toLocaleString()}: ${error.message}`, 'error');
+                }
+            }
+            
+            if (passed === amounts.length) {
+                log('hash-results', `🎉 Todos los montos procesados correctamente (${passed}/${amounts.length})`, 'success');
+                successfulTests++;
+            } else {
+                log('hash-results', `⚠️ Solo ${passed}/${amounts.length} montos procesados correctamente`, 'warning');
+                failedTests++;
+            }
+            
+            updateStats();
+        }
+
+        // Simular pago exitoso
+        async function simulateSuccessfulPayment() {
+            totalTests++;
+            log('webhook-results', 'Simulando pago exitoso...', 'info');
+            
+            try {
+                const orderId = `SUCCESS-${Date.now()}`;
+                const webhookData = {
+                    event: 'payment.success',
+                    data: {
+                        order_id: orderId,
+                        transaction_id: `TXN-${Date.now()}`,
+                        amount: 50000,
+                        currency: 'COP',
+                        status: 'approved',
+                        payment_method: 'PSE Bold',
+                        customer: {
+                            email: 'test@sequoiaspeed.com.co',
+                            full_name: 'Usuario Test'
+                        }
+                    }
+                };
+                
+                const response = await fetch('/bold_webhook_test.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(webhookData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('webhook-results', `✅ Webhook procesado: ${result.message}`, 'success');
+                    log('webhook-results', `Order ID: ${result.order_id}`, 'info');
+                    log('webhook-results', `Event: ${result.event}`, 'info');
+                    successfulTests++;
+                } else {
+                    throw new Error(result.message || 'Error en webhook');
+                }
+                
+            } catch (error) {
+                log('webhook-results', `❌ Error simulando pago: ${error.message}`, 'error');
+                failedTests++;
+            }
+            
+            updateStats();
+        }
+
+        // Simular pago fallido
+        async function simulateFailedPayment() {
+            totalTests++;
+            log('webhook-results', 'Simulando pago fallido...', 'info');
+            
+            try {
+                const orderId = `FAILED-${Date.now()}`;
+                const webhookData = {
+                    event: 'payment.failed',
+                    data: {
+                        order_id: orderId,
+                        transaction_id: `TXN-${Date.now()}`,
+                        amount: 50000,
+                        currency: 'COP',
+                        status: 'rejected',
+                        payment_method: 'PSE Bold',
+                        error: 'Insufficient funds'
+                    }
+                };
+                
+                const response = await fetch('/bold_webhook_test.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(webhookData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('webhook-results', `✅ Webhook fallido procesado: ${result.message}`, 'success');
+                    log('webhook-results', `Order ID: ${result.order_id}`, 'info');
+                    successfulTests++;
+                } else {
+                    throw new Error(result.message || 'Error en webhook');
+                }
+                
+            } catch (error) {
+                log('webhook-results', `❌ Error simulando pago fallido: ${error.message}`, 'error');
+                failedTests++;
+            }
+            
+            updateStats();
+        }
+
+        // Test flujo PSE
+        async function testPSEFlow() {
+            totalTests++;
+            log('payment-results', '🏦 Iniciando test flujo PSE Bold...', 'info');
+            
+            try {
+                // Step 1: Generar hash
+                const orderId = `PSE-FLOW-${Date.now()}`;
+                const hashResponse = await fetch('/bold_hash.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        amount: 75000,
+                        currency: 'COP'
+                    })
+                });
+                
+                if (!hashResponse.ok) {
+                    throw new Error('Error generando hash PSE');
+                }
+                
+                const hashData = await hashResponse.json();
+                log('payment-results', `✅ Hash PSE generado: ${hashData.data.integrity_signature.substring(0, 16)}...`, 'success');
+                
+                // Step 2: Simular apertura de ventana de pago
+                log('payment-results', '🔄 Simulando apertura de ventana PSE...', 'info');
+                
+                // Step 3: Simular webhook de confirmación
+                const webhookData = {
+                    event: 'payment.success',
+                    data: {
+                        order_id: orderId,
+                        transaction_id: `PSE-TXN-${Date.now()}`,
+                        amount: 75000,
+                        currency: 'COP',
+                        status: 'approved',
+                        payment_method: 'PSE Bold'
+                    }
+                };
+                
+                const webhookResponse = await fetch('/bold_webhook_test.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(webhookData)
+                });
+                
+                const webhookResult = await webhookResponse.json();
+                
+                if (webhookResponse.ok) {
+                    log('payment-results', `✅ Flujo PSE completado exitosamente`, 'success');
+                    log('payment-results', `Order: ${orderId}`, 'info');
+                    log('payment-results', `Webhook: ${webhookResult.message}`, 'info');
+                    successfulTests++;
+                } else {
+                    throw new Error('Error en webhook PSE');
+                }
+                
+            } catch (error) {
+                log('payment-results', `❌ Error en flujo PSE: ${error.message}`, 'error');
+                failedTests++;
+            }
+            
+            updateStats();
+        }
+
+        // Ejecutar flujo completo
+        async function runCompleteFlow() {
+            totalTests++;
+            log('integration-results', '🎯 Ejecutando flujo completo de integración...', 'info');
+            
+            const methods = ['PSE Bold', 'Botón Bancolombia', 'Tarjeta de Crédito o Débito'];
+            let completedMethods = 0;
+            
+            for (const method of methods) {
+                try {
+                    const orderId = `COMPLETE-${method.replace(/\s+/g, '-')}-${Date.now()}`;
+                    
+                    // Step 1: Hash
+                    log('integration-results', `🔐 Generando hash para ${method}...`, 'info');
+                    const hashResponse = await fetch('/bold_hash.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            order_id: orderId,
+                            amount: 100000,
+                            currency: 'COP'
+                        })
+                    });
+                    
+                    const hashData = await hashResponse.json();
+                    if (!hashData.success) throw new Error('Error en hash');
+                    
+                    // Step 2: Webhook
+                    log('integration-results', `🔗 Procesando webhook para ${method}...`, 'info');
+                    const webhookResponse = await fetch('/bold_webhook_test.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event: 'payment.success',
+                            data: {
+                                order_id: orderId,
+                                transaction_id: `TXN-${Date.now()}`,
+                                amount: 100000,
+                                currency: 'COP',
+                                status: 'approved',
+                                payment_method: method
+                            }
+                        })
+                    });
+                    
+                    if (webhookResponse.ok) {
+                        log('integration-results', `✅ ${method}: Flujo completado`, 'success');
+                        completedMethods++;
+                    } else {
+                        throw new Error('Error en webhook');
+                    }
+                    
+                    // Pausa entre métodos
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                } catch (error) {
+                    log('integration-results', `❌ ${method}: ${error.message}`, 'error');
+                }
+            }
+            
+            if (completedMethods === methods.length) {
+                log('integration-results', `🎉 Flujo completo exitoso: ${completedMethods}/${methods.length} métodos`, 'success');
+                successfulTests++;
+            } else {
+                log('integration-results', `⚠️ Flujo parcial: ${completedMethods}/${methods.length} métodos completados`, 'warning');
+                failedTests++;
+            }
+            
+            updateStats();
+        }
+
+        // Limpiar todos los resultados
+        function clearAllResults() {
+            const resultAreas = ['hash-results', 'webhook-results', 'payment-results', 'integration-results'];
+            resultAreas.forEach(area => {
+                document.getElementById(area).innerHTML = '<div>Resultados limpiados...</div>';
+            });
+            
+            // Resetear estadísticas
+            totalTests = 0;
+            successfulTests = 0;
+            failedTests = 0;
+            updateStats();
+            
+            console.log('Todos los resultados han sido limpiados');
+        }
+
+        // Funciones adicionales simplificadas
+        function testHashValidation() {
+            log('hash-results', '⚠️ Test de validación de hash - Función en desarrollo', 'warning');
+        }
+
+        function simulatePendingPayment() {
+            simulateWebhookWithStatus('payment.pending', 'pending');
+        }
+
+        function simulateInvalidWebhook() {
+            log('webhook-results', '⚠️ Test de webhook inválido - Función en desarrollo', 'warning');
+        }
+
+        function testBancolombiaFlow() {
+            log('payment-results', '⚠️ Test flujo Bancolombia - Función en desarrollo', 'warning');
+        }
+
+        function testCreditCardFlow() {
+            log('payment-results', '⚠️ Test flujo Tarjeta - Función en desarrollo', 'warning');
+        }
+
+        function testAllMethods() {
+            log('payment-results', '⚠️ Test todos los métodos - Función en desarrollo', 'warning');
+        }
+
+        function runStressTest() {
+            log('integration-results', '⚠️ Test de carga - Función en desarrollo', 'warning');
+        }
+
+        function runSecurityTest() {
+            log('integration-results', '⚠️ Test de seguridad - Función en desarrollo', 'warning');
+        }
+
+        // Función auxiliar para simular webhooks
+        async function simulateWebhookWithStatus(event, status) {
+            totalTests++;
+            const orderId = `${status.toUpperCase()}-${Date.now()}`;
+            
+            try {
+                const response = await fetch('/bold_webhook_test.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event: event,
+                        data: {
+                            order_id: orderId,
+                            status: status,
+                            amount: 50000
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                log('webhook-results', `✅ Webhook ${status} simulado: ${result.message}`, 'success');
+                successfulTests++;
+            } catch (error) {
+                log('webhook-results', `❌ Error simulando ${status}: ${error.message}`, 'error');
+                failedTests++;
+            }
+            
+            updateStats();
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Simulador de Webhook Bold iniciado');
+            checkWebhookStatus();
+            updateStats();
+        });
+    </script>
+</body>
+</html>

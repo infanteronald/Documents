@@ -164,7 +164,7 @@ ini_set('display_errors', 1);
 
 ## 📱 Contacto y Soporte
 
-- **Email Órdenes**: ronald@sequoiaspeed.com
+- **Email Ventas**: ventas@sequoiaspeed.com.co
 - **WhatsApp**: +57 314 216 2979
 - **Soporte Bold**: [developers.bold.co](https://developers.bold.co/)
 

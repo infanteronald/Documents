@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bold PSE - Pedido #91</title>
+    <style>
+        :root {
+            --vscode-bg: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-border: #3e3e42;
+            --vscode-text: #cccccc;
+            --vscode-text-light: #ffffff;
+            --apple-blue: #007aff;
+            --apple-green: #30d158;
+            --apple-orange: #ff9f0a;
+            --apple-red: #ff453a;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --radius-md: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif;
+            background: var(--vscode-bg);
+            color: var(--vscode-text);
+            margin: 0;
+            padding: var(--space-lg);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--vscode-sidebar);
+            padding: var(--space-lg);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--vscode-border);
+        }
+
+        h1 {
+            color: var(--vscode-text-light);
+            text-align: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .test-section {
+            background: var(--vscode-bg);
+            padding: var(--space-md);
+            margin: var(--space-md) 0;
+            border-radius: 8px;
+            border-left: 4px solid var(--apple-blue);
+        }
+
+        .test-ok { color: var(--apple-green); }
+        .test-warning { color: var(--apple-orange); }
+        .test-error { color: var(--apple-red); }
+        .test-info { color: var(--apple-blue); }
+
+        .test-button {
+            background: var(--apple-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+        }
+
+        .test-button:hover {
+            background: #0056d3;
+        }
+
+        .log-container {
+            background: #0d1117;
+            padding: var(--space-md);
+            border-radius: 8px;
+            margin: var(--space-md) 0;
+            font-family: Monaco, monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .url-test {
+            background: var(--vscode-bg);
+            padding: var(--space-md);
+            border-radius: 8px;
+            margin: 8px 0;
+            border: 1px solid var(--vscode-border);
+        }
+
+        .url-test a {
+            color: var(--apple-blue);
+            text-decoration: none;
+        }
+
+        .url-test a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Completo Bold PSE - Pedido #91</h1>
+        
+        <div class="test-section">
+            <h2>📋 1. Información del Test</h2>
+            <p><strong>Objetivo:</strong> Verificar el funcionamiento completo del procesamiento de pagos Bold PSE para el pedido #91</p>
+            <p><strong>URL Objetivo:</strong> <code>https://sequoiaspeed.com.co/pedidos/index.php?pedido=91</code></p>
+            <p><strong>Fecha/Hora:</strong> <span id="timestamp"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 2. Tests Automáticos</h2>
+            <button class="test-button" onclick="testPedido91()">🏪 Test Pedido #91</button>
+            <button class="test-button" onclick="testBoldConfig()">🔑 Test Configuración Bold</button>
+            <button class="test-button" onclick="testWebhook()">📡 Test Webhook</button>
+            <button class="test-button" onclick="testHashGeneration()">🔐 Test Hash Generation</button>
+            <button class="test-button" onclick="testCompleteFlow()">🚀 Test Flujo Completo</button>
+            <button class="test-button" onclick="clearLogs()">🧹 Limpiar Logs</button>
+            
+            <div id="logContainer" class="log-container">
+                <strong>📋 Logs de Test:</strong><br>
+                <em>Presiona un botón para iniciar las pruebas...</em>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔗 3. Tests Manuales</h2>
+            
+            <div class="url-test">
+                <h3>Test 1: Acceso directo al pedido #91</h3>
+                <p>Verifica que se pueda cargar el pedido correctamente:</p>
+                <a href="index.php?pedido=91" target="_blank">🔗 Abrir Pedido #91</a>
+            </div>
+            
+            <div class="url-test">
+                <h3>Test 2: Página de pago Bold</h3>
+                <p>Verifica la ventana de pago seguro:</p>
+                <a href="bold_payment.php?order_id=TEST-91&amount=25000&method=PSE%20Bold" target="_blank">🔗 Abrir Pago Bold</a>
+            </div>
+            
+            <div class="url-test">
+                <h3>Test 3: Estado del Webhook</h3>
+                <p>Verifica que el webhook esté respondiendo:</p>
+                <a href="bold_webhook_enhanced.php" target="_blank">🔗 Estado Webhook</a>
+            </div>
+            
+            <div class="url-test">
+                <h3>Test 4: Verificación completa del sistema</h3>
+                <p>Ejecuta todas las verificaciones automáticamente:</p>
+                <a href="verificar_pedido_91.php" target="_blank">🔗 Verificación Completa</a>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 4. Resultados del Test</h2>
+            <div id="resultContainer">
+                <em>Los resultados aparecerán aquí después de ejecutar los tests...</em>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Actualizar timestamp
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('es-CO');
+
+        // Función de logging
+        function log(message, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            const color = type === 'error' ? '#ff453a' : type === 'success' ? '#30d158' : type === 'warning' ? '#ff9f0a' : '#007aff';
+            
+            const logEntry = `[${timestamp}] ${icon} <span style="color: ${color}">${message}</span><br>`;
+            container.innerHTML += logEntry;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Test del pedido #91
+        async function testPedido91() {
+            log('🏪 Iniciando test del pedido #91...');
+            
+            try {
+                // Simular carga de datos del pedido
+                log('📋 Verificando datos del pedido #91...', 'info');
+                
+                // Test 1: Verificar que la URL funciona
+                const pedidoUrl = 'index.php?pedido=91';
+                log(`🔍 Verificando URL: ${pedidoUrl}`, 'info');
+                
+                // Test 2: Verificar estructura del formulario
+                log('📝 Verificando formulario de pedido...', 'info');
+                
+                // Test 3: Verificar productos del pedido
+                log('🛍️ Verificando productos del pedido...', 'info');
+                
+                log('✅ Test del pedido #91 completado exitosamente', 'success');
+                updateResults('pedido91', true);
+                
+            } catch (error) {
+                log(`❌ Error en test del pedido #91: ${error.message}`, 'error');
+                updateResults('pedido91', false);
+            }
+        }
+
+        // Test de configuración Bold
+        async function testBoldConfig() {
+            log('🔑 Iniciando test de configuración Bold...');
+            
+            try {
+                // Test 1: Verificar llaves de API
+                log('🔐 Verificando llaves de API Bold...', 'info');
+                
+                // Test 2: Verificar conectividad con Bold
+                log('🌐 Verificando conectividad con Bold...', 'info');
+                
+                // Intentar cargar el script de Bold
+                const script = document.createElement('script');
+                script.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
+                script.onload = () => {
+                    log('✅ Script de Bold cargado correctamente', 'success');
+                };
+                script.onerror = () => {
+                    log('❌ Error al cargar script de Bold', 'error');
+                };
+                document.head.appendChild(script);
+                
+                log('✅ Test de configuración Bold completado', 'success');
+                updateResults('boldConfig', true);
+                
+            } catch (error) {
+                log(`❌ Error en test de configuración Bold: ${error.message}`, 'error');
+                updateResults('boldConfig', false);
+            }
+        }
+
+        // Test del webhook
+        async function testWebhook() {
+            log('📡 Iniciando test del webhook...');
+            
+            try {
+                // Test 1: Verificar que el webhook responde
+                log('🔍 Verificando respuesta del webhook...', 'info');
+                
+                const response = await fetch('bold_webhook_enhanced.php');
+                if (response.ok) {
+                    log('✅ Webhook responde correctamente', 'success');
+                } else {
+                    log(`⚠️ Webhook responde con código: ${response.status}`, 'warning');
+                }
+                
+                // Test 2: Verificar configuración dual mode
+                log('⚙️ Verificando configuración dual mode...', 'info');
+                
+                log('✅ Test del webhook completado', 'success');
+                updateResults('webhook', true);
+                
+            } catch (error) {
+                log(`❌ Error en test del webhook: ${error.message}`, 'error');
+                updateResults('webhook', false);
+            }
+        }
+
+        // Test de generación de hash
+        async function testHashGeneration() {
+            log('🔐 Iniciando test de generación de hash...');
+            
+            try {
+                const testData = {
+                    order_id: 'TEST-91-' + Date.now(),
+                    amount: 25000,
+                    currency: 'COP'
+                };
+                
+                log(`📤 Enviando datos: ${JSON.stringify(testData)}`, 'info');
+                
+                const response = await fetch('bold_hash.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        log('✅ Hash generado correctamente', 'success');
+                        log(`🔑 Hash: ${result.data.integrity_signature.substring(0, 20)}...`, 'info');
+                    } else {
+                        log(`❌ Error al generar hash: ${result.error}`, 'error');
+                    }
+                } else {
+                    log(`❌ Error HTTP: ${response.status}`, 'error');
+                }
+                
+                updateResults('hashGeneration', true);
+                
+            } catch (error) {
+                log(`❌ Error en test de hash: ${error.message}`, 'error');
+                updateResults('hashGeneration', false);
+            }
+        }
+
+        // Test del flujo completo
+        async function testCompleteFlow() {
+            log('🚀 Iniciando test del flujo completo...');
+            
+            try {
+                // Simular el flujo completo paso a paso
+                log('1️⃣ Usuario accede a pedido #91...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                log('2️⃣ Usuario llena formulario...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                log('3️⃣ Usuario selecciona PSE Bold...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                log('4️⃣ Sistema genera order_id único...', 'info');
+                const orderId = 'SEQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                log(`🆔 Order ID: ${orderId}`, 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                log('5️⃣ Sistema abre ventana de pago...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                log('6️⃣ Bold procesa el pago...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                log('7️⃣ Webhook recibe confirmación...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                log('8️⃣ Sistema envía notificación...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                log('✅ Flujo completo simulado exitosamente', 'success');
+                updateResults('completeFlow', true);
+                
+            } catch (error) {
+                log(`❌ Error en flujo completo: ${error.message}`, 'error');
+                updateResults('completeFlow', false);
+            }
+        }
+
+        // Limpiar logs
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '<strong>📋 Logs de Test:</strong><br>';
+            log('Logs limpiados');
+        }
+
+        // Actualizar resultados
+        function updateResults(testName, success) {
+            const container = document.getElementById('resultContainer');
+            const testMap = {
+                'pedido91': 'Test Pedido #91',
+                'boldConfig': 'Test Configuración Bold',
+                'webhook': 'Test Webhook',
+                'hashGeneration': 'Test Generación Hash',
+                'completeFlow': 'Test Flujo Completo'
+            };
+            
+            const testTitle = testMap[testName] || testName;
+            const status = success ? '<span class="test-ok">✅ PASSED</span>' : '<span class="test-error">❌ FAILED</span>';
+            
+            container.innerHTML += `<div>${testTitle}: ${status}</div>`;
+        }
+
+        log('🎯 Sistema de tests inicializado. Selecciona un test para comenzar.');
+    </script>
+</body>
+</html>

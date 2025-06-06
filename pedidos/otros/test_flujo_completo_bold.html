@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Flujo Completo Bold - PSE, Bancolombia, Tarjeta</title>
+    <style>
+        :root {
+            --vscode-bg: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-border: #3e3e42;
+            --vscode-text: #cccccc;
+            --vscode-text-muted: #999999;
+            --apple-blue: #007aff;
+            --success-green: #28a745;
+            --error-red: #dc3545;
+            --warning-orange: #fd7e14;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--vscode-bg);
+            color: var(--vscode-text);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            height: 60px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: var(--apple-blue);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--vscode-text-muted);
+            font-size: 1.1rem;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-card {
+            background: var(--vscode-sidebar);
+            border: 1px solid var(--vscode-border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .test-card h3 {
+            color: var(--apple-blue);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .test-description {
+            color: var(--vscode-text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .test-button {
+            background: var(--apple-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .test-button:hover {
+            background: #0056d3;
+            transform: translateY(-1px);
+        }
+        
+        .test-button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .test-result {
+            min-height: 120px;
+            background: rgba(0, 122, 255, 0.1);
+            border: 1px solid var(--apple-blue);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.8rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        .status-pending {
+            background: var(--warning-orange);
+            color: white;
+        }
+        
+        .status-success {
+            background: var(--success-green);
+            color: white;
+        }
+        
+        .status-error {
+            background: var(--error-red);
+            color: white;
+        }
+        
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--apple-blue);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .console-log {
+            background: var(--vscode-bg);
+            border: 1px solid var(--vscode-border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.8rem;
+        }
+        
+        .global-controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .global-controls button {
+            background: var(--vscode-border);
+            color: var(--vscode-text);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-weight: 600;
+        }
+        
+        .global-controls button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo.png" alt="Sequoia Speed" class="logo">
+            <h1>🧪 Test Flujo Completo Bold</h1>
+            <p class="subtitle">Verificación integral de PSE, Botón Bancolombia y Tarjeta de Crédito</p>
+        </div>
+        
+        <div class="global-controls">
+            <button onclick="runAllTests()">🚀 Ejecutar Todos los Tests</button>
+            <button onclick="clearAllLogs()">🧹 Limpiar Logs</button>
+            <button onclick="checkWebhookStatus()">🔗 Verificar Webhook</button>
+        </div>
+        
+        <div class="test-grid">
+            <!-- Test PSE Bold -->
+            <div class="test-card">
+                <h3>🏦 PSE Bold</h3>
+                <p class="test-description">
+                    Prueba del flujo completo de pago PSE a través de Bold, 
+                    incluyendo generación de hash, carga de checkout y webhook.
+                </p>
+                <button class="test-button" onclick="testPSEBold()">
+                    Probar PSE Bold
+                </button>
+                <div id="pse-result" class="test-result">
+                    <span class="status-indicator status-pending">ESPERANDO</span>
+                    Haz clic en el botón para iniciar la prueba
+                </div>
+            </div>
+            
+            <!-- Test Botón Bancolombia -->
+            <div class="test-card">
+                <h3>🟡 Botón Bancolombia</h3>
+                <p class="test-description">
+                    Prueba del flujo completo de pago con Botón Bancolombia, 
+                    validando integración directa con cuentas Bancolombia.
+                </p>
+                <button class="test-button" onclick="testBancolombiaButton()">
+                    Probar Botón Bancolombia
+                </button>
+                <div id="bancolombia-result" class="test-result">
+                    <span class="status-indicator status-pending">ESPERANDO</span>
+                    Haz clic en el botón para iniciar la prueba
+                </div>
+            </div>
+            
+            <!-- Test Tarjeta de Crédito -->
+            <div class="test-card">
+                <h3>💳 Tarjeta de Crédito/Débito</h3>
+                <p class="test-description">
+                    Prueba del flujo completo de pago con tarjetas de crédito 
+                    y débito, validando procesamiento seguro de tarjetas.
+                </p>
+                <button class="test-button" onclick="testCreditCard()">
+                    Probar Tarjeta
+                </button>
+                <div id="tarjeta-result" class="test-result">
+                    <span class="status-indicator status-pending">ESPERANDO</span>
+                    Haz clic en el botón para iniciar la prueba
+                </div>
+            </div>
+        </div>
+        
+        <!-- Console Global -->
+        <div class="console-log" id="global-console">
+            <strong>📋 Console Log Global:</strong><br>
+            Sistema iniciado - Listo para pruebas<br>
+        </div>
+    </div>
+
+    <script>
+        // Configuración global
+        const TEST_CONFIG = {
+            baseUrl: window.location.origin,
+            testAmount: 50000,
+            currency: 'COP',
+            customer: {
+                email: 'test@sequoiaspeed.com.co',
+                fullName: 'Usuario Test Sequoia',
+                phone: '3001234567',
+                dialCode: '+57'
+            },
+            billing: {
+                address: 'Calle 123 #45-67',
+                city: 'Bogotá',
+                state: 'Cundinamarca',
+                country: 'CO'
+            }
+        };
+
+        // Sistema de logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const console = document.getElementById('global-console');
+            const typeIcon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            
+            console.innerHTML += `[${timestamp}] ${typeIcon} ${message}<br>`;
+            console.scrollTop = console.scrollHeight;
+            
+            // También log en consola del navegador
+            console[type === 'error' ? 'error' : 'log'](`[Bold Test] ${message}`);
+        }
+
+        // Función para actualizar estado de test
+        function updateTestStatus(testId, status, message) {
+            const resultDiv = document.getElementById(`${testId}-result`);
+            const statusClass = status === 'success' ? 'status-success' : 
+                               status === 'error' ? 'status-error' : 'status-pending';
+            
+            resultDiv.innerHTML = `
+                <span class="status-indicator ${statusClass}">${status.toUpperCase()}</span>
+                ${message}
+            `;
+        }
+
+        // Test PSE Bold
+        async function testPSEBold() {
+            const testId = 'pse';
+            log('🏦 Iniciando test PSE Bold...');
+            
+            updateTestStatus(testId, 'pending', '<div class="loading"><div class="spinner"></div>Probando PSE Bold...</div>');
+            
+            try {
+                const orderId = `TEST-PSE-${Date.now()}`;
+                
+                // Step 1: Generar hash
+                log(`Generando hash para orden: ${orderId}`);
+                const hashResponse = await fetch('/bold_hash.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        amount: TEST_CONFIG.testAmount,
+                        currency: TEST_CONFIG.currency
+                    })
+                });
+                
+                if (!hashResponse.ok) {
+                    throw new Error(`Error hash: ${hashResponse.status}`);
+                }
+                
+                const hashData = await hashResponse.json();
+                if (!hashData.success) {
+                    throw new Error(hashData.error || 'Error generando hash');
+                }
+                
+                log(`✅ Hash generado exitosamente: ${hashData.data.integrity_signature.substring(0, 16)}...`);
+                
+                // Step 2: Crear ventana de pago
+                const paymentUrl = `/bold_payment.php?${new URLSearchParams({
+                    order_id: orderId,
+                    amount: TEST_CONFIG.testAmount,
+                    method: 'PSE Bold',
+                    customer_data: JSON.stringify(TEST_CONFIG.customer),
+                    billing_address: JSON.stringify(TEST_CONFIG.billing)
+                })}`;
+                
+                log(`Abriendo ventana de pago PSE: ${orderId}`);
+                const paymentWindow = window.open(paymentUrl, 'testPSE', 'width=600,height=700');
+                
+                if (!paymentWindow) {
+                    throw new Error('No se pudo abrir ventana de pago (verificar bloqueador)');
+                }
+                
+                updateTestStatus(testId, 'pending', `
+                    🔄 Test en progreso<br>
+                    <strong>Orden:</strong> ${orderId}<br>
+                    <strong>Monto:</strong> $${TEST_CONFIG.testAmount.toLocaleString()}<br>
+                    <strong>Estado:</strong> Ventana de pago abierta<br>
+                    <small>Complete el pago en la ventana o ciérrela para simular cancelación</small>
+                `);
+                
+                // Monitorear ventana
+                const monitor = setInterval(() => {
+                    if (paymentWindow.closed) {
+                        clearInterval(monitor);
+                        log(`Ventana PSE cerrada para orden: ${orderId}`);
+                        updateTestStatus(testId, 'success', `
+                            ✅ Test PSE completado<br>
+                            <strong>Orden:</strong> ${orderId}<br>
+                            <strong>Estado:</strong> Ventana cerrada<br>
+                            <small>Verificar webhook y logs para resultado final</small>
+                        `);
+                    }
+                }, 1000);
+                
+                // Timeout de seguridad
+                setTimeout(() => {
+                    clearInterval(monitor);
+                    if (!paymentWindow.closed) {
+                        paymentWindow.close();
+                        log(`⏰ Timeout PSE para orden: ${orderId}`);
+                    }
+                }, 5 * 60 * 1000); // 5 minutos
+                
+            } catch (error) {
+                log(`❌ Error en test PSE: ${error.message}`, 'error');
+                updateTestStatus(testId, 'error', `❌ Error: ${error.message}`);
+            }
+        }
+
+        // Test Botón Bancolombia
+        async function testBancolombiaButton() {
+            const testId = 'bancolombia';
+            log('🟡 Iniciando test Botón Bancolombia...');
+            
+            updateTestStatus(testId, 'pending', '<div class="loading"><div class="spinner"></div>Probando Botón Bancolombia...</div>');
+            
+            try {
+                const orderId = `TEST-BANCOLOMBIA-${Date.now()}`;
+                
+                // Step 1: Generar hash
+                log(`Generando hash para orden Bancolombia: ${orderId}`);
+                const hashResponse = await fetch('/bold_hash.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        amount: TEST_CONFIG.testAmount,
+                        currency: TEST_CONFIG.currency
+                    })
+                });
+                
+                if (!hashResponse.ok) {
+                    throw new Error(`Error hash Bancolombia: ${hashResponse.status}`);
+                }
+                
+                const hashData = await hashResponse.json();
+                if (!hashData.success) {
+                    throw new Error(hashData.error || 'Error generando hash Bancolombia');
+                }
+                
+                log(`✅ Hash Bancolombia generado: ${hashData.data.integrity_signature.substring(0, 16)}...`);
+                
+                // Step 2: Crear ventana de pago
+                const paymentUrl = `/bold_payment.php?${new URLSearchParams({
+                    order_id: orderId,
+                    amount: TEST_CONFIG.testAmount,
+                    method: 'Botón Bancolombia',
+                    customer_data: JSON.stringify(TEST_CONFIG.customer),
+                    billing_address: JSON.stringify(TEST_CONFIG.billing)
+                })}`;
+                
+                log(`Abriendo ventana Bancolombia: ${orderId}`);
+                const paymentWindow = window.open(paymentUrl, 'testBancolombia', 'width=600,height=700');
+                
+                if (!paymentWindow) {
+                    throw new Error('No se pudo abrir ventana Bancolombia (verificar bloqueador)');
+                }
+                
+                updateTestStatus(testId, 'pending', `
+                    🔄 Test Bancolombia en progreso<br>
+                    <strong>Orden:</strong> ${orderId}<br>
+                    <strong>Monto:</strong> $${TEST_CONFIG.testAmount.toLocaleString()}<br>
+                    <strong>Estado:</strong> Ventana de pago abierta<br>
+                    <small>Complete el pago con su cuenta Bancolombia</small>
+                `);
+                
+                // Monitorear ventana
+                const monitor = setInterval(() => {
+                    if (paymentWindow.closed) {
+                        clearInterval(monitor);
+                        log(`Ventana Bancolombia cerrada para orden: ${orderId}`);
+                        updateTestStatus(testId, 'success', `
+                            ✅ Test Bancolombia completado<br>
+                            <strong>Orden:</strong> ${orderId}<br>
+                            <strong>Estado:</strong> Ventana cerrada<br>
+                            <small>Verificar webhook y logs para resultado final</small>
+                        `);
+                    }
+                }, 1000);
+                
+                // Timeout de seguridad
+                setTimeout(() => {
+                    clearInterval(monitor);
+                    if (!paymentWindow.closed) {
+                        paymentWindow.close();
+                        log(`⏰ Timeout Bancolombia para orden: ${orderId}`);
+                    }
+                }, 5 * 60 * 1000);
+                
+            } catch (error) {
+                log(`❌ Error en test Bancolombia: ${error.message}`, 'error');
+                updateTestStatus(testId, 'error', `❌ Error: ${error.message}`);
+            }
+        }
+
+        // Test Tarjeta de Crédito
+        async function testCreditCard() {
+            const testId = 'tarjeta';
+            log('💳 Iniciando test Tarjeta de Crédito/Débito...');
+            
+            updateTestStatus(testId, 'pending', '<div class="loading"><div class="spinner"></div>Probando Tarjeta...</div>');
+            
+            try {
+                const orderId = `TEST-TARJETA-${Date.now()}`;
+                
+                // Step 1: Generar hash
+                log(`Generando hash para orden Tarjeta: ${orderId}`);
+                const hashResponse = await fetch('/bold_hash.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        amount: TEST_CONFIG.testAmount,
+                        currency: TEST_CONFIG.currency
+                    })
+                });
+                
+                if (!hashResponse.ok) {
+                    throw new Error(`Error hash Tarjeta: ${hashResponse.status}`);
+                }
+                
+                const hashData = await hashResponse.json();
+                if (!hashData.success) {
+                    throw new Error(hashData.error || 'Error generando hash Tarjeta');
+                }
+                
+                log(`✅ Hash Tarjeta generado: ${hashData.data.integrity_signature.substring(0, 16)}...`);
+                
+                // Step 2: Crear ventana de pago
+                const paymentUrl = `/bold_payment.php?${new URLSearchParams({
+                    order_id: orderId,
+                    amount: TEST_CONFIG.testAmount,
+                    method: 'Tarjeta de Crédito o Débito',
+                    customer_data: JSON.stringify(TEST_CONFIG.customer),
+                    billing_address: JSON.stringify(TEST_CONFIG.billing)
+                })}`;
+                
+                log(`Abriendo ventana Tarjeta: ${orderId}`);
+                const paymentWindow = window.open(paymentUrl, 'testTarjeta', 'width=600,height=700');
+                
+                if (!paymentWindow) {
+                    throw new Error('No se pudo abrir ventana Tarjeta (verificar bloqueador)');
+                }
+                
+                updateTestStatus(testId, 'pending', `
+                    🔄 Test Tarjeta en progreso<br>
+                    <strong>Orden:</strong> ${orderId}<br>
+                    <strong>Monto:</strong> $${TEST_CONFIG.testAmount.toLocaleString()}<br>
+                    <strong>Estado:</strong> Ventana de pago abierta<br>
+                    <small>Complete el pago con su tarjeta de crédito o débito</small>
+                `);
+                
+                // Monitorear ventana
+                const monitor = setInterval(() => {
+                    if (paymentWindow.closed) {
+                        clearInterval(monitor);
+                        log(`Ventana Tarjeta cerrada para orden: ${orderId}`);
+                        updateTestStatus(testId, 'success', `
+                            ✅ Test Tarjeta completado<br>
+                            <strong>Orden:</strong> ${orderId}<br>
+                            <strong>Estado:</strong> Ventana cerrada<br>
+                            <small>Verificar webhook y logs para resultado final</small>
+                        `);
+                    }
+                }, 1000);
+                
+                // Timeout de seguridad
+                setTimeout(() => {
+                    clearInterval(monitor);
+                    if (!paymentWindow.closed) {
+                        paymentWindow.close();
+                        log(`⏰ Timeout Tarjeta para orden: ${orderId}`);
+                    }
+                }, 5 * 60 * 1000);
+                
+            } catch (error) {
+                log(`❌ Error en test Tarjeta: ${error.message}`, 'error');
+                updateTestStatus(testId, 'error', `❌ Error: ${error.message}`);
+            }
+        }
+
+        // Ejecutar todos los tests secuencialmente
+        async function runAllTests() {
+            log('🚀 Iniciando batería completa de tests...');
+            
+            // Deshabilitar botones
+            const buttons = document.querySelectorAll('.test-button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            try {
+                // Test 1: PSE Bold
+                await testPSEBold();
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Pausa entre tests
+                
+                // Test 2: Botón Bancolombia
+                await testBancolombiaButton();
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Pausa entre tests
+                
+                // Test 3: Tarjeta
+                await testCreditCard();
+                
+                log('✅ Batería de tests completada');
+                
+            } catch (error) {
+                log(`❌ Error en batería de tests: ${error.message}`, 'error');
+            } finally {
+                // Rehabilitar botones
+                buttons.forEach(btn => btn.disabled = false);
+            }
+        }
+
+        // Verificar estado del webhook
+        async function checkWebhookStatus() {
+            log('🔗 Verificando estado del webhook...');
+            
+            try {
+                const response = await fetch('/bold_webhook_enhanced.php');
+                const responseText = await response.text();
+                
+                if (response.ok) {
+                    log('✅ Webhook enhanced respondiendo correctamente');
+                } else {
+                    log(`⚠️ Webhook enhanced respondió con código: ${response.status}`, 'warning');
+                }
+            } catch (error) {
+                log(`❌ Error verificando webhook: ${error.message}`, 'error');
+            }
+        }
+
+        // Limpiar todos los logs
+        function clearAllLogs() {
+            document.getElementById('global-console').innerHTML = '<strong>📋 Console Log Global:</strong><br>Logs limpiados<br>';
+            
+            // Resetear estados de tests
+            updateTestStatus('pse', 'pending', 'Haz clic en el botón para iniciar la prueba');
+            updateTestStatus('bancolombia', 'pending', 'Haz clic en el botón para iniciar la prueba');
+            updateTestStatus('tarjeta', 'pending', 'Haz clic en el botón para iniciar la prueba');
+            
+            log('🧹 Logs limpiados y tests reseteados');
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🎯 Sistema de pruebas Bold iniciado');
+            log(`📊 Configuración: ${TEST_CONFIG.testAmount.toLocaleString()} ${TEST_CONFIG.currency}`);
+            log('🔧 Listo para ejecutar pruebas');
+            
+            // Verificar estado inicial del webhook
+            setTimeout(checkWebhookStatus, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -60,7 +60,7 @@ if ($pedido_id) {
       background: var(--vscode-bg);
       color: var(--vscode-text);
       margin: 0;
-      padding: 0;
+      padding: 20px;
       min-height: 100vh;
     }
 
@@ -68,7 +68,6 @@ if ($pedido_id) {
       max-width: 600px;
       margin: 0 auto;
       padding: var(--space-lg);
-      box-sizing: border-box;
     }
 
     /* Logo y título */
@@ -100,14 +99,13 @@ if ($pedido_id) {
     /* Campos del formulario */
     textarea, input[type="text"], input[type="number"], input[type="email"], input[type="tel"], input[type="file"], select {
       width: 100%;
-      max-width: 100%;
       background: var(--vscode-bg);
       border: 1px solid var(--vscode-border);
       border-radius: var(--radius-sm);
       color: var(--vscode-text);
       margin-bottom: var(--space-md);
-      font-size: 0.7rem !important;
-      padding: 6px !important;
+      font-size: 0.9rem;
+      padding: 12px;
       font-family: inherit;
       box-sizing: border-box;
     }
@@ -123,10 +121,10 @@ if ($pedido_id) {
       background: var(--apple-blue);
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 12px 24px;
       border-radius: var(--radius-md);
       font-weight: 600;
-      font-size: 0.7rem !important;
+      font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.2s;
       width: 100%;
@@ -151,7 +149,7 @@ if ($pedido_id) {
       background: var(--vscode-sidebar);
       border-radius: var(--radius-sm);
       overflow: hidden;
-      font-size: 0.7rem;
+      font-size: 0.8rem;
     }
 
     th {
@@ -178,10 +176,10 @@ if ($pedido_id) {
       background: #25D366;
       color: white;
       text-decoration: none;
-      padding: 8px var(--space-md);
+      padding: 12px var(--space-md);
       border-radius: var(--radius-md);
       margin-top: var(--space-lg);
-      font-size: 0.7rem !important;
+      font-size: 0.9rem;
       font-weight: 600;
       transition: all 0.2s;
     }
@@ -202,13 +200,13 @@ if ($pedido_id) {
       padding: var(--space-md);
       border-radius: var(--radius-sm);
       margin-bottom: var(--space-md);
-      font-size: 0.68rem !important;
+      font-size: 0.85rem;
     }
 
     .label-archivo {
       display: block;
       margin-bottom: var(--space-xs);
-      font-size: 0.7rem !important;
+      font-size: 0.9rem;
       color: var(--vscode-text-muted);
     }
 
@@ -278,29 +276,7 @@ if ($pedido_id) {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
-    /* Media queries para dispositivos móviles */
-    @media (max-width: 768px) {
-      .container {
-        max-width: 95%;
-        padding: var(--space-md);
-      }
-      
-      textarea, input, select, button {
-        font-size: 16px !important; /* Evita zoom en iOS */
-      }
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        max-width: 98%;
-        padding: var(--space-sm);
-      }
-    }
   </style>
-  
-  <!-- CSS y JS para UX mejorada -->
-  <link rel="stylesheet" href="payment_ux_enhanced.css">
 </head>
 <body>
 <div class="container">
@@ -309,16 +285,16 @@ if ($pedido_id) {
   <form id="formPedido" method="POST" enctype="multipart/form-data" action="procesar_orden.php">
     <?php if ($pedido_id && $detalles): ?>
       <!-- Pedido guardado desde orden_pedido.php -->
-      <div style="margin-bottom:8px; background:rgba(0, 122, 255, 0.1); padding:12px; border-radius:8px; border:1px solid var(--apple-blue);">
-        <p style="margin:0 0 8px 0; font-weight:600; color:var(--apple-blue);">📦 Pedido #<?= $pedido_id ?> - Completa los datos de envío</p>
+      <div style="margin-bottom:16px; background:rgba(0, 122, 255, 0.1); padding:16px; border-radius:8px; border:1px solid var(--apple-blue);">
+        <p style="margin:0 0 12px 0; font-weight:600; color:var(--apple-blue);">📦 Pedido #<?= $pedido_id ?> - Completa los datos de envío</p>
         <div class="tabla-responsive">
-          <table style="margin:0 auto; font-size:0.7rem;">
+          <table style="margin:0 auto;">
             <thead>
               <tr>
                 <th>Producto</th>
-                <th style="width: 50px; text-align:center;">Cant</th>
-                <th>Precio</th>
-                <th>Total</th>
+                <th style="width: 60px; text-align:center;">Cant</th>
+                <th style="text-align:right;">Precio</th>
+                <th style="text-align:right;">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -346,6 +322,7 @@ if ($pedido_id) {
         value="$<?= number_format($monto, 0, ',', '.') ?>"
         readonly
         required>
+        
     <?php elseif ($pedido_id): ?>
       <div style="color:#ff4d4d;text-align:center;margin:20px 0;">
         No se encontraron detalles para este pedido.
@@ -360,6 +337,7 @@ if ($pedido_id) {
         value="$<?= number_format($monto, 0, ',', '.') ?>"
         readonly
         required>
+        
     <?php else: ?>
       <!-- Sin número de pedido, el usuario puede ingresar el monto manualmente -->
       <textarea name="pedido" rows="3" placeholder="Indique su pedido. Indicar producto, tallas y cantidades" required></textarea>
@@ -400,14 +378,12 @@ if ($pedido_id) {
 </div>
 <script>
   document.getElementById('metodo_pago').addEventListener('change', function() {
-    console.log('🔥 EVENT LISTENER: Método de pago cambiado a:', this.value);
     const value = this.value;
     let info = "";
     if(value === "Nequi" || value === "Transfiya") info = "<b>Nequi / Transfiya:</b> 3213260357";
     else if(value === "Bancolombia") info = "<b>Bancolombia:</b> Ahorros 03500000175 Ronald Infante";
     else if(value === "Provincial") info = "<b>Provincial:</b> Ahorros 0958004765 Ronald Infante";
     else if(value === "PSE Bold") {
-      console.log('🔥 Método Bold seleccionado: PSE Bold');
       info = `<div class="pse-bold-container">
         <b>PSE Bold - Pago Seguro:</b>
         <p style="color: var(--vscode-text-muted); margin: 8px 0;">Pague de manera segura sin salir de esta página</p>
@@ -415,7 +391,6 @@ if ($pedido_id) {
       </div>`;
     }
     else if(value === "Botón Bancolombia") {
-      console.log('🔥 Método Bold seleccionado: Botón Bancolombia');
       info = `<div class="pse-bold-container">
         <b>Botón Bancolombia - Pago Seguro:</b>
         <p style="color: var(--vscode-text-muted); margin: 8px 0;">Pague directamente con su cuenta Bancolombia de forma segura</p>
@@ -423,7 +398,6 @@ if ($pedido_id) {
       </div>`;
     }
     else if(value === "Tarjeta de Crédito o Débito") {
-      console.log('🔥 Método Bold seleccionado: Tarjeta de Crédito o Débito');
       info = `<div class="pse-bold-container">
         <b>Tarjeta de Crédito o Débito - Pago Seguro:</b>
         <p style="color: var(--vscode-text-muted); margin: 8px 0;">Pague con cualquier tarjeta de crédito o débito de forma segura</p>
@@ -434,156 +408,37 @@ if ($pedido_id) {
     else if(value === "Efectivo") info = "<b>Efectivo:</b> En tienda o recaudo al recibir";
     else if(value === "Recaudo al Entregar") info = "<b>Recaudo al Entregar:</b> No requiere pago anticipado";
     
-    console.log('🔄 Actualizando info_pago con:', info.substring(0, 50) + '...');
     document.getElementById('info_pago').innerHTML = info;
     
     // Inicializar Bold PSE si es la opción seleccionada
     if(value === "PSE Bold" || value === "Botón Bancolombia" || value === "Tarjeta de Crédito o Débito") {
-      console.log('⏰ Programando inicialización Bold con verificación de container...');
-      
-      // Función para verificar que el container existe antes de inicializar
-      function initializeBoldWhenReady(maxAttempts = 10, attempt = 1) {
-        console.log(`🔍 Intento ${attempt}/${maxAttempts}: Verificando container...`);
-        
-        const container = document.getElementById('bold-payment-container');
-        
-        if (container) {
-          console.log('✅ Container encontrado, ejecutando initializeBoldPayment...');
-          try {
-            if (typeof initializeBoldPayment === 'function') {
-              console.log('🎯 Intentando ejecutar initializeBoldPayment...');
-              const result = initializeBoldPayment();
-              console.log('✅ initializeBoldPayment ejecutada, resultado:', result);
-              
-              if (result === false) {
-                console.warn('⚠️ initializeBoldPayment retornó false, puede haber un problema');
-              } else if (result === true) {
-                console.log('🎉 initializeBoldPayment ejecutada exitosamente');
-              }
-            } else {
-              console.error('❌ initializeBoldPayment NO está definida como función');
-            }
-          } catch (error) {
-            console.error('❌ ERROR al ejecutar initializeBoldPayment():', error);
-            console.error('❌ Stack trace:', error.stack);
-          }
-        } else {
-          console.log(`⏳ Container no encontrado en intento ${attempt}, reintentando...`);
-          if (attempt < maxAttempts) {
-            setTimeout(() => initializeBoldWhenReady(maxAttempts, attempt + 1), 100);
-          } else {
-            console.error('❌ Container no encontrado después de', maxAttempts, 'intentos');
-          }
-        }
-      }
-      
-      // Iniciar verificación con un pequeño delay
-      setTimeout(() => initializeBoldWhenReady(), 50);
-    }
-  });
-
-  // Listener para actualizar monto dinámicamente en pedidos manuales
-  document.addEventListener('DOMContentLoaded', function() {
-    const montoField = document.querySelector('input[name="monto"]');
-    if (montoField && !montoField.readOnly) {
-      montoField.addEventListener('input', function() {
-        // Si hay un método Bold seleccionado, reinicializar
-        const metodoPago = document.getElementById('metodo_pago').value;
-        if (metodoPago === "PSE Bold" || metodoPago === "Botón Bancolombia" || metodoPago === "Tarjeta de Crédito o Débito") {
-          const container = document.getElementById('bold-payment-container');
-          if (container) {
-            container.innerHTML = '<div class="bold-loading">Actualizando monto...</div>';
-            setTimeout(() => {
-              console.log('🔄 Ejecutando initializeBoldPayment desde setTimeout...');
-              const result = initializeBoldPayment();
-              console.log('✅ Resultado de initializeBoldPayment en setTimeout:', result);
-              
-              if (result === false) {
-                console.error('❌ initializeBoldPayment falló en setTimeout');
-                if (container) {
-                  container.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 16px;">Error al actualizar el pago. Intente refrescar la página.</div>';
-                }
-              } else if (result === undefined) {
-                console.warn('⚠️ initializeBoldPayment retornó undefined en setTimeout');
-              } else {
-                console.log('🎉 initializeBoldPayment exitosa en setTimeout');
-              }
-            }, 500);
-          }
-        }
-      });
+      initializeBoldPayment();
     }
   });
 
   // Función para inicializar el pago Bold PSE con ventana separada
-  function initializeBoldPayment() {
-    // Log inmediato para confirmar que la función se ejecuta
-    console.log('🚀 initializeBoldPayment() INICIADA');
-    console.log('🕐 Timestamp:', new Date().toISOString());
+  async function initializeBoldPayment() {
+    const container = document.getElementById('bold-payment-container');
+    if (!container) {
+      console.error('Container Bold no encontrado');
+      return;
+    }
+
+    // Mostrar información del pago
+    container.innerHTML = '<div class="bold-loading">Preparando pago seguro...</div>';
+
+    // Generar ID único para la orden
+    const orderId = 'SEQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     
-    // Capturar errores globales durante la ejecución
-    window.addEventListener('error', function(e) {
-      console.error('❌ ERROR GLOBAL durante initializeBoldPayment:', e.message, 'en', e.filename, 'línea', e.lineno);
-    });
+    // Obtener el monto del pedido si existe
+    const monto = <?php echo $monto > 0 ? $monto : 0; ?>;
+    
+    // Obtener el método de pago seleccionado
+    const metodoPago = document.getElementById('metodo_pago').value;
+    
+    console.log('Preparando Bold con método:', metodoPago, 'monto:', monto);
     
     try {
-      console.log('🔧 PASO 1: Intentando obtener container...');
-      
-      const container = document.getElementById('bold-payment-container');
-      console.log('🔍 Container encontrado:', container);
-      
-      if (!container) {
-        console.error('❌ Container Bold no encontrado - RETORNANDO FALSE');
-        return false;
-      }
-      
-      console.log('✅ Container Bold encontrado y verificado');
-
-      // Mostrar información del pago
-      console.log('🔧 PASO 2: Intentando mostrar loading...');
-      container.innerHTML = '<div style="text-align: center; padding: 16px; color: #007aff;">Preparando pago seguro...</div>';
-      console.log('✅ Loading mostrado exitosamente');
-
-      // Generar ID único para la orden
-      console.log('🔧 PASO 3: Generando ID de orden...');
-      const orderId = 'SEQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-      console.log('✅ ID orden generado:', orderId);
-    
-      // Obtener el monto del pedido con manejo seguro
-      console.log('🔧 PASO 4: Obteniendo monto...');
-      let monto = <?php echo json_encode($monto > 0 ? $monto : 0); ?>;
-      console.log('✅ Monto desde PHP:', monto, 'Tipo:', typeof monto);
-      
-      // Si no hay monto del PHP, intentar obtenerlo del campo del formulario
-      if (!monto || monto === 0) {
-        console.log('🔧 PASO 5: Intentando obtener monto del formulario...');
-        const montoField = document.querySelector('input[name="monto"]');
-        if (montoField && montoField.value) {
-          // Remover formato de moneda y convertir a número
-          const rawValue = montoField.value.replace(/[^\d]/g, '');
-          monto = parseInt(rawValue) || 0;
-          console.log('✅ Monto desde formulario:', monto);
-        } else {
-          console.log('⚠️ No se encontró campo de monto en formulario');
-        }
-      }
-      
-      // Obtener el método de pago seleccionado
-      console.log('🔧 PASO 6: Obteniendo método de pago...');
-      const metodoPago = document.getElementById('metodo_pago').value;
-      console.log('✅ Método de pago:', metodoPago);
-      
-      console.log('🔧 PASO 7: Preparando Bold con método:', metodoPago, 'monto:', monto);
-      
-      // Validar que hay un monto válido (permitir monto 0 para checkout abierto)
-      if (monto === null || monto === undefined || (typeof monto === 'string' && monto.trim() === '')) {
-        console.log('⚠️ Inicializando Bold con checkout abierto (sin monto específico)');
-        monto = 0; // Monto abierto para que el cliente defina el valor
-      }
-      
-      console.log('💰 Monto final para Bold:', monto);
-      
-      console.log('🔄 Iniciando proceso de preparación Bold...');
       // Obtener datos del cliente del formulario
       const customerData = {
         email: document.querySelector('input[name="correo"]')?.value || '',
@@ -591,7 +446,6 @@ if ($pedido_id) {
         phone: document.querySelector('input[name="telefono"]')?.value || '',
         dialCode: '+57'
       };
-      console.log('👤 Datos del cliente:', customerData);
 
       // Datos de dirección de facturación
       const billingAddress = {
@@ -600,7 +454,6 @@ if ($pedido_id) {
         state: 'Cundinamarca',
         country: 'CO'
       };
-      console.log('📍 Dirección de facturación:', billingAddress);
 
       // Crear URL para la ventana de pago
       const paymentParams = new URLSearchParams({
@@ -612,10 +465,8 @@ if ($pedido_id) {
       });
 
       const paymentUrl = 'bold_payment.php?' + paymentParams.toString();
-      console.log('🔗 URL de pago generada:', paymentUrl);
       
       // Mostrar botón para abrir ventana de pago
-      console.log('🎨 Creando botón de pago...');
       container.innerHTML = `
         <div style="text-align: center; padding: var(--space-md);">
           <button type="button" onclick="openPaymentWindow('${paymentUrl}', '${orderId}')" 
@@ -630,8 +481,6 @@ if ($pedido_id) {
           </p>
         </div>
       `;
-      
-      console.log('✅ Botón de pago creado exitosamente');
 
       // Guardar información del pedido para uso posterior
       window.currentOrderData = {
@@ -641,24 +490,10 @@ if ($pedido_id) {
         customer: customerData,
         billing: billingAddress
       };
-      
-      console.log('💾 Datos del pedido guardados:', window.currentOrderData);
-      console.log('🎉 initializeBoldPayment() COMPLETADA EXITOSAMENTE');
-      console.log('🕐 Timestamp final:', new Date().toISOString());
-      
-      return true; // Retornar éxito
 
     } catch (error) {
-      console.error('❌ ERROR CAPTURADO en initializeBoldPayment:', error);
-      console.error('❌ Mensaje:', error.message);
-      console.error('❌ Stack trace:', error.stack);
-      console.error('❌ Timestamp error:', new Date().toISOString());
-      
-      const container = document.getElementById('bold-payment-container');
-      if (container) {
-        container.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 16px;">Error al inicializar el pago. Intente nuevamente.</div>';
-      }
-      return false; // Retornar error
+      console.error('Error al preparar Bold:', error);
+      showBoldError('Error al preparar el checkout: ' + error.message);
     }
   }
 
@@ -861,22 +696,6 @@ if ($pedido_id) {
     }
   });
 
-</script>
-
-<!-- JavaScript para UX mejorada -->
-<script src="payment_ux_enhanced.js"></script>
-<script>
-// Inicializar el sistema de UX mejorada
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar el enhancer
-    const paymentUX = new PaymentUXEnhancer();
-    
-    // Configurar el formulario
-    const form = document.getElementById('formPedido');
-    if (form) {
-        paymentUX.init(form);
-    }
-});
 </script>
 </body>
 </html>

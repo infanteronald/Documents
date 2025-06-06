@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Test Container Fix - Bold Payment</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #fff;
+            line-height: 1.6;
+        }
+        .hero {
+            background: linear-gradient(135deg, #007aff, #51cf66);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .section {
+            background: #2d2d2d;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #404040;
+        }
+        .success { background: #1e4d1e; border-color: #51cf66; }
+        .warning { background: #4d3d1e; border-color: #ffd43b; }
+        .error { background: #4d1e1e; border-color: #ff6b6b; }
+        .log {
+            background: #000;
+            color: #0ff;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 600;
+        }
+        button:hover { background: #0056cc; }
+        .btn-success { background: #51cf66; }
+        .btn-warning { background: #ffd43b; color: #000; }
+        .btn-error { background: #ff6b6b; }
+        .test-container {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            min-height: 100px;
+            border: 2px dashed #666;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        .status.success { background: #1e4d1e; color: #51cf66; }
+        .status.error { background: #4d1e1e; color: #ff6b6b; }
+        .status.info { background: #1e3a4d; color: #74c0fc; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>🔧 Test Container Fix</h1>
+        <p>Verificación de solución de timing del container Bold</p>
+    </div>
+
+    <div class="section success">
+        <h2>✅ Mejoras Aplicadas</h2>
+        <ul>
+            <li><strong>Verificación de container:</strong> Reintenta hasta 10 veces si el container no está disponible</li>
+            <li><strong>Búsqueda robusta:</strong> Busca containers alternativos si el principal no existe</li>
+            <li><strong>Logging mejorado:</strong> Información detallada sobre cada intento</li>
+            <li><strong>Manejo de errores:</strong> Retorna valores boolean consistentes</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Tests de Verificación</h2>
+        
+        <button onclick="testWithoutContainer()">❌ Test Sin Container</button>
+        <button onclick="testWithDelayedContainer()">⏳ Test Container Retrasado</button>
+        <button onclick="testWithExistingContainer()">✅ Test Container Existente</button>
+        <button onclick="testAlternativeContainers()">🔍 Test Containers Alternativos</button>
+        <button onclick="clearLog()">🧹 Limpiar Log</button>
+        
+        <div id="status" class="status info">
+            Listo para ejecutar tests de container...
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Containers de prueba -->
+    <div class="test-container" id="test-area">
+        <h3>📦 Área de Test de Containers</h3>
+        <p>Los containers aparecerán aquí durante las pruebas</p>
+    </div>
+
+    <script>
+        let logElement = document.getElementById('log');
+        let statusElement = document.getElementById('status');
+        let testArea = document.getElementById('test-area');
+        
+        function updateStatus(message, type = 'info') {
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const colors = {
+                info: '#0ff',
+                error: '#ff6b6b',
+                success: '#51cf66',
+                warning: '#ffd43b'
+            };
+            
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logElement.innerHTML += `<span style="color: ${colors[type]}">${logEntry}</span>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            logElement.innerHTML = '';
+            updateStatus('Log limpiado', 'info');
+        }
+
+        // Simulación de la función mejorada de verificación de container
+        function initializeBoldWhenReady(maxAttempts = 10, attempt = 1) {
+            log(`🔍 Intento ${attempt}/${maxAttempts}: Verificando container...`, 'info');
+            
+            const container = document.getElementById('bold-payment-container');
+            
+            if (container) {
+                log('✅ Container encontrado, ejecutando initializeBoldPayment...', 'success');
+                try {
+                    const result = simulateInitializeBoldPayment();
+                    log(`✅ initializeBoldPayment ejecutada, resultado: ${result}`, result ? 'success' : 'warning');
+                    
+                    if (result === false) {
+                        log('⚠️ initializeBoldPayment retornó false, puede haber un problema', 'warning');
+                    } else if (result === true) {
+                        log('🎉 initializeBoldPayment ejecutada exitosamente', 'success');
+                    }
+                    return result;
+                } catch (error) {
+                    log(`❌ ERROR al ejecutar initializeBoldPayment: ${error.message}`, 'error');
+                    return false;
+                }
+            } else {
+                log(`⏳ Container no encontrado en intento ${attempt}, reintentando...`, 'warning');
+                if (attempt < maxAttempts) {
+                    setTimeout(() => initializeBoldWhenReady(maxAttempts, attempt + 1), 100);
+                } else {
+                    log(`❌ Container no encontrado después de ${maxAttempts} intentos`, 'error');
+                    return false;
+                }
+            }
+        }
+
+        // Simulación de búsqueda robusta de containers
+        function findAlternativeContainer() {
+            log('🔍 Container principal no encontrado, buscando alternativos...', 'warning');
+            
+            const alternativeContainers = [
+                { selector: '.pse-bold-container', name: 'PSE Bold Container' },
+                { selector: '#info_pago', name: 'Info Pago' },
+                { selector: '[id*="bold"]', name: 'Cualquier elemento con "bold" en ID' },
+                { selector: '[class*="bold"]', name: 'Cualquier elemento con "bold" en clase' },
+                { selector: '#test-area', name: 'Área de test (fallback)' }
+            ];
+            
+            for (let i = 0; i < alternativeContainers.length; i++) {
+                const container = document.querySelector(alternativeContainers[i].selector);
+                if (container) {
+                    log(`✅ Container alternativo encontrado: ${alternativeContainers[i].name}`, 'success');
+                    log(`📍 Elemento: ${container.tagName}${container.id ? '#' + container.id : ''}${container.className ? '.' + container.className : ''}`, 'info');
+                    return container;
+                }
+            }
+            
+            log('❌ No se pudo encontrar ningún container válido', 'error');
+            return null;
+        }
+
+        // Simulación de initializeBoldPayment
+        function simulateInitializeBoldPayment() {
+            log('🚀 Simulando initializeBoldPayment...', 'info');
+            
+            // Buscar container principal
+            let container = document.getElementById('bold-payment-container');
+            
+            if (!container) {
+                log('⚠️ Container principal no encontrado, buscando alternativos...', 'warning');
+                container = findAlternativeContainer();
+            }
+            
+            if (!container) {
+                log('❌ No se encontró ningún container válido', 'error');
+                return false;
+            }
+            
+            // Simular creación de botón Bold
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px; background: #1e4d1e; border-radius: 8px;">
+                    <div style="color: #51cf66; font-size: 1.2rem; margin-bottom: 10px;">
+                        ✅ Función Ejecutada Correctamente
+                    </div>
+                    <button style="background: #007aff; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">
+                        💳 Pagar con Bold - Simulado
+                    </button>
+                    <div style="margin-top: 10px; font-size: 0.9rem; color: #888;">
+                        Container: ${container.id || container.className || 'alternativo'}
+                    </div>
+                </div>
+            `;
+            
+            log('🎨 Botón Bold creado exitosamente', 'success');
+            return true;
+        }
+
+        // Tests específicos
+        function testWithoutContainer() {
+            log('═══════════════════════════════════════', 'info');
+            log('🧪 TEST 1: SIN CONTAINER', 'warning');
+            log('═══════════════════════════════════════', 'info');
+            
+            // Asegurar que no hay container
+            const existing = document.getElementById('bold-payment-container');
+            if (existing) existing.remove();
+            
+            updateStatus('Test 1: Verificando comportamiento sin container', 'info');
+            
+            const result = simulateInitializeBoldPayment();
+            
+            if (result === true) {
+                updateStatus('✅ Test 1 EXITOSO: Encontró container alternativo', 'success');
+            } else {
+                updateStatus('❌ Test 1: No se pudo resolver la falta de container', 'error');
+            }
+        }
+
+        function testWithDelayedContainer() {
+            log('═══════════════════════════════════════', 'info');
+            log('🧪 TEST 2: CONTAINER RETRASADO', 'warning');
+            log('═══════════════════════════════════════', 'info');
+            
+            updateStatus('Test 2: Simulando container que aparece con retraso', 'info');
+            
+            // Eliminar container existente
+            const existing = document.getElementById('bold-payment-container');
+            if (existing) existing.remove();
+            
+            // Iniciar verificación
+            initializeBoldWhenReady();
+            
+            // Crear container después de un retraso
+            setTimeout(() => {
+                log('📦 Creando container con retraso...', 'info');
+                const container = document.createElement('div');
+                container.id = 'bold-payment-container';
+                container.style.cssText = 'background: #333; padding: 15px; border-radius: 5px; margin: 10px 0;';
+                container.innerHTML = '<p>Container Bold creado con retraso</p>';
+                testArea.appendChild(container);
+                
+                updateStatus('✅ Test 2: Container creado, verificando detección...', 'success');
+            }, 250);
+        }
+
+        function testWithExistingContainer() {
+            log('═══════════════════════════════════════', 'info');
+            log('🧪 TEST 3: CONTAINER EXISTENTE', 'warning');
+            log('═══════════════════════════════════════', 'info');
+            
+            updateStatus('Test 3: Creando container antes de la verificación', 'info');
+            
+            // Crear container inmediatamente
+            const existing = document.getElementById('bold-payment-container');
+            if (existing) existing.remove();
+            
+            const container = document.createElement('div');
+            container.id = 'bold-payment-container';
+            container.style.cssText = 'background: #333; padding: 15px; border-radius: 5px; margin: 10px 0;';
+            container.innerHTML = '<p>Container Bold pre-existente</p>';
+            testArea.appendChild(container);
+            
+            log('📦 Container creado antes de la verificación', 'success');
+            
+            setTimeout(() => {
+                const result = initializeBoldWhenReady();
+                if (result !== false) {
+                    updateStatus('✅ Test 3 EXITOSO: Container detectado inmediatamente', 'success');
+                }
+            }, 50);
+        }
+
+        function testAlternativeContainers() {
+            log('═══════════════════════════════════════', 'info');
+            log('🧪 TEST 4: CONTAINERS ALTERNATIVOS', 'warning');
+            log('═══════════════════════════════════════', 'info');
+            
+            updateStatus('Test 4: Probando búsqueda de containers alternativos', 'info');
+            
+            // Eliminar container principal
+            const existing = document.getElementById('bold-payment-container');
+            if (existing) existing.remove();
+            
+            // Crear container alternativo
+            const altContainer = document.createElement('div');
+            altContainer.className = 'pse-bold-container';
+            altContainer.style.cssText = 'background: #4d3d1e; padding: 15px; border-radius: 5px; margin: 10px 0; border: 2px solid #ffd43b;';
+            altContainer.innerHTML = '<p>Container alternativo PSE Bold</p>';
+            testArea.appendChild(altContainer);
+            
+            log('📦 Container alternativo creado (pse-bold-container)', 'warning');
+            
+            setTimeout(() => {
+                const result = simulateInitializeBoldPayment();
+                if (result === true) {
+                    updateStatus('✅ Test 4 EXITOSO: Container alternativo encontrado y usado', 'success');
+                } else {
+                    updateStatus('❌ Test 4: No se pudo usar container alternativo', 'error');
+                }
+            }, 50);
+        }
+
+        // Inicialización
+        log('🚀 Sistema de Test de Container Fix Inicializado', 'success');
+        log('Verificando mejoras de timing y búsqueda robusta de containers', 'info');
+        updateStatus('Sistema listo para tests de container', 'info');
+    </script>
+</body>
+</html>

@@ -5,16 +5,15 @@
 ### 📧 **Destinatarios Actualizados:**
 
 **EMAIL AL ADMINISTRADOR:**
-- **Para**: ronald@sequoiaspeed.com
+- **Para**: ventas@sequoiaspeed.com.co
 - **Con copia (Cc)**: 
   - jorgejosecardozo@gmail.com
-  - ventas@sequoiaspeed.com.co
 
 **EMAIL AL CLIENTE:**
 - **Para**: [email del cliente]
 - **Con copia oculta (Bcc)**:
-  - ronald@sequoiaspeed.com
   - jorgejosecardozo@gmail.com
+  - ventas@sequoiaspeed.com.co
 
 ### 📮 **Remitente Actualizado:**
 - **From**: `ventas@sequoiaspeed.com.co`

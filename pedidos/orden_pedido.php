@@ -409,6 +409,15 @@ while ($row = $res_cat->fetch_assoc()) {
             background: #e60026;
         }
 
+        .btn-success {
+            background: #34c759;
+        }
+
+        .btn-success:hover {
+            background: #30a14e;
+            box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+        }
+
         /* Cart section */
         .totalizador {
             margin-top: 32px;
@@ -1127,7 +1136,10 @@ while ($row = $res_cat->fetch_assoc()) {
     <div id="pedido-url" style="display:none; margin-top:20px; text-align:center;">
         <p>Tu pedido ha sido generado. Comparte este enlace:</p>
         <input type="text" id="pedido-link" readonly style="width:80%;padding:8px;">
-        <button class="btn" onclick="copiarLink()">Copiar</button>
+        <div style="margin-top:12px;">
+            <button class="btn" onclick="copiarLink()">Copiar</button>
+            <button class="btn btn-success" onclick="nuevoPedido()" style="margin-left:8px;">Nuevo Pedido</button>
+        </div>
     </div>
 </div>
 <script>
@@ -1560,6 +1572,43 @@ function copiarLink() {
     } catch (err) {
         console.error('Error al copiar:', err);
         mostrarMensaje('Error al copiar el enlace', 'error');
+    }
+}
+
+function nuevoPedido() {
+    // Confirmar si el usuario realmente quiere limpiar todo
+    if (confirm('¿Estás seguro de que quieres empezar un nuevo pedido? Se perderá el enlace actual.')) {
+        // Limpiar todo y reiniciar el formulario
+        carrito = [];
+        productosPersonalizados = [];
+        
+        // Limpiar formularios
+        document.getElementById('categoria').selectedIndex = 0;
+        document.getElementById('busqueda').value = '';
+        document.getElementById('custom-nombre').value = '';
+        document.getElementById('custom-precio').value = '';
+        document.getElementById('custom-talla').value = '';
+        document.getElementById('custom-cantidad').value = '1';
+        
+        // Limpiar lista de productos
+        document.getElementById('productos-list').innerHTML = '<p>Selecciona una categoría o escribe un nombre para buscar productos.</p>';
+        
+        // Actualizar carrito vacío
+        actualizarCarrito();
+        
+        // Ocultar la sección de URL y mostrar el botón de finalizar
+        document.getElementById('pedido-url').style.display = 'none';
+        document.getElementById('finalizar-pedido').style.display = 'block';
+        
+        // Remover cualquier mensaje de éxito/error
+        const mensajes = document.querySelectorAll('.success-message, .error-message');
+        mensajes.forEach(msg => msg.remove());
+        
+        // Mostrar mensaje de confirmación
+        mostrarMensaje('Formulario limpiado. Puedes empezar un nuevo pedido.', 'success');
+        
+        // Hacer scroll hacia arriba para que el usuario vea el formulario limpio
+        document.querySelector('.search-section').scrollIntoView({ behavior: 'smooth' });
     }
 }
 </script>
