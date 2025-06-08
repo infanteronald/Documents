@@ -1143,8 +1143,7 @@ while ($row = $res_cat->fetch_assoc()) {
     </div>
 </div>
 
-<!-- Sistema de migración moderna - FASE 2 -->
-<?php require_once 'migration-helper.php'; echo MigrationHelper::getInstance()->injectMigrationAssets(); ?>
+<!-- Sistema de archivos CSS/JS optimizados -->
 
 <script>
 let carrito = [];

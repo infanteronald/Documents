@@ -19,7 +19,16 @@ if ($pedido_id) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Orden de Pedido - Sequoia Speed</title>
+  
+  <!-- CSS optimizados del sistema (combinados) -->
+  <link rel="stylesheet" href="assets/combined/app.min.css">
+  
+  <!-- Scripts externos -->
   <script src="https://checkout.bold.co/library/boldPaymentButton.js"></script>
+  
+  <!-- JavaScript optimizados del sistema -->
+  <script defer src="assets/combined/app.min.js"></script>
+  <script defer src="assets/optimized/js/lazy-loader.min.js"></script>
   <style>
     /* Estilo Apple oscuro como VSCode con botones azules */
     :root {
@@ -863,8 +872,7 @@ if ($pedido_id) {
 
 </script>
 
-<!-- Sistema de migración moderna - FASE 2 -->
-<?php require_once 'migration-helper.php'; echo MigrationHelper::getInstance()->injectMigrationAssets(); ?>
+<!-- Sistema de archivos CSS/JS optimizados -->
 
 <script>
 // Inicializar el sistema de pago moderno
