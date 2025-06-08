@@ -1,0 +1,58 @@
+{
+  "phase4": {
+    "version": "1.0.0",
+    "startDate": "2024-01-20",
+    "objectives": {
+      "mvcMigration": {
+        "status": "in-progress",
+        "target": "100% legacy file migration",
+        "priority": "critical"
+      },
+      "advancedRouting": {
+        "status": "pending",
+        "target": "RESTful API complete",
+        "priority": "high"
+      },
+      "databaseOptimization": {
+        "status": "pending", 
+        "target": "< 100ms query response",
+        "priority": "high"
+      },
+      "productionReady": {
+        "status": "pending",
+        "target": "zero legacy files in root",
+        "priority": "critical"
+      }
+    },
+    "legacyFiles": {
+      "critical": [
+        "listar_pedidos.php",
+        "guardar_pedido.php", 
+        "actualizar_estado.php",
+        "productos_por_categoria.php"
+      ],
+      "secondary": [
+        "ver_detalle_pedido.php",
+        "exportar_excel.php",
+        "generar_pdf.php",
+        "subir_guia.php"
+      ],
+      "payment": [
+        "bold_payment.php",
+        "bold_webhook_enhanced.php",
+        "procesar_pago_manual.php"
+      ]
+    },
+    "performance": {
+      "targetResponseTime": "< 200ms",
+      "targetCoverage": "> 80%",
+      "targetOptimization": "> 50%"
+    },
+    "monitoring": {
+      "errorTracking": true,
+      "performanceMetrics": true,
+      "userAnalytics": true,
+      "systemHealth": true
+    }
+  }
+}

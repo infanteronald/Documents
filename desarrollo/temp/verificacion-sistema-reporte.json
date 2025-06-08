@@ -1,0 +1,33 @@
+{
+    "timestamp": "2025-06-08 07:39:21",
+    "estado_general": "CR\u00cdTICO",
+    "metricas": {
+        "archivos_esenciales": {
+            "total": 18,
+            "encontrados": 18,
+            "porcentaje": 100
+        },
+        "estructura_mvc": {
+            "directorios_verificados": 9,
+            "directorios_ok": 9
+        },
+        "apis": {
+            "total": 4,
+            "funcionando": 3
+        },
+        "integracion_bold": {
+            "archivos_total": 4,
+            "archivos_ok": 4
+        }
+    },
+    "errores": [
+        "Error en configuraci\u00f3n de BD: Connection refused",
+        "Conexi\u00f3n a base de datos fallida",
+        "API faltante: public\/api\/reports\/ventas.php"
+    ],
+    "warnings": [
+        "Asset faltante: public\/assets\/css\/sequoia-unified.css"
+    ],
+    "total_errores": 3,
+    "total_warnings": 1
+}

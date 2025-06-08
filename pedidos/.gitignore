@@ -1,0 +1,87 @@
+# Archivos y directorios de sistemas operativos
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Directorios de dependencias
+/vendor/
+/node_modules/
+
+# Archivos de entorno y configuración
+.env
+config.php
+conexion_local.php
+
+# Archivos temporales
+*.tmp
+*.temp
+*.cache
+*.log
+
+# Archivos de IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
+.komodotools/
+*.code-workspace
+
+# Archivos de uploads y media que no se deberían versionar
+/uploads/*
+/comprobantes/*
+/guias/*
+!/uploads/.gitkeep
+!/comprobantes/.gitkeep
+!/guias/.gitkeep
+
+# Archivos de respaldo
+*.bak
+*.backup
+*.old
+*~
+
+# Archivos de pruebas y desarrollo
+/tests/fixtures/temp_*
+/tests/logs/
+/tests/coverage/
+/tests/reports/
+
+# Archivos de debug y logs específicos
+debug_*.log
+test_*.log
+error_*.log
+
+# Archivos temporales de pruebas
+/tests/temp/
+test_temp_*
+debug_temp_*
+
+# Directorio otros debe mantenerse vacío (archivos ya organizados en tests/)
+/otros/*
+!/otros/.gitkeep
+
+# Prevenir archivos de pruebas en la raíz (deben ir en /tests/)
+/bold_*test*
+/bold_*debug*
+/bold_*simulator*
+/*_test.php
+/*_debug.php
+/*_test.html
+/*_debug.html
+/test_*.php
+/test_*.html
+/debug_*.php
+/debug_*.html
+/conexion_local.php
+/*.sqlite
+/*.db
+/bold_test*
+
+# Prevenir archivos de práctica/lecciones de Git en la raíz
+/sistema_*.php
+/ui-mejoras.*
+/*_ejemplo.*
+/*_practica.*
+/git_*
+/ejemplo_*

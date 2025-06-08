@@ -1,0 +1,200 @@
+{
+    "timestamp": "2025-06-08 07:25:24",
+    "legacy_files": {
+        "listar_pedidos.php": {
+            "info": {
+                "controller": "PedidoController",
+                "methods": [
+                    "index",
+                    "filter",
+                    "search",
+                    "paginate"
+                ],
+                "complexity": "high",
+                "priority": 1
+            },
+            "metrics": {
+                "lines": 442,
+                "functions": 1,
+                "queries": 2,
+                "complexity_score": 4
+            },
+            "functions": [
+                "estado_pill"
+            ],
+            "queries": [
+                "$result = $conn->query(",
+                "$total_result = $conn->query("
+            ],
+            "dependencies": [
+                "conexion.php",
+                "migration-helper.php"
+            ]
+        },
+        "guardar_pedido.php": {
+            "info": {
+                "controller": "PedidoController",
+                "methods": [
+                    "store",
+                    "validateOrder"
+                ],
+                "complexity": "high",
+                "priority": 1
+            },
+            "metrics": {
+                "lines": 204,
+                "functions": 0,
+                "queries": 9,
+                "complexity_score": 15
+            },
+            "functions": [],
+            "queries": [
+                "$result = $conn->query(",
+                "$stmt_main_pedido = $conn->prepare(",
+                "$stmt_main_pedido->execute(",
+                "$stmt_detalle_pedido = $conn->prepare(",
+                "$checkStmt = $conn->prepare(",
+                "$checkStmt->execute(",
+                "$insertProductStmt = $conn->prepare(",
+                "$insertProductStmt->execute(",
+                "$stmt_detalle_pedido->execute("
+            ],
+            "dependencies": [
+                "conexion.php"
+            ]
+        },
+        "actualizar_estado.php": {
+            "info": {
+                "controller": "PedidoController",
+                "methods": [
+                    "updateStatus",
+                    "trackChanges"
+                ],
+                "complexity": "medium",
+                "priority": 2
+            },
+            "metrics": {
+                "lines": 10,
+                "functions": 0,
+                "queries": 1,
+                "complexity_score": 0
+            },
+            "functions": [],
+            "queries": [
+                "$conn->query("
+            ],
+            "dependencies": [
+                "conexion.php"
+            ]
+        },
+        "productos_por_categoria.php": {
+            "info": {
+                "controller": "ProductoController",
+                "methods": [
+                    "getByCategory",
+                    "categoryFilter"
+                ],
+                "complexity": "medium",
+                "priority": 2
+            },
+            "metrics": {
+                "lines": 57,
+                "functions": 0,
+                "queries": 2,
+                "complexity_score": 1
+            },
+            "functions": [],
+            "queries": [
+                "$stmt = $conn->prepare(",
+                "$stmt->execute("
+            ],
+            "dependencies": [
+                "conexion.php"
+            ]
+        },
+        "ver_detalle_pedido.php": {
+            "info": {
+                "controller": "PedidoController",
+                "methods": [
+                    "show",
+                    "getDetails"
+                ],
+                "complexity": "low",
+                "priority": 3
+            },
+            "metrics": {
+                "lines": 96,
+                "functions": 1,
+                "queries": 3,
+                "complexity_score": 3
+            },
+            "functions": [
+                "h"
+            ],
+            "queries": [
+                "$r = $conn->query(",
+                "$stmt_detalle = $conn->prepare(",
+                "$stmt_detalle->execute("
+            ],
+            "dependencies": [
+                "conexion.php"
+            ]
+        },
+        "bold_payment.php": {
+            "info": {
+                "controller": "PaymentController",
+                "methods": [
+                    "processBoldPayment",
+                    "handleWebhook"
+                ],
+                "complexity": "high",
+                "priority": 1
+            },
+            "metrics": {
+                "lines": 432,
+                "functions": 6,
+                "queries": 0,
+                "complexity_score": 22
+            },
+            "functions": [
+                "notifyParentWindow",
+                "showMessage",
+                "closeWindowWithDelay",
+                "initializeBoldPayment",
+                "createBoldButton",
+                "createAlternativeButton"
+            ],
+            "queries": [],
+            "dependencies": [
+                "legacy-bridge.php"
+            ]
+        }
+    },
+    "migration_plan": {
+        "controllers": {
+            "PedidoController": [
+                "listar_pedidos.php",
+                "guardar_pedido.php",
+                "actualizar_estado.php",
+                "ver_detalle_pedido.php"
+            ],
+            "ProductoController": [
+                "productos_por_categoria.php"
+            ],
+            "PaymentController": [
+                "bold_payment.php"
+            ]
+        },
+        "execution_order": [
+            "PedidoController",
+            "PaymentController",
+            "ProductoController"
+        ],
+        "estimated_time": 5
+    },
+    "summary": {
+        "total_files": 6,
+        "total_controllers": 3,
+        "estimated_hours": 5
+    }
+}

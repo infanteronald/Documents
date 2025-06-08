@@ -1,0 +1,39 @@
+{
+    "name": "sequoia-speed/pedidos",
+    "description": "Sistema de Gestión de Pedidos con Bold PSE - Sequoia Speed",
+    "type": "project",
+    "keywords": ["pedidos", "bold-pse", "e-commerce", "sequoia-speed"],
+    "homepage": "https://sequoiaspeed.com.co",
+    "license": "Proprietary",
+    "authors": [
+        {
+            "name": "Sequoia Speed Team",
+            "email": "info@sequoiaspeed.com.co"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "SequoiaSpeed\\": "app/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SequoiaSpeed\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@php -r \"copy('.env.example', '.env');\""
+        ],
+        "test": "php tests/run_tests.php",
+        "migrate": "php scripts/migrate.php"
+    }
+}
