@@ -146,3 +146,4 @@ guias/*
 .production-files
 .env.local
 .env.development
+pedidos-development/
