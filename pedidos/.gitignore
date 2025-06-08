@@ -84,4 +84,54 @@ debug_temp_*
 /*_ejemplo.*
 /*_practica.*
 /git_*
-/ejemplo_*
+/ejemplo_*33
+
+# ============================================================================
+# 🧹 SISTEMA DE LIMPIEZA AUTOMÁTICA
+# ============================================================================
+# Para limpiar archivos temporales y de desarrollo, ejecuta:
+# borratemporales
+#
+# El comando organizará automáticamente archivos temporales en desarrollo/
+# - Documentación (*.md) → desarrollo/docs/
+# - Pruebas (test_*, debug_*) → desarrollo/tests/
+# - Temporales (*.tmp, .DS_Store) → desarrollo/temp/
+# - Scripts (*-helper.php, verify-*) → desarrollo/scripts/
+#
+# Uso:
+#   borratemporales           # Ejecutar limpieza
+#   borratemporales --dry-run # Simular sin mover archivos
+#   configurarlimpieza       # Personalizar patrones
+# ============================================================================
+
+# Archivos que el sistema de limpieza ya organiza (información)
+# Los siguientes patrones son manejados automáticamente por borratemporales:
+# *.md, *README*, *ESTADO*, *FASE*, *RESUMEN*, *COMPLETAD*, *CORREC*
+# test_*.php, debug_*.php, verificar_*.php, verification*.php
+# *.tmp, *.temp, .DS_Store, *_temp.*
+# verify-*.sh, *-check.php, *-helper.php, *-optimizer.php
+
+# Patrones adicionales para archivos que deben organizarse automáticamente
+*ESTADO*.md
+*FASE*.md
+*RESUMEN*.md
+*COMPLETAD*.md
+*CORREC*.md
+*SISTEMA*.md
+*GUÍA*.md
+*GUIDE*.md
+/verificar_*.php
+/verification*.php
+/test-*.html
+/*-test.php
+/verify-*.sh
+/*-check.php
+/*-helper.php
+/*-optimizer.php
+/*-bridge.php
+
+# Directorio de desarrollo completo (archivos organizados automáticamente)
+/desarrollo/
+
+# Logs del sistema de limpieza
+/desarrollo/temp/cleanup_*.log
