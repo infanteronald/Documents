@@ -6,7 +6,7 @@
 
 namespace SequoiaSpeed\Services;
 
-use Exception;
+use SequoiaSpeed\Models\Pedido;
 
 class BoldWebhookService
 {
@@ -17,7 +17,7 @@ class BoldWebhookService
     public function __construct()
     {
         $this->config = include dirname(dirname(__DIR__)) . '/app/config/bold.php';
-        $this->pedidoModel = new \Pedido($connection);
+        $this->pedidoModel = new Pedido();
         $this->logFile = dirname(dirname(__DIR__)) . '/storage/logs/bold_webhooks.log';
     }
     
@@ -45,7 +45,7 @@ class BoldWebhookService
             $this->log('INFO', 'Webhook válido recibido', $webhookData);
             return true;
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error validando webhook: ' . $e->getMessage(), $webhookData);
             return false;
         }
@@ -86,7 +86,7 @@ class BoldWebhookService
                     ];
             }
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error procesando webhook: ' . $e->getMessage(), $webhookData);
             return [
                 'success' => false,
@@ -147,7 +147,7 @@ class BoldWebhookService
                 'message' => 'Pago aprobado procesado exitosamente'
             ];
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error procesando pago aprobado: ' . $e->getMessage(), $data);
             return [
                 'success' => false,
@@ -189,7 +189,7 @@ class BoldWebhookService
                 'message' => 'Pago rechazado procesado exitosamente'
             ];
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error procesando pago rechazado: ' . $e->getMessage(), $data);
             return [
                 'success' => false,
@@ -227,7 +227,7 @@ class BoldWebhookService
                 'message' => 'Pago pendiente procesado exitosamente'
             ];
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error procesando pago pendiente: ' . $e->getMessage(), $data);
             return [
                 'success' => false,
@@ -270,7 +270,7 @@ class BoldWebhookService
                 'message' => 'Reembolso procesado exitosamente'
             ];
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error procesando reembolso: ' . $e->getMessage(), $data);
             return [
                 'success' => false,
@@ -312,7 +312,7 @@ class BoldWebhookService
                 'message' => 'Cancelación procesada exitosamente'
             ];
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error procesando cancelación: ' . $e->getMessage(), $data);
             return [
                 'success' => false,
@@ -361,7 +361,7 @@ class BoldWebhookService
                 ];
             }
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error en createTransaction: ' . $e->getMessage(), $transactionData);
             return [
                 'success' => false,
@@ -394,7 +394,7 @@ class BoldWebhookService
                 ];
             }
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error en getTransactionStatus: ' . $e->getMessage(), ['transaction_id' => $transactionId]);
             return [
                 'success' => false,
@@ -468,7 +468,7 @@ class BoldWebhookService
             // Aquí se integraría con el servicio de email
             // Por ahora solo registramos en log
             $this->log('INFO', "Notificación de pago enviada: {$type} para pedido {$pedidoId}", $data);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->log('ERROR', 'Error enviando notificación: ' . $e->getMessage(), $data);
         }
     }
@@ -511,36 +511,11 @@ class BoldWebhookService
                 'message' => $response['success'] ? 'Conexión exitosa' : 'Error de conexión',
                 'data' => $response['data']
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [
                 'success' => false,
                 'message' => 'Error de conexión: ' . $e->getMessage()
             ];
         }
-    }
-
-    public function updateOrderStatus($pedidoId, $transactionData) {
-        // Implementación básica
-        return ['success' => true];
-    }
-    
-    public function getTransactions($fechaInicio = null, $fechaFin = null) {
-        return [];
-    }
-    
-    public function reverseTransaction($transactionId, $motivo = null) {
-        return ['success' => true];
-    }
-    
-    public function getPaymentStats($fechaInicio = null, $fechaFin = null) {
-        return ['total' => 0];
-    }
-    
-    public function notifyAdmins($error) {
-        return ['success' => true];
-    }
-    
-    public function generateReconciliationReport($fecha) {
-        return ['fecha' => $fecha, 'transacciones' => []];
     }
 }

@@ -7,7 +7,7 @@
 namespace SequoiaSpeed\Controllers;
 
 use SequoiaSpeed\Services\BoldWebhookService;
-use SequoiaSpeed\Models\Pedido;
+use Exception;
 
 class BoldController
 {
@@ -17,7 +17,10 @@ class BoldController
     public function __construct()
     {
         $this->boldService = new BoldWebhookService();
-        $this->pedidoModel = new Pedido();
+        require_once dirname(dirname(__DIR__)) . "/app/models/Pedido.php";
+        require_once dirname(dirname(__DIR__)) . "/conexion.php";
+        global $conn;
+        $this->pedidoModel = new \Pedido($conn);
     }
     
     /**

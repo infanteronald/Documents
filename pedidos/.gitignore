@@ -1,137 +1,148 @@
-# Archivos y directorios de sistemas operativos
+# GITIGNORE DEFINITIVO SEQUOIA SPEED
+# Archivo: .gitignore
+# Propósito: Evitar que archivos borrados reaparezcan automáticamente
+
+# ==============================================================================
+# ARCHIVOS DE SISTEMA Y TEMPORALES
+# ==============================================================================
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# Directorios de dependencias
-/vendor/
-/node_modules/
-
-# Archivos de entorno y configuración
-.env
-config.php
-conexion_local.php
-
-# Archivos temporales
-*.tmp
-*.temp
-*.cache
 *.log
-
-# Archivos de IDE
-.idea/
-.vscode/
-*.sublime-project
-*.sublime-workspace
-*.komodoproject
-.komodotools/
-*.code-workspace
-
-# Archivos de uploads y media que no se deberían versionar
-/uploads/*
-/comprobantes/*
-/guias/*
-!/uploads/.gitkeep
-!/comprobantes/.gitkeep
-!/guias/.gitkeep
-
-# Archivos de respaldo
+*.tmp
+*.cache
 *.bak
-*.backup
-*.old
+*.swp
+*.swo
 *~
 
-# Archivos de pruebas y desarrollo
-/tests/fixtures/temp_*
-/tests/logs/
-/tests/coverage/
-/tests/reports/
+# ==============================================================================
+# ARCHIVOS PROBLEMÁTICOS QUE NO DEBEN REAPARECER
+# ==============================================================================
 
-# Archivos de debug y logs específicos
-debug_*.log
-test_*.log
-error_*.log
+# Archivos de documentación obsoletos
+ARCHIVOS_PRODUCCION.txt
+CLEANUP_REPORT.md
+CORRECCIÓN_BD_COMPLETADA.md
+CORRECCIONES_404_COMPLETADAS.md
+DEPLOYMENT_REPORT.md
+ESTADO_FINAL_SISTEMA.md
+ESTADO_FINAL_TRANSICION.md
+FASE4-COMPLETADA.md
+IMPLEMENTACION_ESTRUCTURA_PROFESIONAL.md
+NUEVA_ESTRUCTURA_PROPUESTA.md
+QUE_SIGUE_AHORA.md
+REORGANIZACION_COMPLETADA.md
+REORGANIZAR_PROYECTO.php
+RESPUESTA_REORGANIZACION.md
+RESUMEN_CORRECCION_BOLD.md
+RESUMEN_FASE3_COMPLETADA.md
+RESUMEN_FINAL_FASE2.md
+SISTEMA_MVC_FASE4_COMPLETADO.md
+SOLUCION_FINAL_BOLD.md
+SOLUCION_FINAL_COMPLETADA.md
 
-# Archivos temporales de pruebas
-/tests/temp/
-test_temp_*
-debug_temp_*
+# Scripts obsoletos
+cleanup-main-directory.sh
+deploy-demo.sh
+deploy-production.sh
+deploy.sh
+deployment-demo.sh
+development-monitor.sh
+direct-optimizer.php
+finalize-phase2.php
+generate-phase3-guide.php
+legacy-bridge.php
+migration-helper.php
+phase4-guide.md
+production-deploy.sh
+production-validator.php
+reorganizar_ahora.php
+setup-phase3-env.php
+setup-production-monitor.php
+simple-validator.php
+sistema_verificacion_completa.php
+transition-guide-phase3.php
+verificacion_final.html
+verificacion-fase2.php
+verificacion-sistema-completa.php
+verificar_conectividad.php
+verification-final-system.php
+verify-env-config.sh
+verify-phase4.php
 
-# Directorio otros debe mantenerse vacío (archivos ya organizados en tests/)
-/otros/*
-!/otros/.gitkeep
+# Archivos de prueba y debug
+test_bold_complete.php
+test_bold_function.html
+test_container_fix.html
+test_error_corregido_final.html
+test_error_corregido.html
+test_error_final_corregido.html
+test_final_bold.php
+test_final_solution.html
+test_function_fix.html
+test_live_debug.html
+test_produccion_final.html
+test-assets.html
+test-db-connection.php
+test-db-real-connection.php
+test-mvc-routes.php
 
-# Prevenir archivos de pruebas en la raíz (deben ir en /tests/)
-/bold_*test*
-/bold_*debug*
-/bold_*simulator*
-/*_test.php
-/*_debug.php
-/*_test.html
-/*_debug.html
-/test_*.php
-/test_*.html
-/debug_*.php
-/debug_*.html
-/conexion_local.php
-/*.sqlite
-/*.db
-/bold_test*
+# Directorios obsoletos
+phase3/
+phase4/
+tests/
+otros/
+desarrollo/obsolete/
+desarrollo/temp/
 
-# Prevenir archivos de práctica/lecciones de Git en la raíz
-/sistema_*.php
-/ui-mejoras.*
-/*_ejemplo.*
-/*_practica.*
-/git_*
-/ejemplo_*33
+# Archivos CSS/JS obsoletos
+style.css
+app.js
+payment_ux_enhanced.js
+conexion_local.php
+database_connection.php
+composer.json
 
-# ============================================================================
-# 🧹 SISTEMA DE LIMPIEZA AUTOMÁTICA
-# ============================================================================
-# Para limpiar archivos temporales y de desarrollo, ejecuta:
-# borratemporales
-#
-# El comando organizará automáticamente archivos temporales en desarrollo/
-# - Documentación (*.md) → desarrollo/docs/
-# - Pruebas (test_*, debug_*) → desarrollo/tests/
-# - Temporales (*.tmp, .DS_Store) → desarrollo/temp/
-# - Scripts (*-helper.php, verify-*) → desarrollo/scripts/
-#
-# Uso:
-#   borratemporales           # Ejecutar limpieza
-#   borratemporales --dry-run # Simular sin mover archivos
-#   configurarlimpieza       # Personalizar patrones
-# ============================================================================
+# Enlaces simbólicos
+desarrollo-link
 
-# Archivos que el sistema de limpieza ya organiza (información)
-# Los siguientes patrones son manejados automáticamente por borratemporales:
-# *.md, *README*, *ESTADO*, *FASE*, *RESUMEN*, *COMPLETAD*, *CORREC*
-# test_*.php, debug_*.php, verificar_*.php, verification*.php
-# *.tmp, *.temp, .DS_Store, *_temp.*
-# verify-*.sh, *-check.php, *-helper.php, *-optimizer.php
+# Archivos de GitHub Copilot
+.github:copilot-instructions.md
 
-# Patrones adicionales para archivos que deben organizarse automáticamente
-*ESTADO*.md
-*FASE*.md
-*RESUMEN*.md
-*COMPLETAD*.md
-*CORREC*.md
-*SISTEMA*.md
-*GUÍA*.md
-*GUIDE*.md
-/verificar_*.php
-/verification*.php
-/test-*.html
-/*-test.php
-/verify-*.sh
-/*-check.php
-/*-helper.php
-/*-optimizer.php
-/*-bridge.php
+# ==============================================================================
+# ARCHIVOS DE DESARROLLO ESPECÍFICOS
+# ==============================================================================
 
-# Directorio de desarrollo completo (archivos organizados automáticamente)
-/desarrollo/
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Logs del sistema de limpieza
-/desarrollo/temp/cleanup_*.log
+# Composer
+vendor/
+composer.lock
+
+# IDE y editores
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.sublime-*
+
+# ==============================================================================
+# ARCHIVOS DE USUARIO Y UPLOADS
+# ==============================================================================
+uploads/*
+!uploads/.gitkeep
+comprobantes/*
+!comprobantes/.gitkeep
+guias/*
+!guias/.gitkeep
+
+# ==============================================================================
+# ARCHIVOS DE PRODUCCIÓN
+# ==============================================================================
+.production-files
+.env.local
+.env.development

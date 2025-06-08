@@ -358,31 +358,31 @@ class BoldWebhookProcessor {
                 return;
             }
             
-            $notificationSystem = new BoldNotificationSystem();
+            $notificationSystem = new BoldNotificationSystem($this->conn);
             
             // Determinar el tipo de notificación basado en el estado
             switch ($estado) {
                 case 'PAGADO':
                 case 'APROBADO':
                     // Notificación de éxito al cliente
-                    $notificationSystem->sendSuccessNotification($pedido, $transactionId);
+                    $notificationSystem->sendCustomerSuccessNotification($pedidoId, $paymentData);
                     // Notificación al administrador
-                    $notificationSystem->sendAdminNotification($pedido, 'success', $transactionId);
+                    $notificationSystem->sendAdminNotification($pedidoId, 'success', $paymentData);
                     BoldLogger::info("Notificaciones de éxito enviadas", ['pedido_id' => $pedidoId]);
                     break;
                     
                 case 'PENDIENTE':
                     // Notificación de estado pendiente al cliente
-                    $notificationSystem->sendPendingNotification($pedido, $transactionId);
+                    $notificationSystem->sendCustomerPendingNotification($pedidoId, $paymentData);
                     BoldLogger::info("Notificación de pendiente enviada", ['pedido_id' => $pedidoId]);
                     break;
                     
                 case 'RECHAZADO':
                 case 'FALLIDO':
                     // Notificación de fallo al cliente
-                    $notificationSystem->sendFailureNotification($pedido, $transactionId);
+                    $notificationSystem->sendCustomerFailedNotification($pedidoId, $paymentData);
                     // Notificación al administrador
-                    $notificationSystem->sendAdminNotification($pedido, 'failure', $transactionId);
+                    $notificationSystem->sendAdminNotification($pedidoId, 'failure', $paymentData);
                     BoldLogger::info("Notificaciones de fallo enviadas", ['pedido_id' => $pedidoId]);
                     break;
                     

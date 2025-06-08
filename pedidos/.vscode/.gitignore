@@ -1,0 +1,7 @@
+# Ignorar configuraciones personales
+settings.json
+launch.json
+tasks.json
+
+# Mantener configuración del proyecto
+!extensions.json

@@ -1,0 +1,13 @@
+{
+    "recommendations": [
+        "ms-vscode.vscode-php-pack",
+        "bmewburn.vscode-intelephense-client",
+        "xdebug.php-debug",
+        "bradlc.vscode-tailwindcss"
+    ],
+    "unwantedRecommendations": [
+        "ms-vscode.vscode-typescript-next",
+        "ms-vscode.vscode-javascript",
+        "ms-python.python"
+    ]
+}
