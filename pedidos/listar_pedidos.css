@@ -1,0 +1,100 @@
+/*
+    SISTEMA DE DISEÑO APPLE + VS CODE DARK THEME
+    Aplicación móvil PHP con estilo minimalista
+    Colores: #1e1e1e, #252526, #007aff, #cccccc
+    Tipografía: SF Pro Display / Sistema Apple
+    Grid: Sistema de 8px de Apple
+*/
+
+/* ===== RESET Y BASE ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Colores VS Code Dark - Paleta Principal */
+    --vscode-bg: #1e1e1e;
+    --vscode-sidebar: #252526;
+    --vscode-border: #3e3e42;
+    --vscode-text: #cccccc;
+    --vscode-text-muted: #999999;
+    --vscode-text-light: #ffffff;
+    
+    /* Solo azul Apple como único color de acento */
+    --apple-blue: #007aff;
+    --apple-blue-hover: #0056d3;
+    --apple-blue-active: #004494;
+    
+    /* Grises para estados neutros */
+    --gray-light: rgba(204, 204, 204, 0.1);
+    --gray-medium: rgba(204, 204, 204, 0.2);
+    --gray-dark: rgba(204, 204, 204, 0.05);
+    
+    /* Estados usando solo grises y azul */
+    --success-bg: var(--gray-light);
+    --success-text: var(--vscode-text);
+    --warning-bg: var(--gray-medium);
+    --warning-text: var(--vscode-text);
+    --error-bg: var(--gray-medium);
+    --error-text: var(--vscode-text);
+    
+    /* Shadows Apple */
+    --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.25);
+    --shadow-heavy: 0 8px 32px rgba(0, 0, 0, 0.35);
+    
+    /* Spacing Apple (8px grid) */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-xxl: 48px;
+    
+    /* Border radius Apple */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    
+    /* Typography */
+    --font-system: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+body {
+    font-family: var(--font-system);
+    background: var(--vscode-bg);
+    color: var(--vscode-text);
+    line-height: 1.47; /* Apple line height */
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ===== COMPONENTES GLOBALES ===== */
+
+/* Botones estilo Apple */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: 12px var(--space-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-system);
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
