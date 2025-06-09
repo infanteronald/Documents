@@ -620,7 +620,7 @@ if ($pedido_id) {
         billing_address: JSON.stringify(billingAddress)
       });
 
-      const paymentUrl = 'bold_payment.php?' + paymentParams.toString();
+      const paymentUrl = 'bold/bold_payment.php?' + paymentParams.toString();
       console.log('🔗 URL de pago generada:', paymentUrl);
       
       // Mostrar botón para abrir ventana de pago
@@ -874,8 +874,8 @@ if ($pedido_id) {
 
 <!-- Sistema de archivos CSS/JS optimizados -->
 <!-- Sistema de pago Bold con UI en tiempo real -->
-<script src="bold_realtime_payment_ui.js"></script>
-<script src="bold_payment_enhanced_handler_v2.js"></script>
+<script src="bold/bold_realtime_payment_ui.js"></script>
+<script src="bold/bold_payment_enhanced_handler_v3.js"></script>
 
 <script>
 // Inicializar sistema Bold UI en tiempo real
