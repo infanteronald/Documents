@@ -873,33 +873,79 @@ if ($pedido_id) {
 </script>
 
 <!-- Sistema de archivos CSS/JS optimizados -->
+<!-- Sistema de pago Bold con UI en tiempo real -->
+<script src="bold_realtime_payment_ui.js"></script>
+<script src="bold_payment_enhanced_handler_v2.js"></script>
 
 <script>
-// Inicializar el sistema de pago moderno
-document.addEventListener('DOMContentLoaded', function() {
-    // Sistema híbrido: usar la nueva integración si está disponible, sino fallback a legacy
-    if (window.boldPayment && window.boldPayment.initializePayment) {
-        // Usar sistema moderno
-        console.log('✅ Usando sistema de pago moderno');
-        window.boldPayment.initializePayment();
+// Inicializar sistema Bold UI en tiempo real
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("🚀 Inicializando Bold Payment UI v2.0");
+    
+    // Verificar disponibilidad de sistemas
+    if (typeof BoldRealtimePaymentUI !== "undefined" && typeof BoldPaymentEnhancedHandler !== "undefined") {
+        console.log("✅ Sistema Bold UI en tiempo real cargado");
         
-        // Configurar el formulario con la nueva API
-        const form = document.getElementById('formPedido');
+        // Inicializar la UI en tiempo real
+        const boldUI = new BoldRealtimePaymentUI();
+        
+        // Inicializar el handler mejorado
+        const boldHandler = new BoldPaymentEnhancedHandler(boldUI);
+        
+        // Configurar el formulario
+        const form = document.getElementById("formPedido");
         if (form) {
-            window.boldPayment.attachToForm(form);
+            boldHandler.attachToForm(form);
+            console.log("✅ Handler Bold conectado al formulario");
         }
-    } else if (window.PaymentUXEnhancer) {
-        // Fallback a sistema legacy
-        console.log('⚡ Fallback a sistema legacy');
-        const paymentUX = new PaymentUXEnhancer();
-        const form = document.getElementById('formPedido');
-        if (form) {
-            paymentUX.init(form);
-        }
+        
+        // Hacer disponible globalmente para legacy
+        window.boldPaymentSystem = {
+            ui: boldUI,
+            handler: boldHandler,
+            showBoldSuccess: (data) => boldUI.showFinalResult(data, "success"),
+            showBoldError: (message) => boldUI.showFinalResult({error: message}, "error"),
+            showBoldInfo: (message) => boldUI.updateProgress("Información: " + message, 50)
+        };
+        
     } else {
-        console.warn('⚠️ No se pudo cargar ningún sistema de pago');
+        console.warn("⚠️ Sistema Bold UI no disponible, usando fallback");
+        // Funciones fallback para compatibilidad
+        window.boldPaymentSystem = {
+            showBoldSuccess: (data) => {
+                console.log("Bold Success (fallback):", data);
+                alert("Pago completado exitosamente");
+            },
+            showBoldError: (message) => {
+                console.error("Bold Error (fallback):", message);
+                alert("Error en el pago: " + message);
+            },
+            showBoldInfo: (message) => {
+                console.log("Bold Info (fallback):", message);
+            }
+        };
     }
 });
+
+// Funciones globales para retrocompatibilidad
+function showBoldSuccess(data) {
+    if (window.boldPaymentSystem) {
+        window.boldPaymentSystem.showBoldSuccess(data);
+    }
+}
+
+function showBoldError(message) {
+    if (window.boldPaymentSystem) {
+        window.boldPaymentSystem.showBoldError(message);
+    }
+}
+
+function showBoldInfo(message) {
+    if (window.boldPaymentSystem) {
+        window.boldPaymentSystem.showBoldInfo(message);
+    }
+}
 </script>
+
 </body>
 </html>
