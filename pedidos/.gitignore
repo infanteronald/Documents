@@ -87,7 +87,8 @@ assets/optimized/
 assets/combined/
 assets/temp/
 public/assets/optimized/
-logs/
+logs/*
+!logs/.gitkeep
 temp/
 tmp/
 
