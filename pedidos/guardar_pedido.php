@@ -36,8 +36,20 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 $carrito = $data['carrito'] ?? [];
 $monto = $data['monto'] ?? 0;
 
+// Extraer información adicional del formulario
+$nombre = $data['nombre'] ?? '';
+$correo = $data['correo'] ?? '';
+$telefono = $data['telefono'] ?? '';
+$direccion = $data['direccion'] ?? '';
+$persona_recibe = $data['persona_recibe'] ?? '';
+$horarios = $data['horarios'] ?? '';
+$metodo_pago = $data['metodo_pago'] ?? '';
+$bold_order_id = $data['bold_order_id'] ?? null;
+
 error_log("Carrito recibido: " . print_r($carrito, true));
 error_log("Monto recibido: " . $monto);
+error_log("Método de pago: " . $metodo_pago);
+error_log("Bold Order ID: " . $bold_order_id);
 
 // Validar estructura del carrito
 if (!$carrito) {
@@ -53,36 +65,57 @@ foreach ($carrito as $index => $item) {
         echo json_encode(['success' => false, 'error' => 'Datos de producto inválidos']);
         exit;
     }
-    
+
     // Limpiar y validar datos
     $item['nombre'] = trim($item['nombre']);
     $item['precio'] = floatval($item['precio']);
     $item['cantidad'] = intval($item['cantidad']);
-    
+
     if (empty($item['nombre']) || $item['precio'] <= 0 || $item['cantidad'] <= 0) {
         error_log("Datos de producto inválidos después de limpieza en índice $index: " . print_r($item, true));
         echo json_encode(['success' => false, 'error' => 'Datos de producto inválidos']);
         exit;
     }
-    
+
     // Actualizar el item en el carrito con datos limpios
     $carrito[$index] = $item;
 }
 
 // Obtener los nombres de los productos separados por coma
-$nombres = array_map(function($item) {
+$nombres = array_map(function ($item) {
     return $item['nombre'];
 }, $carrito);
 $pedido_str = implode(', ', $nombres);
 
-// Insertar pedido en pedidos_detal
-$stmt_main_pedido = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, estado) VALUES (?, ?, 'sin_enviar')");
+// Insertar pedido en pedidos_detal con todos los campos necesarios
+$sql = "INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, correo, persona_recibe, horarios, metodo_pago, estado";
+
+// Agregar campos de Bold si es un pago Bold
+if ($bold_order_id) {
+    $sql .= ", bold_order_id, estado_pago";
+}
+
+$sql .= ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sin_enviar'";
+
+if ($bold_order_id) {
+    $sql .= ", ?, 'pendiente'";
+}
+
+$sql .= ")";
+
+$stmt_main_pedido = $conn->prepare($sql);
 if ($stmt_main_pedido === false) {
     error_log("Error al preparar la consulta para pedidos_detal: " . $conn->error);
     echo json_encode(['success' => false, 'error' => 'Error interno del servidor (código PED_PREP_FAIL).']);
     exit;
 }
-$stmt_main_pedido->bind_param("sd", $pedido_str, $monto);
+
+// Bind parameters según si es Bold o no
+if ($bold_order_id) {
+    $stmt_main_pedido->bind_param("sdssssssss", $pedido_str, $monto, $nombre, $direccion, $telefono, $correo, $persona_recibe, $horarios, $metodo_pago, $bold_order_id);
+} else {
+    $stmt_main_pedido->bind_param("sdsssssss", $pedido_str, $monto, $nombre, $direccion, $telefono, $correo, $persona_recibe, $horarios, $metodo_pago);
+}
 if ($stmt_main_pedido->execute() === false) {
     error_log("Error al ejecutar la inserción en pedidos_detal: " . $stmt_main_pedido->error);
     echo json_encode(['success' => false, 'error' => 'Error interno del servidor (código PED_EXEC_FAIL).']);
@@ -104,12 +137,12 @@ foreach ($carrito as $item) {
     // Verificar si es un producto personalizado
     $es_personalizado = isset($item['personalizado']) && $item['personalizado'];
     $producto_id = $es_personalizado ? 0 : intval($item['id'] ?? 0);
-    
+
     // Log para debugging
     error_log("Procesando item: " . print_r($item, true));
     error_log("Es personalizado: " . ($es_personalizado ? 'SÍ' : 'NO'));
     error_log("producto_id asignado: " . $producto_id);
-    
+
     // Si es un producto personalizado, primero debemos agregarlo a la tabla de productos
     if ($es_personalizado) {
         // Verificar si ya existe un producto con el mismo nombre
@@ -120,7 +153,8 @@ foreach ($carrito as $item) {
             // Respuesta JSON para el cliente
             echo json_encode(['success' => false, 'error' => 'Error interno del servidor (código 1).']);
             exit;
-        }$checkStmt->bind_param("s", $item['nombre']);
+        }
+        $checkStmt->bind_param("s", $item['nombre']);
         $checkStmt->execute();
         if ($checkStmt->error) {
             // Log del error para el administrador del servidor
@@ -130,16 +164,16 @@ foreach ($carrito as $item) {
             $checkStmt->close();
             exit;
         }
-        
+
         // Usar bind_result en lugar de get_result para compatibilidad con PHP 8.0.30
         $existingProductCount = 0;
         $checkStmt->store_result();
         $existingProductCount = $checkStmt->num_rows;
-          if ($existingProductCount == 0) {
+        if ($existingProductCount == 0) {
             // El producto no existe, lo agregamos a la tabla de productos
             // Verificar que el nombre no sea demasiado largo
             $nombre_truncado = substr($item['nombre'], 0, 255); // Asegurar que no exceda límites
-            
+
             $insertProductStmt = $conn->prepare("INSERT INTO productos (nombre, precio, activo, categoria) VALUES (?, ?, 1, 'Personalizado')");
             if ($insertProductStmt === false) {
                 // Log del error para el administrador del servidor
@@ -150,7 +184,7 @@ foreach ($carrito as $item) {
                 exit;
             }
             $insertProductStmt->bind_param("sd", $nombre_truncado, $item['precio']);
-            
+
             if ($insertProductStmt->execute() === false) {
                 // Log detallado del error para el administrador del servidor
                 error_log("Error al ejecutar la inserción del nuevo producto personalizado:");
@@ -158,10 +192,10 @@ foreach ($carrito as $item) {
                 error_log("- Precio: " . $item['precio']);
                 error_log("- Error MySQL: " . $insertProductStmt->error);
                 error_log("- Error conexión: " . $conn->error);
-                
+
                 // Respuesta JSON para el cliente
                 echo json_encode([
-                    'success' => false, 
+                    'success' => false,
                     'error' => 'Error interno del servidor (código 3).',
                     'debug_info' => [
                         'mysql_error' => $insertProductStmt->error,
@@ -175,7 +209,8 @@ foreach ($carrito as $item) {
             }
             $producto_id = $conn->insert_id; // Obtenemos el ID del nuevo producto
             error_log("Producto personalizado insertado exitosamente con ID: " . $producto_id);
-            $insertProductStmt->close();} else {
+            $insertProductStmt->close();
+        } else {
             // El producto ya existe, necesitamos obtener su ID
             $checkStmt->bind_result($existing_product_id);
             $checkStmt->fetch();
@@ -186,10 +221,10 @@ foreach ($carrito as $item) {
     $talla = isset($item['talla']) ? trim($item['talla']) : 'N/A';
     $precio_decimal = floatval($item['precio']);
     $cantidad_int = intval($item['cantidad']);
-    
+
     // Log para debugging del detalle
     error_log("Insertando detalle - pedido_id: $pedido_id, producto_id: $producto_id, nombre: {$item['nombre']}, precio: $precio_decimal, cantidad: $cantidad_int, talla: $talla");
-    
+
     $stmt_detalle_pedido->bind_param("iisdis", $pedido_id, $producto_id, $item['nombre'], $precio_decimal, $cantidad_int, $talla);
     if ($stmt_detalle_pedido->execute() === false) {
         error_log("Error al ejecutar la inserción en pedido_detalle para producto '{$item['nombre']}': " . $stmt_detalle_pedido->error);
@@ -201,4 +236,3 @@ foreach ($carrito as $item) {
 $stmt_detalle_pedido->close();
 
 echo json_encode(['success' => true, 'pedido_id' => $pedido_id]);
-?>

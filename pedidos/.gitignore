@@ -3,9 +3,14 @@
 # Propósito: Evitar que archivos borrados reaparezcan automáticamente
 
 # ==============================================================================
-# ARCHIVOS DE SISTEMA Y TEMPORALES
+# ARCHIVOS DE SISTEMA Y TEMPORALES GENERALES
 # ==============================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 *.log
 *.tmp
@@ -14,12 +19,112 @@ Thumbs.db
 *.swp
 *.swo
 *~
+*.pid
+*.seed
+*.pid.lock
 
 # ==============================================================================
-# ARCHIVOS PROBLEMÁTICOS QUE NO DEBEN REAPARECER
+# ARCHIVOS VS CODE Y EDITORES
+# ==============================================================================
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.idea/
+*.sublime-*
+*.sublime-project
+*.sublime-workspace
+
+# ==============================================================================
+# DIRECTORIOS EXTERNOS Y DEL SISTEMA
+# ==============================================================================
+../Desarrollo/
+../desarrollo/
+../.git/
+node_modules/
+vendor/
+
+# ==============================================================================
+# ARCHIVOS DE DESARROLLO Y DEBUG
+# ==============================================================================
+analizar_webhook.php
+debug_webhook_processing.php
+deploy_bold_fixes.php
+diagnostico_bold_completo.php
+ejecutar_retry_multi_estructura.php
+ejecutar_retry_simple.php
+forzar_creacion_pedido.php
+procesar_webhooks_directo.php
+setup_ssh_key.sh
+sync_bold_correcciones.php
+sync_bold_fixes.php
+verificacion_final_bold.php
+verificar_pedidos_bold.php
+verify_bold_fixes.php
+test_*.php
+test_*.html
+*_test.php
+debug_*.php
+
+# ==============================================================================
+# ARCHIVOS DE DOCUMENTACIÓN TEMPORAL
+# ==============================================================================
+BOLD_3_METODOS_COMPLETADO.md
+VERIFICACION_FINAL_BOLD_3_METODOS.md
+README_BOLD_3_METODOS_FINAL.md
+*_COMPLETADO.md
+*_FINAL.md
+VERIFICACION_*.md
+
+# ==============================================================================
+# DIRECTORIOS DE DESARROLLO Y ASSETS OPTIMIZADOS
+# ==============================================================================
+desarrollo/
+assets/optimized/
+assets/combined/
+assets/temp/
+public/assets/optimized/
+logs/
+temp/
+tmp/
+
+# ==============================================================================
+# ARCHIVOS DE USUARIO Y UPLOADS
+# ==============================================================================
+uploads/*
+!uploads/.gitkeep
+comprobantes/*
+!comprobantes/.gitkeep
+guias/*
+!guias/.gitkeep
+
+# ==============================================================================
+# ARCHIVOS DE CONFIGURACIÓN Y PRODUCCIÓN
+# ==============================================================================
+.env
+.env.local
+.env.development
+.env.production
+.production-files
+pedidos-development/
+config.local.php
+conexion_local.php
+
+# ==============================================================================
+# ARCHIVOS ESPECÍFICOS DEL PROYECTO A IGNORAR
 # ==============================================================================
 
-# Archivos de documentación obsoletos
+# Scripts de análisis y debug Bold
+process_retry_queue.php
+setup_bold_db.php
+test_bold_integration.php
+verify_bold_system.php
+bold_payment_enhanced_handler_v2.js
+
+# Archivos de documentación obsoletos (mantener los que ya estaban)
 ARCHIVOS_PRODUCCION.txt
 CLEANUP_REPORT.md
 CORRECCIÓN_BD_COMPLETADA.md

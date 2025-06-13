@@ -15,6 +15,7 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -131,8 +132,13 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .close-info {
@@ -161,11 +167,12 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         }
     </style>
 </head>
+
 <body>
     <div class="payment-container">
         <img src="logo.png" class="logo" alt="Sequoia Speed">
         <h1>Pago Seguro</h1>
-        
+
         <div class="payment-info">
             <h3><?= htmlspecialchars($method) ?></h3>
             <p><strong>Orden:</strong> <?= htmlspecialchars($order_id) ?></p>
@@ -206,12 +213,14 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
             try {
                 if (window.opener && !window.opener.closed) {
                     window.opener.postMessage({
-                        type: 'bold_payment_update',
+                        type: 'bold_payment_result',
                         status: status,
                         orderId: orderData.orderId,
-                        data: data
+                        ...data
                     }, '*');
                     console.log('Mensaje enviado a ventana padre:', status, data);
+                } else {
+                    console.warn('Ventana padre no disponible');
                 }
             } catch (error) {
                 console.error('Error al comunicar con ventana padre:', error);
@@ -221,9 +230,9 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         // Función para mostrar mensajes en la UI
         function showMessage(message, type = 'info') {
             const container = document.getElementById('bold-payment-container');
-            let className = type === 'error' ? 'error-message' : 
-                           type === 'success' ? 'success-message' : 'loading';
-            
+            let className = type === 'error' ? 'error-message' :
+                type === 'success' ? 'success-message' : 'loading';
+
             container.innerHTML = `<div class="${className}">${message}</div>`;
         }
 
@@ -239,7 +248,7 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         async function initializeBoldPayment() {
             try {
                 console.log('Inicializando Bold con datos:', orderData);
-                
+
                 let boldConfig = {
                     'data-bold-button': 'dark-L',
                     'data-description': `Pago ${orderData.method} Sequoia Speed - Pedido #${orderData.orderId}`,
@@ -251,7 +260,7 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
                 // Si hay monto definido, generar hash de integridad
                 if (orderData.amount > 0) {
                     showMessage('Generando hash de seguridad...');
-                    
+
                     const hashResponse = await fetch('bold_hash.php', {
                         method: 'POST',
                         headers: {
@@ -271,7 +280,7 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
                     }
 
                     const hashData = await hashResponse.json();
-                    
+
                     if (!hashData.success) {
                         throw new Error(hashData.error || 'Error en el servidor de hash');
                     }
@@ -293,7 +302,9 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
                 }
 
                 // Notificar a la ventana padre que el pago está iniciando
-                notifyParentWindow('payment_started', { orderId: orderData.orderId });
+                notifyParentWindow('payment_started', {
+                    orderId: orderData.orderId
+                });
 
                 // Crear el botón Bold
                 createBoldButton(boldConfig);
@@ -301,7 +312,9 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
             } catch (error) {
                 console.error('Error al inicializar Bold:', error);
                 showMessage('Error al cargar el checkout: ' + error.message, 'error');
-                notifyParentWindow('payment_error', { error: error.message });
+                notifyParentWindow('payment_error', {
+                    error: error.message
+                });
                 closeWindowWithDelay(5000);
             }
         }
@@ -309,22 +322,22 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         // Función para crear el botón Bold
         function createBoldButton(config) {
             const container = document.getElementById('bold-payment-container');
-            
+
             showMessage('Cargando checkout seguro...');
-            
+
             setTimeout(() => {
                 container.innerHTML = '';
-                
+
                 const boldScript = document.createElement('script');
                 boldScript.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
-                
+
                 Object.keys(config).forEach(key => {
                     boldScript.setAttribute(key, config[key]);
                 });
 
                 boldScript.onload = function() {
                     console.log('✅ Script Bold cargado exitosamente');
-                    
+
                     // Verificar si el botón se creó correctamente
                     setTimeout(() => {
                         const boldButton = container.querySelector('[data-bold-button]');
@@ -336,34 +349,36 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
                         }
                     }, 1000);
                 };
-                
+
                 boldScript.onerror = function() {
                     console.error('❌ Error al cargar script Bold');
                     showMessage('Error al cargar el script de Bold', 'error');
-                    notifyParentWindow('payment_error', { error: 'Error al cargar script Bold' });
+                    notifyParentWindow('payment_error', {
+                        error: 'Error al cargar script Bold'
+                    });
                     closeWindowWithDelay(5000);
                 };
 
                 container.appendChild(boldScript);
-                
+
             }, 500);
         }
 
         // Método alternativo para crear el botón
         function createAlternativeButton(container, config) {
             container.innerHTML = '';
-            
+
             const buttonDiv = document.createElement('div');
             buttonDiv.style.textAlign = 'center';
             buttonDiv.style.padding = '16px';
-            
+
             const script = document.createElement('script');
             script.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
-            
+
             Object.entries(config).forEach(([key, value]) => {
                 script.setAttribute(key, value);
             });
-            
+
             buttonDiv.appendChild(script);
             container.appendChild(buttonDiv);
         }
@@ -373,14 +388,19 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
             // Escuchar eventos de Bold (si los hay)
             if (event.data && event.data.type === 'bold_payment') {
                 console.log('Evento Bold recibido:', event.data);
-                
                 if (event.data.status === 'success') {
                     showMessage('¡Pago completado exitosamente! Cerrando ventana...', 'success');
-                    notifyParentWindow('payment_success', event.data);
+                    notifyParentWindow('success', {
+                        message: 'Pago completado exitosamente',
+                        ...event.data
+                    });
                     closeWindowWithDelay(2000);
                 } else if (event.data.status === 'error') {
                     showMessage('Error en el pago: ' + (event.data.message || 'Error desconocido'), 'error');
-                    notifyParentWindow('payment_error', event.data);
+                    notifyParentWindow('error', {
+                        message: event.data.message || 'Error desconocido',
+                        ...event.data
+                    });
                     closeWindowWithDelay(5000);
                 }
             }
@@ -388,7 +408,9 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
 
         // Detectar cuando la ventana está a punto de cerrarse
         window.addEventListener('beforeunload', function() {
-            notifyParentWindow('payment_closed', { orderId: orderData.orderId });
+            notifyParentWindow('payment_closed', {
+                orderId: orderData.orderId
+            });
         });
 
         // Detectar cambios en el DOM para monitorear el estado del pago
@@ -397,18 +419,24 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
                 mutation.addedNodes.forEach(function(node) {
                     if (node.nodeType === 1) {
                         // Buscar elementos que indiquen éxito o error en el pago
-                        const successElements = node.querySelectorAll ? 
+                        const successElements = node.querySelectorAll ?
                             node.querySelectorAll('[class*="success"], [class*="completed"], [id*="success"]') : [];
-                        const errorElements = node.querySelectorAll ? 
+                        const errorElements = node.querySelectorAll ?
                             node.querySelectorAll('[class*="error"], [class*="failed"], [id*="error"]') : [];
-                        
                         if (successElements.length > 0) {
                             console.log('Elementos de éxito detectados en DOM');
                             showMessage('¡Pago completado! Cerrando ventana...', 'success');
-                            notifyParentWindow('payment_success', { orderId: orderData.orderId });
+                            notifyParentWindow('success', {
+                                message: 'Pago completado exitosamente',
+                                detected_via: 'dom_mutation'
+                            });
                             closeWindowWithDelay(2000);
                         } else if (errorElements.length > 0) {
                             console.log('Elementos de error detectados en DOM');
+                            notifyParentWindow('error', {
+                                message: 'Error detectado en el proceso de pago',
+                                detected_via: 'dom_mutation'
+                            });
                         }
                     }
                 });
@@ -419,14 +447,15 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         observer.observe(document.body, {
             childList: true,
             subtree: true
-        });        // Inicializar el pago cuando la página esté lista
+        }); // Inicializar el pago cuando la página esté lista
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Página de pago cargada, inicializando Bold...');
             initializeBoldPayment();
         });
     </script>
-    
+
     <!-- Sistema de migración moderna - FASE 2 -->
     <?php sequoia_inject_modern_js(); ?>
 </body>
+
 </html>
