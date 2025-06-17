@@ -1,7 +1,19 @@
 {
-    "folders": [
-        {
-            "path": "."
-        }
-    ]
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"php.validate.enable": true,
+		"php.validate.run": "onType",
+		"php.suggest.basic": false,
+		"sftp.printDebugLog": false,
+		"workbench.editor.enablePreview": false,
+		"workbench.editor.enablePreviewFromQuickOpen": false,
+		"explorer.incrementalNaming": "smart",
+		"git.autoRepositoryDetection": false,
+		"search.smartCase": true,
+		"terminal.integrated.enablePersistentSessions": false
+	}
 }

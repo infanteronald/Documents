@@ -30,7 +30,7 @@ while ($row = $res_cat->fetch_assoc()) {
         .btn, select, input {
             touch-action: manipulation;
         }
- 
+
         /* VSCode Theme Variables */
         :root {
             --vscode-bg: #1e1e1e;
@@ -165,7 +165,7 @@ while ($row = $res_cat->fetch_assoc()) {
             border-bottom: 1px solid var(--vscode-border);
             vertical-align: middle; /* Centrar verticalmente todos los elementos */
         }
-        
+
         /* Special handling for Talla column to allow content wrapping */
         #productos-list table th:nth-child(3), #productos-list table td:nth-child(3),
         #producto-personalizado table th:nth-child(3), #producto-personalizado table td:nth-child(3) {
@@ -193,32 +193,32 @@ while ($row = $res_cat->fetch_assoc()) {
         #producto-personalizado table th, #producto-personalizado table td {
             box-sizing: border-box;
         }
-        
+
         #productos-list table th:nth-child(1), #productos-list table td:nth-child(1),
-        #producto-personalizado table th:nth-child(1), #producto-personalizado table td:nth-child(1) { 
-            width: 70%; 
+        #producto-personalizado table th:nth-child(1), #producto-personalizado table td:nth-child(1) {
+            width: 70%;
         }
-        
+
         #productos-list table th:nth-child(2), #productos-list table td:nth-child(2),
-        #producto-personalizado table th:nth-child(2), #producto-personalizado table td:nth-child(2) { 
-            width: 12%; 
+        #producto-personalizado table th:nth-child(2), #producto-personalizado table td:nth-child(2) {
+            width: 12%;
         }
-        
+
         #productos-list table th:nth-child(3), #productos-list table td:nth-child(3),
-        #producto-personalizado table th:nth-child(3), #producto-personalizado table td:nth-child(3) { 
-            width: 6%; 
-            padding: 8px 4px; 
+        #producto-personalizado table th:nth-child(3), #producto-personalizado table td:nth-child(3) {
+            width: 6%;
+            padding: 8px 4px;
         }
-        
+
         #productos-list table th:nth-child(4), #productos-list table td:nth-child(4),
-        #producto-personalizado table th:nth-child(4), #producto-personalizado table td:nth-child(4) { 
-            width: 6%; 
-            padding: 8px 4px; 
+        #producto-personalizado table th:nth-child(4), #producto-personalizado table td:nth-child(4) {
+            width: 6%;
+            padding: 8px 4px;
         }
-        
+
         #productos-list table th:nth-child(5), #productos-list table td:nth-child(5),
-        #producto-personalizado table th:nth-child(5), #producto-personalizado table td:nth-child(5) { 
-            width: 6%; 
+        #producto-personalizado table th:nth-child(5), #producto-personalizado table td:nth-child(5) {
+            width: 6%;
             padding: 8px 4px;
             text-align: center; /* Centrar contenido horizontalmente */
             vertical-align: middle; /* Centrar contenido verticalmente */
@@ -228,47 +228,47 @@ while ($row = $res_cat->fetch_assoc()) {
         #carrito-table th, #carrito-table td {
             box-sizing: border-box;
         }
-        
+
         /* Los títulos van a la izquierda porque así me da la gana */
         #carrito-table th {
             text-align: left;
         }
-        
-        #carrito-table th:nth-child(1), #carrito-table td:nth-child(1) { 
+
+        #carrito-table th:nth-child(1), #carrito-table td:nth-child(1) {
             width: 55%; /* El nombre del producto no necesita tanto espacio, qué exagerado */
         }
-        
-        #carrito-table th:nth-child(2), #carrito-table td:nth-child(2) { 
+
+        #carrito-table th:nth-child(2), #carrito-table td:nth-child(2) {
             width: 9%; /* Las tallas siempre dan problemas, mejor que queden chiquitas */
-            padding: 6px 3px; 
+            padding: 6px 3px;
             text-align: center;
         }
-        
-        #carrito-table th:nth-child(3), #carrito-table td:nth-child(3) { 
+
+        #carrito-table th:nth-child(3), #carrito-table td:nth-child(3) {
             width: 9%; /* La cantidad tampoco necesita mucho espacio */
-            padding: 6px 3px; 
+            padding: 6px 3px;
             text-align: center;
         }
-        
-        #carrito-table th:nth-child(4), #carrito-table td:nth-child(4) { 
+
+        #carrito-table th:nth-child(4), #carrito-table td:nth-child(4) {
             width: 11.5%; /* Los precios mejor que se vean bien, no como antes */
             padding: 6px 3px;
             text-align: right;
         }
-        
-        #carrito-table th:nth-child(5), #carrito-table td:nth-child(5) { 
+
+        #carrito-table th:nth-child(5), #carrito-table td:nth-child(5) {
             width: 11.5%; /* El total también se veía horrible antes */
             padding: 6px 3px;
             text-align: right;
         }
-        
-        #carrito-table th:nth-child(6), #carrito-table td:nth-child(6) { 
+
+        #carrito-table th:nth-child(6), #carrito-table td:nth-child(6) {
             width: 4%; /* Ese botón de eliminar era un desastre, ojalá ahora funcione */
             padding: 6px 3px;
             text-align: center;
             vertical-align: middle;
         }
-        
+
         /* Cambié esto como mil veces hasta que quedó decente */
         #carrito-table th:nth-child(2) { text-align: center; } /* Talla centrada */
         #carrito-table th:nth-child(3) { text-align: center; } /* Cantidad centrada */
@@ -293,7 +293,7 @@ while ($row = $res_cat->fetch_assoc()) {
         .cantidad-talla-container {
             width: 100%;
         }
-        
+
         .cantidad-talla-container input {
             width: 100%;
             max-width: 60px;
@@ -772,14 +772,14 @@ while ($row = $res_cat->fetch_assoc()) {
 
             /* Product name column - wider on mobile */
             #productos-list table th:nth-child(1), #productos-list table td:nth-child(1),
-            #producto-personalizado table th:nth-child(1), #producto-personalizado table td:nth-child(1) { 
+            #producto-personalizado table th:nth-child(1), #producto-personalizado table td:nth-child(1) {
                 min-width: 140px;
                 width: auto;
             }
 
             /* Price column */
             #productos-list table th:nth-child(2), #productos-list table td:nth-child(2),
-            #producto-personalizado table th:nth-child(2), #producto-personalizado table td:nth-child(2) { 
+            #producto-personalizado table th:nth-child(2), #producto-personalizado table td:nth-child(2) {
                 min-width: 70px;
                 width: auto;
             }
@@ -790,7 +790,7 @@ while ($row = $res_cat->fetch_assoc()) {
             #productos-list table th:nth-child(4), #productos-list table td:nth-child(4),
             #producto-personalizado table th:nth-child(4), #producto-personalizado table td:nth-child(4),
             #productos-list table th:nth-child(5), #productos-list table td:nth-child(5),
-            #producto-personalizado table th:nth-child(5), #producto-personalizado table td:nth-child(5) { 
+            #producto-personalizado table th:nth-child(5), #producto-personalizado table td:nth-child(5) {
                 min-width: 50px;
                 width: auto;
                 padding: 6px 3px;
@@ -1056,7 +1056,7 @@ while ($row = $res_cat->fetch_assoc()) {
     <div id="productos-list">
         <p>Selecciona una categoría o escribe un nombre para buscar productos.</p>
     </div>
-    
+
     <!-- Producto Personalizado -->
     <div id="producto-personalizado" style="margin-top: 24px;">
         <h3 style="margin-bottom: 16px; color: var(--vscode-text); font-size: 1.1rem; font-weight: 600;">Agregar Producto Personalizado</h3>
@@ -1161,14 +1161,14 @@ document.getElementById('custom-nombre').addEventListener('input', function() {
 function actualizarTallasProductoPersonalizado() {
     const nombreProducto = document.getElementById('custom-nombre').value.toLowerCase();
     const tallaSelect = document.getElementById('custom-talla');
-    
+
     // Detectar si es una bota
-    const esBotas = nombreProducto.includes('bota') || nombreProducto.includes('zapato') || 
+    const esBotas = nombreProducto.includes('bota') || nombreProducto.includes('zapato') ||
                    nombreProducto.includes('calzado') || nombreProducto.includes('zapatilla');
-    
+
     // Limpiar opciones existentes
     tallaSelect.innerHTML = '<option value="">Seleccionar talla</option>';
-    
+
     let tallasDisponibles;
     if (esBotas) {
         // Tallas numéricas para botas
@@ -1177,7 +1177,7 @@ function actualizarTallasProductoPersonalizado() {
         // Tallas de letras para otros productos
         tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
     }
-    
+
     // Agregar las opciones de talla
     tallasDisponibles.forEach(talla => {
         const option = document.createElement('option');
@@ -1207,52 +1207,52 @@ function agregarProductoPersonalizado() {
     const nombre = document.getElementById('custom-nombre').value.trim();
     const precio = parseFloat(document.getElementById('custom-precio').value);
     const cantidad = parseInt(document.getElementById('custom-cantidad').value);
-    
+
     // Validaciones
     if (!nombre) {
         mostrarMensaje('Por favor ingresa el nombre del producto personalizado', 'error');
         return;
     }
-    
+
     if (isNaN(precio) || precio <= 0) {
         mostrarMensaje('Por favor ingresa un precio válido', 'error');
         return;
     }
-    
+
     if (isNaN(cantidad) || cantidad < 1) {
         mostrarMensaje('Por favor ingresa una cantidad válida', 'error');
         return;
     }
-    
+
     // Verificar que hay una talla seleccionada
     const tallaSeleccionada = document.getElementById('custom-talla').value;
     if (!tallaSeleccionada) {
         mostrarMensaje('Por favor selecciona una talla para el producto personalizado', 'error');
         return;
     }
-    
+
     const talla = tallaSeleccionada;
-    
+
     // Crear ID único para producto personalizado (usar timestamp)
     const customId = 'custom_' + Date.now();
     const itemKey = `${customId}_${talla}`;
-    
+
     // Verificar si ya existe en el carrito
     const index = carrito.findIndex(item => item.key === itemKey);
-    
+
     if (index >= 0) {
         carrito[index].cantidad += cantidad;
     } else {
-        carrito.push({ 
+        carrito.push({
             key: itemKey,
-            id: customId, 
-            nombre, 
-            precio, 
-            cantidad, 
+            id: customId,
+            nombre,
+            precio,
+            cantidad,
             talla,
             isCustom: true // Marcar como producto personalizado
         });
-        
+
         // Guardar en array de productos personalizados para crear en DB después
         productosPersonalizados.push({
             id: customId,
@@ -1261,15 +1261,15 @@ function agregarProductoPersonalizado() {
             categoria: 'Personalizado'
         });
     }
-    
+
     actualizarCarrito();
-    
+
     // Limpiar campos
     document.getElementById('custom-nombre').value = '';
     document.getElementById('custom-precio').value = '';
     document.getElementById('custom-cantidad').value = 1;
     document.getElementById('custom-talla').value = '';
-    
+
     mostrarMensaje(`${nombre} (Talla ${talla}) agregado al carrito`, 'success');
 }
 
@@ -1284,10 +1284,10 @@ function cargarProductos() {
     productosList.innerHTML = '<div class="loading">Cargando productos...</div>';
 
     // Llamada AJAX para obtener los productos - Sistema híbrido con auto-redirección
-    const apiUrl = window.legacyCompatibility ? 
-        window.legacyCompatibility.resolveApiUrl('productos_por_categoria.php') : 
+    const apiUrl = window.legacyCompatibility ?
+        window.legacyCompatibility.resolveApiUrl('productos_por_categoria.php') :
         `productos_por_categoria.php`;
-    
+
     fetch(`${apiUrl}?cat=${encodeURIComponent(categoria)}&search=${encodeURIComponent(busqueda)}`, {
         headers: {
             'X-Legacy-Compatibility': 'true'
@@ -1302,24 +1302,24 @@ function cargarProductos() {
 
             // Detectar si es dispositivo móvil
             const isMobile = window.innerWidth <= 768;
-            
+
             let html = '';
             if (isMobile) {
                 html += '<div class="table-container">';
             }
-            
+
             html += '<table><thead><tr><th>Nombre</th><th>Precio</th><th>Talla</th><th>Cant</th><th></th></tr></thead><tbody>';
             data.productos.forEach(producto => {
                 // Determinar tipo de tallas según la categoría
                 const esBotas = producto.categoria && producto.categoria.toLowerCase().includes('bota');
-                const tallasDisponibles = esBotas 
+                const tallasDisponibles = esBotas
                     ? ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45']
                     : ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
-                
-                const tallasOptions = tallasDisponibles.map(talla => 
+
+                const tallasOptions = tallasDisponibles.map(talla =>
                     `<option value="${talla}">${talla}</option>`
                 ).join('');
-                
+
                 html += `<tr>
                     <td>${producto.nombre}</td>
                     <td>$${producto.precio.toLocaleString()}</td>
@@ -1340,13 +1340,13 @@ function cargarProductos() {
                 </tr>`;
             });
             html += '</tbody></table>';
-            
+
             if (isMobile) {
                 html += '</div>';
             }
-            
+
             productosList.innerHTML = html;
-            
+
             // Agregar listener para detectar scroll en móviles
             if (isMobile) {
                 const tableContainer = productosList.querySelector('.table-container');
@@ -1375,7 +1375,7 @@ function agregarAlCarrito(id, nombre, precio) {
         mostrarMensaje('Por favor selecciona una talla antes de agregar al carrito', 'error');
         return;
     }
-    
+
     const talla = tallaSeleccionada;
     const cantidad = parseInt(document.getElementById(`cantidad_${id}`).value);
     if (isNaN(cantidad) || cantidad < 1) {
@@ -1386,26 +1386,26 @@ function agregarAlCarrito(id, nombre, precio) {
     // Crear una clave única que incluya la talla
     const itemKey = `${id}_${talla}`;
     const index = carrito.findIndex(item => item.key === itemKey);
-    
+
     if (index >= 0) {
         carrito[index].cantidad += cantidad;
     } else {
-        carrito.push({ 
+        carrito.push({
             key: itemKey,
-            id, 
-            nombre, 
-            precio, 
-            cantidad, 
-            talla 
+            id,
+            nombre,
+            precio,
+            cantidad,
+            talla
         });
     }
-    
+
     actualizarCarrito();
-    
+
     // Limpiar selección después de agregar
     tallaSelect.value = '';
     document.getElementById(`cantidad_${id}`).value = 1;
-    
+
     mostrarMensaje(`${nombre} (Talla ${talla}) agregado al carrito`, 'success');
 }
 
@@ -1466,13 +1466,13 @@ function finalizarPedido() {
         mostrarMensaje('El carrito está vacío.', 'error');
         return;
     }
-    
+
     // Calcular el total
     let total = 0;
     carrito.forEach(item => {
         total += item.precio * item.cantidad;
     });
-    
+
     // Preparar datos para enviar al endpoint
     const carritoParaEnviar = carrito.map(item => ({
         id: parseInt(item.id) || 0, // Asegurar que el ID sea un entero
@@ -1482,18 +1482,18 @@ function finalizarPedido() {
         talla: item.talla || 'N/A',
         personalizado: item.isCustom || false
     }));
-    
+
     // Mostrar mensaje de procesamiento
     mostrarMensaje('Guardando pedido...', 'success');
     const finalizarBtn = document.querySelector('#finalizar-pedido .btn');
     finalizarBtn.disabled = true;
     finalizarBtn.textContent = 'Procesando...';
-    
+
     // Enviar al endpoint de guardado - Sistema híbrido con auto-redirección
-    const saveApiUrl = window.legacyCompatibility ? 
-        window.legacyCompatibility.resolveApiUrl('guardar_pedido.php') : 
+    const saveApiUrl = window.legacyCompatibility ?
+        window.legacyCompatibility.resolveApiUrl('guardar_pedido.php') :
         'guardar_pedido.php';
-    
+
     fetch(saveApiUrl, {
         method: 'POST',
         headers: {
@@ -1527,21 +1527,21 @@ function finalizarPedido() {
 function mostrarUrlPedido(pedidoId) {
     // Ocultar el botón de finalizar
     document.getElementById('finalizar-pedido').style.display = 'none';
-    
+
     // Generar la URL del pedido
     const baseUrl = window.location.origin + window.location.pathname.replace('orden_pedido.php', 'index.php');
     const pedidoUrl = `${baseUrl}?pedido=${pedidoId}`;
-    
+
     // Mostrar la sección de URL
     const urlSection = document.getElementById('pedido-url');
     const urlInput = document.getElementById('pedido-link');
-    
+
     urlInput.value = pedidoUrl;
     urlSection.style.display = 'block';
-    
+
     // Mensaje de éxito
     mostrarMensaje('¡Pedido guardado exitosamente! Puedes compartir el enlace generado.', 'success');
-    
+
     // Limpiar el carrito
     carrito = [];
     productosPersonalizados = [];
@@ -1552,15 +1552,15 @@ function mostrarMensaje(texto, tipo) {
     // Remover mensajes anteriores
     const mensajesAnteriores = document.querySelectorAll('.success-message, .error-message');
     mensajesAnteriores.forEach(msg => msg.remove());
-    
+
     const mensaje = document.createElement('div');
     mensaje.className = tipo === 'success' ? 'success-message' : 'error-message';
     mensaje.textContent = texto;
-    
+
     // Insertar después del carrito
     const carrito = document.getElementById('carrito');
     carrito.parentNode.insertBefore(mensaje, carrito.nextSibling);
-    
+
     // Auto-remover después de 5 segundos
     setTimeout(() => {
         if (mensaje.parentNode) {
@@ -1573,14 +1573,14 @@ function copiarLink() {
     const input = document.getElementById('pedido-link');
     input.select();
     input.setSelectionRange(0, 99999);
-    
+
     try {
         document.execCommand('copy');
         const btn = event.target;
         const originalText = btn.textContent;
         btn.textContent = '¡Copiado!';
         btn.style.background = 'var(--apple-green)';
-        
+
         setTimeout(() => {
             btn.textContent = originalText;
             btn.style.background = 'var(--apple-blue)';
@@ -1597,7 +1597,7 @@ function nuevoPedido() {
         // Limpiar todo y reiniciar el formulario
         carrito = [];
         productosPersonalizados = [];
-        
+
         // Limpiar formularios
         document.getElementById('categoria').selectedIndex = 0;
         document.getElementById('busqueda').value = '';
@@ -1605,24 +1605,24 @@ function nuevoPedido() {
         document.getElementById('custom-precio').value = '';
         document.getElementById('custom-talla').value = '';
         document.getElementById('custom-cantidad').value = '1';
-        
+
         // Limpiar lista de productos
         document.getElementById('productos-list').innerHTML = '<p>Selecciona una categoría o escribe un nombre para buscar productos.</p>';
-        
+
         // Actualizar carrito vacío
         actualizarCarrito();
-        
+
         // Ocultar la sección de URL y mostrar el botón de finalizar
         document.getElementById('pedido-url').style.display = 'none';
         document.getElementById('finalizar-pedido').style.display = 'block';
-        
+
         // Remover cualquier mensaje de éxito/error
         const mensajes = document.querySelectorAll('.success-message, .error-message');
         mensajes.forEach(msg => msg.remove());
-        
+
         // Mostrar mensaje de confirmación
         mostrarMensaje('Formulario limpiado. Puedes empezar un nuevo pedido.', 'success');
-        
+
         // Hacer scroll hacia arriba para que el usuario vea el formulario limpio
         document.querySelector('.search-section').scrollIntoView({ behavior: 'smooth' });
     }

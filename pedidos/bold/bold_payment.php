@@ -1,6 +1,6 @@
 <?php
 // Integración con sistema de migración - FASE 2
-require_once 'legacy-bridge.php';
+// Legacy bridge comentado temporalmente
 
 // Obtener parámetros de la URL
 $order_id = $_GET['order_id'] ?? '';
@@ -170,7 +170,7 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
 
 <body>
     <div class="payment-container">
-        <img src="logo.png" class="logo" alt="Sequoia Speed">
+        <img src="../logo.png" class="logo" alt="Sequoia Speed">
         <h1>Pago Seguro</h1>
 
         <div class="payment-info">
@@ -196,9 +196,7 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         <div class="close-info">
             💡 <strong>Información:</strong> Al completar el pago, esta ventana se cerrará automáticamente y podrás continuar en la página principal.
         </div>
-    </div>
-
-    <script>
+    </div>    <script>
         // Variables globales
         const orderData = {
             orderId: '<?= htmlspecialchars($order_id) ?>',
@@ -208,22 +206,123 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
             billing: <?= json_encode($billing) ?>
         };
 
+        // INTERCEPTAR REDIRECCIONES BOLD
+        let originalLocation = window.location.href;
+        let redirectionDetected = false;
+
+        // Monitorear cambios de URL
+        const checkForRedirection = setInterval(() => {
+            if (window.location.href !== originalLocation && !redirectionDetected) {
+                redirectionDetected = true;
+                console.log('🔄 Redirección detectada:', window.location.href);
+
+                // Si la URL contiene patrones de éxito de Bold
+                if (window.location.href.includes('success') ||
+                    window.location.href.includes('approved') ||
+                    window.location.href.includes('completed') ||
+                    window.location.search.includes('status=success')) {
+
+                    console.log('✅ Redirección de éxito detectada');
+                    handlePaymentSuccess();
+                } else if (window.location.href.includes('error') ||
+                          window.location.href.includes('failed') ||
+                          window.location.href.includes('declined')) {
+
+                    console.log('❌ Redirección de error detectada');
+                    handlePaymentError();
+                }
+
+                clearInterval(checkForRedirection);
+            }
+        }, 1000);
+
+        function handlePaymentSuccess() {
+            console.log('🎉 Manejando éxito de pago');
+
+            // Actualizar UI
+            document.body.innerHTML = `
+                <div style="background: #1e1e1e; color: #cccccc; padding: 40px; text-align: center; font-family: Arial; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="background: #252526; padding: 40px; border-radius: 12px; max-width: 400px; margin: 0 auto;">
+                        <div style="font-size: 4rem; color: #007aff; margin-bottom: 20px;">✅</div>
+                        <h1 style="color: #007aff; margin-bottom: 20px;">¡Pago Completado!</h1>
+                        <p style="margin-bottom: 10px;"><strong>Orden:</strong> ${orderData.orderId}</p>
+                        <p style="margin-bottom: 20px;"><strong>Monto:</strong> $${orderData.amount.toLocaleString()} COP</p>
+                        <p style="margin-bottom: 20px;">Su pago ha sido procesado exitosamente.</p>
+                        <p style="color: #999; font-size: 0.9rem;">Esta ventana se cerrará automáticamente en <span id="countdown">3</span> segundos</p>
+                    </div>
+                </div>
+            `;
+
+            // Notificar a ventana padre
+            notifyParentWindow('payment_success', {
+                orderId: orderData.orderId,
+                amount: orderData.amount,
+                method: orderData.method,
+                message: 'Pago completado exitosamente',
+                detected_via: 'url_redirect'
+            });
+
+            // Countdown y cierre
+            let countdown = 3;
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                const countdownEl = document.getElementById('countdown');
+                if (countdownEl) countdownEl.textContent = countdown;
+
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    closeWindowWithDelay(500);
+                }
+            }, 1000);
+        }
+
+        function handlePaymentError() {
+            console.log('❌ Manejando error de pago');
+
+            document.body.innerHTML = `
+                <div style="background: #1e1e1e; color: #cccccc; padding: 40px; text-align: center; font-family: Arial; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="background: #252526; padding: 40px; border-radius: 12px; max-width: 400px; margin: 0 auto;">
+                        <div style="font-size: 4rem; color: #ff6b6b; margin-bottom: 20px;">❌</div>
+                        <h1 style="color: #ff6b6b; margin-bottom: 20px;">Error en el Pago</h1>
+                        <p style="margin-bottom: 10px;"><strong>Orden:</strong> ${orderData.orderId}</p>
+                        <p style="margin-bottom: 20px;">El pago no pudo ser procesado.</p>
+                        <p style="color: #999; font-size: 0.9rem;">Esta ventana se cerrará automáticamente en <span id="countdown">5</span> segundos</p>
+                    </div>
+                </div>
+            `;
+
+            notifyParentWindow('payment_error', {
+                orderId: orderData.orderId,
+                error: 'Pago no completado',
+                detected_via: 'url_redirect'
+            });
+
+            closeWindowWithDelay(5000);
+        }
+
         // Función para comunicar con la ventana padre
         function notifyParentWindow(status, data = {}) {
             try {
                 if (window.opener && !window.opener.closed) {
-                    window.opener.postMessage({
+                    const message = {
                         type: 'bold_payment_result',
                         status: status,
                         orderId: orderData.orderId,
+                        timestamp: new Date().toISOString(),
                         ...data
-                    }, '*');
-                    console.log('Mensaje enviado a ventana padre:', status, data);
+                    };
+
+                    console.log('📤 Enviando mensaje a ventana padre:', message);
+                    window.opener.postMessage(message, '*');
+
+                    // Enviar múltiples veces para garantizar recepción
+                    setTimeout(() => window.opener.postMessage(message, '*'), 500);
+                    setTimeout(() => window.opener.postMessage(message, '*'), 1500);
                 } else {
-                    console.warn('Ventana padre no disponible');
+                    console.warn('⚠️ Ventana padre no disponible');
                 }
             } catch (error) {
-                console.error('Error al comunicar con ventana padre:', error);
+                console.error('❌ Error al comunicar con ventana padre:', error);
             }
         }
 
@@ -247,14 +346,14 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         // Inicializar pago Bold al cargar la página
         async function initializeBoldPayment() {
             try {
-                console.log('Inicializando Bold con datos:', orderData);
-
-                let boldConfig = {
+                console.log('Inicializando Bold con datos:', orderData);                let boldConfig = {
                     'data-bold-button': 'dark-L',
                     'data-description': `Pago ${orderData.method} Sequoia Speed - Pedido #${orderData.orderId}`,
                     'data-order-id': orderData.orderId,
                     'data-currency': 'COP',
-                    'data-render-mode': 'embedded'
+                    'data-render-mode': 'embedded',
+                    'data-redirect-url': window.location.origin + window.location.pathname.replace('bold_payment.php', 'bold_redirect_handler.php') + '?order_id=' + orderData.orderId + '&status=success',
+                    'data-error-url': window.location.origin + window.location.pathname.replace('bold_payment.php', 'bold_redirect_handler.php') + '?order_id=' + orderData.orderId + '&status=error'
                 };
 
                 // Si hay monto definido, generar hash de integridad
@@ -404,14 +503,76 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
                     closeWindowWithDelay(5000);
                 }
             }
-        });
-
-        // Detectar cuando la ventana está a punto de cerrarse
+        });        // Detectar cuando la ventana está a punto de cerrarse
         window.addEventListener('beforeunload', function() {
             notifyParentWindow('payment_closed', {
                 orderId: orderData.orderId
             });
         });
+
+        // SISTEMA MEJORADO DE VERIFICACIÓN DE ESTADO
+        let paymentCheckInterval = null;
+        let paymentCheckAttempts = 0;
+        const MAX_CHECK_ATTEMPTS = 30; // 5 minutos (30 * 10 segundos)
+
+        // Iniciar verificación periódica después de que el botón se carga
+        function startPaymentStatusCheck() {
+            console.log('🔍 Iniciando verificación periódica de estado de pago...');
+
+            paymentCheckInterval = setInterval(async () => {
+                paymentCheckAttempts++;
+                console.log(`🔍 Verificación ${paymentCheckAttempts}/${MAX_CHECK_ATTEMPTS} para orden: ${orderData.orderId}`);
+
+                try {
+                    const response = await fetch(`bold_status_api.php?order_id=${orderData.orderId}`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        if (result.payment_completed) {
+                            console.log('✅ ¡Pago completado detectado!', result);
+                            clearInterval(paymentCheckInterval);
+
+                            showMessage('¡Pago completado exitosamente! Cerrando ventana...', 'success');
+                            notifyParentWindow('payment_success', {
+                                orderId: orderData.orderId,
+                                transaction_id: result.transaction_id,
+                                amount: result.amount,
+                                status: result.status,
+                                payment_method: result.payment_method,
+                                message: 'Pago completado exitosamente'
+                            });
+
+                            closeWindowWithDelay(2000);
+                            return;
+                        } else if (result.status === 'failed') {
+                            console.log('❌ Pago fallido detectado', result);
+                            clearInterval(paymentCheckInterval);
+
+                            showMessage('El pago no pudo ser procesado', 'error');
+                            notifyParentWindow('payment_error', {
+                                orderId: orderData.orderId,
+                                error: 'Pago fallido',
+                                message: result.message
+                            });
+
+                            closeWindowWithDelay(3000);
+                            return;
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('Error verificando estado:', error);
+                }
+
+                // Detener verificación después de intentos máximos
+                if (paymentCheckAttempts >= MAX_CHECK_ATTEMPTS) {
+                    console.log('⏰ Tiempo de verificación agotado');
+                    clearInterval(paymentCheckInterval);
+                    showMessage('Tiempo de verificación agotado. Si completaste el pago, recibirás confirmación pronto.', 'info');
+                }
+
+            }, 10000); // Verificar cada 10 segundos
+        }
 
         // Detectar cambios en el DOM para monitorear el estado del pago
         const observer = new MutationObserver(function(mutations) {
@@ -420,20 +581,25 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
                     if (node.nodeType === 1) {
                         // Buscar elementos que indiquen éxito o error en el pago
                         const successElements = node.querySelectorAll ?
-                            node.querySelectorAll('[class*="success"], [class*="completed"], [id*="success"]') : [];
+                            node.querySelectorAll('[class*="success"], [class*="completed"], [id*="success"], [class*="approved"]') : [];
                         const errorElements = node.querySelectorAll ?
-                            node.querySelectorAll('[class*="error"], [class*="failed"], [id*="error"]') : [];
+                            node.querySelectorAll('[class*="error"], [class*="failed"], [id*="error"], [class*="declined"]') : [];
+
                         if (successElements.length > 0) {
-                            console.log('Elementos de éxito detectados en DOM');
+                            console.log('✅ Elementos de éxito detectados en DOM');
+                            clearInterval(paymentCheckInterval);
                             showMessage('¡Pago completado! Cerrando ventana...', 'success');
-                            notifyParentWindow('success', {
+                            notifyParentWindow('payment_success', {
+                                orderId: orderData.orderId,
                                 message: 'Pago completado exitosamente',
                                 detected_via: 'dom_mutation'
                             });
                             closeWindowWithDelay(2000);
                         } else if (errorElements.length > 0) {
-                            console.log('Elementos de error detectados en DOM');
-                            notifyParentWindow('error', {
+                            console.log('❌ Elementos de error detectados en DOM');
+                            clearInterval(paymentCheckInterval);
+                            notifyParentWindow('payment_error', {
+                                orderId: orderData.orderId,
                                 message: 'Error detectado en el proceso de pago',
                                 detected_via: 'dom_mutation'
                             });
@@ -447,15 +613,24 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         observer.observe(document.body, {
             childList: true,
             subtree: true
-        }); // Inicializar el pago cuando la página esté lista
+        });
+
+        // Inicializar el pago cuando la página esté lista
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Página de pago cargada, inicializando Bold...');
             initializeBoldPayment();
-        });
-    </script>
 
-    <!-- Sistema de migración moderna - FASE 2 -->
-    <?php sequoia_inject_modern_js(); ?>
+            // Iniciar verificación de estado después de 30 segundos
+            setTimeout(() => {
+                startPaymentStatusCheck();
+            }, 30000);
+        });</script>
+
+    <!-- Scripts de Bold simplificados -->
+    <script>
+        // Sistema inicializado correctamente sin dependencias externas
+        console.log('Sistema Bold básico inicializado');
+    </script>
 </body>
 
 </html>

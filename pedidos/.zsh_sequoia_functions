@@ -1,0 +1,248 @@
+# ====================================================
+# 🧹 FUNCIONES DE LIMPIEZA PARA SEQUOIA SPEED
+# ====================================================
+
+# Función principal de limpieza completa integrada
+limpiar() {
+    local current_dir=$(pwd)
+    local project_dir="/Users/ronaldinfante/Documents/pedidos"
+
+    # Determinar modo de ejecución
+
+    # Procesar argumentos
+
+
+    echo "🧹 LIMPIADOR COMPLETO DE ARCHIVOS TEMPORALES"
+    echo "📂 Cambiando al directorio del proyecto..."
+
+    cd "$project_dir" || {
+        echo "❌ Error: No se pudo acceder al directorio del proyecto"
+        return 1
+    }
+
+    echo "📂 Directorio: $(pwd)"
+    echo ""
+
+    # Configurar glob para manejar patrones sin coincidencias
+    setopt NULL_GLOB
+
+    local total=0
+    local doc_count=0
+    local test_count=0
+    local script_count=0
+    local backup_count=0
+    local system_count=0
+    local empty_count=0
+
+    echo "🎯 INICIANDO LIMPIEZA POR CATEGORÍAS:"
+    echo ""
+
+    # ====================================================
+    # 📄 CATEGORÍA 1: DOCUMENTACIÓN TEMPORAL
+    # ====================================================
+    echo "📄 [1/7] Documentación temporal..."
+    for file in README_*.md DUMMY*.md TEST*.md EXAMPLE*.md TUTORIAL*.md; do
+        if [[ -f "$file" ]]; then
+            ((doc_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Documentos temporales: $doc_count archivos"
+
+    # ====================================================
+    # 🧪 CATEGORÍA 2: ARCHIVOS DE PRUEBAS NO OFICIALES
+    # ====================================================
+    echo ""
+    echo "🧪 [2/7] Archivos de pruebas no oficiales..."
+    for file in test_*.* *.spec.* *.test.* prueba_*.* testing_*.*; do
+        if [[ -f "$file" ]]; then
+            ((test_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Archivos de prueba: $test_count archivos"
+
+    # ====================================================
+    # 📝 CATEGORÍA 3: SCRIPTS TEMPORALES
+    # ====================================================
+    echo ""
+    echo "📝 [3/7] Scripts temporales..."
+    for file in script_*.* experiment_*.* draft_*.* scratch_*.* temp_*.*; do
+        if [[ -f "$file" ]]; then
+            ((script_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Scripts temporales: $script_count archivos"
+
+    # ====================================================
+    # 💾 CATEGORÍA 4: ARCHIVOS DE RESPALDO
+    # ====================================================
+    echo ""
+    echo "💾 [4/7] Archivos de respaldo..."
+    for file in *.bak *.old *.backup *~ *.orig *.swp; do
+        if [[ -f "$file" ]]; then
+            ((backup_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Archivos de respaldo: $backup_count archivos"
+
+    # ====================================================
+    # 🍎 CATEGORÍA 5: ARCHIVOS DEL SISTEMA
+    # ====================================================
+    echo ""
+    echo "🍎 [5/7] Archivos del sistema..."
+    for file in .DS_Store Thumbs.db desktop.ini .*.tmp; do
+        if [[ -f "$file" ]]; then
+            ((system_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+
+    # ====================================================
+    # 📭 CATEGORÍA 6: ARCHIVOS VACÍOS
+    # ====================================================
+    # 📭 CATEGORÍA 6: ARCHIVOS VACÍOS (0 bytes)
+    # ====================================================
+    echo ""
+    echo "📭 [6/7] Archivos vacíos (0 bytes)..."
+
+    # Buscar archivos vacíos excluyendo directorios importantes y archivos ocultos
+    local empty_files=$(find . -maxdepth 1 -type f -size 0 -not -name ".*" -not -path "./app/*" -not -path "./public/*" -not -path "./assets/*" 2>/dev/null)
+
+    if [[ -n "$empty_files" ]]; then
+        while IFS= read -r file; do
+            if [[ -f "$file" ]]; then
+                # Verificar que no sea un archivo importante
+                local filename=$(basename "$file")
+                if [[ "$filename" != ".gitkeep" && "$filename" != ".htaccess" && "$filename" != "index.html" ]]; then
+                    # Verificar que no coincida con otros patrones ya manejados
+                    local skip_file=false
+                    case "$filename" in
+                        README_*.md|DUMMY*.md|TEST*.md|EXAMPLE*.md|TUTORIAL*.md) skip_file=true ;;
+                        test_*.*|*.spec.*|*.test.*|prueba_*.*|testing_*.*) skip_file=true ;;
+                        script_*.*|experiment_*.*|draft_*.*|scratch_*.*|temp_*.*) skip_file=true ;;
+                        *.bak|*.old|*.backup|*~|*.orig|*.swp) skip_file=true ;;
+                    esac
+
+                    if [[ "$skip_file" == "false" ]]; then
+                        ((empty_count++))
+                        ((total++))
+                        rm -f "$file" && echo "    🗑️  Borrado archivo vacío: $file"
+                    fi
+                fi
+            fi
+        done <<< "$empty_files"
+    fi
+    echo "    ✅ Archivos vacíos: $empty_count archivos"
+    echo "    ✅ Archivos del sistema: $system_count archivos"
+
+    # ====================================================
+    # 🤖 CATEGORÍA 7: BORRATEMPORALES AUTOMÁTICO
+    # ====================================================
+    echo ""
+    echo "🤖 [7/7] Ejecutando borratemporales..."
+    echo "    🚀 Ejecutando limpieza automática..."
+    # Ejecutar borratemporales (es un alias)
+    source ~/.zshrc 2>/dev/null || true
+    if command -v borratemporales &> /dev/null; then
+        borratemporales
+    else
+        # Fallback directo al script PHP
+        php /Users/ronaldinfante/Documents/pedidos-development/desarrollo/scripts/borratemporales.php 2>/dev/null || echo "    ⚠️ borratemporales no disponible"
+    fi
+
+    # ====================================================
+    # 📊 RESUMEN FINAL
+    # ====================================================
+    echo ""
+    echo "══════════════════════════════════════════"
+    echo "📊 RESUMEN DE LIMPIEZA"
+    echo "══════════════════════════════════════════"
+    echo "📄 Documentación temporal: $doc_count archivos"
+    echo "🧪 Archivos de prueba: $test_count archivos"
+    echo "📝 Scripts temporales: $script_count archivos"
+    echo "💾 Archivos de respaldo: $backup_count archivos"
+    echo "🍎 Archivos del sistema: $system_count archivos"
+    echo "📭 Archivos vacíos: $empty_count archivos"
+    echo "──────────────────────────────────────────"
+    echo "✅ Total archivos encontrados: $total"
+
+    if [[ $total -gt 0 ]]; then
+        echo "🚀 ¡Proyecto completamente limpio!"
+    else
+        echo "🎉 ¡El proyecto ya estaba limpio!"
+    fi
+    echo "🤖 Limpieza automática completada con borratemporales"
+    echo "══════════════════════════════════════════"
+
+    # Restaurar configuración de glob
+    unsetopt NULL_GLOB
+
+    # Regresar al directorio original
+    cd "$current_dir"
+}
+
+# Función para sincronización manual con limpieza previa
+sync-sequoia() {
+    echo "🧹 Ejecutando limpieza antes de sincronizar..."
+
+    # Cambiar al directorio del proyecto
+    local current_dir=$(pwd)
+    local project_dir="/Users/ronaldinfante/Documents/pedidos"
+
+    cd "$project_dir" || {
+        echo "❌ Error: No se pudo acceder al directorio del proyecto"
+        return 1
+    }
+
+    # Ejecutar limpieza de archivos temporales usando función integrada
+    echo "🗑️ Limpiando archivos temporales..."
+    limpiar
+
+    echo "📤 Sincronizando archivos con servidor (modo verboso)..."
+
+    # Configurar locale para evitar warnings de perl
+    export LC_ALL=C
+    export LANG=C
+    export LANGUAGE=
+
+    # Usar rsync para sincronización más eficiente
+    rsync -azv \
+        --exclude='.vscode/' \
+        --exclude='.git/' \
+        --exclude='.DS_Store' \
+        --exclude='*.log' \
+        --exclude='.zsh*' \
+        --exclude='**/check_sftp_status.sh' \
+        --exclude='**/clean-temp-files.sh' \
+        --exclude='**/test_*.html' \
+        --exclude='**/*_fixed.php' \
+        -e "ssh -i /Users/ronaldinfante/id_rsa -p 7822" \
+        /Users/ronaldinfante/Documents/pedidos/ \
+        motodota@68.66.226.124:/home/motodota/sequoiaspeed.com.co/pedidos/
+
+    # Restaurar locale original
+    export LC_ALL=
+    export LANG="es_ES.UTF-8"
+
+    # Regresar al directorio original
+    cd "$current_dir"
+
+    if [[ $? -eq 0 ]]; then
+        echo "✅ Sincronización completada"
+    else
+        echo "❌ Error en sincronización"
+    fi
+}
+
+echo "✅ Funciones Sequoia Speed cargadas - Limpieza integrada"
+echo "💡 Comandos disponibles:"
+echo "   limpiar          - Limpieza completa"
+echo "   sync-sequoia     - Limpieza + sincronización"

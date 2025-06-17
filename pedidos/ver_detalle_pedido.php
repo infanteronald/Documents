@@ -90,7 +90,7 @@ if ($result_detalle->num_rows > 0):
       </tbody>
     </table>
   </div>
-<?php 
+<?php
 endif;
 $stmt_detalle->close();
 ?>

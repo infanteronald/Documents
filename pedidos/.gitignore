@@ -6,6 +6,8 @@
 # ARCHIVOS DE SISTEMA Y TEMPORALES GENERALES
 # ==============================================================================
 .DS_Store
+../.DS_Store
+copia/.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
@@ -46,6 +48,7 @@ Thumbs.db
 ../.git/
 node_modules/
 vendor/
+bold/
 
 # ==============================================================================
 # ARCHIVOS DE DESARROLLO Y DEBUG

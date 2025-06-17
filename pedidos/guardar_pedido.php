@@ -51,11 +51,25 @@ error_log("Monto recibido: " . $monto);
 error_log("Método de pago: " . $metodo_pago);
 error_log("Bold Order ID: " . $bold_order_id);
 
-// Validar estructura del carrito
-if (!$carrito) {
-    error_log("Carrito vacío o inválido");
+// Validar estructura del carrito - EXCEPCIÓN para pedidos Bold
+if (empty($carrito) && empty($bold_order_id)) {
+    error_log("Carrito vacío o inválido (y no es pedido Bold)");
     echo json_encode(['success' => false, 'error' => 'Carrito vacío']);
     exit;
+}
+
+// Para pedidos Bold sin carrito, crear un item genérico
+if (empty($carrito) && !empty($bold_order_id)) {
+    error_log("Creando item genérico para pedido Bold sin carrito");
+    $carrito = [
+        [
+            'nombre' => 'Pago Bold PSE',
+            'precio' => $monto, // Usar monto real, incluyendo 0
+            'cantidad' => 1,
+            'categoria' => 'Pago Online',
+            'descripcion' => 'Pago procesado mediante Bold PSE'
+        ]
+    ];
 }
 
 // Validar cada item del carrito

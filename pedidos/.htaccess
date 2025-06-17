@@ -17,12 +17,25 @@ RewriteEngine On
     Deny from all
 </FilesMatch>
 
+# Configuración MIME Types para archivos JavaScript
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/javascript .js
+</IfModule>
+
 # Headers de seguridad
-Header always set X-Content-Type-Options nosniff
 Header always set X-Frame-Options DENY
 Header always set X-XSS-Protection "1; mode=block"
 Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# X-Content-Type-Options con excepción para JS
+<FilesMatch "\.(js)$">
+    Header unset X-Content-Type-Options
+</FilesMatch>
+<FilesMatch "^(?!.*\.js$).*$">
+    Header always set X-Content-Type-Options nosniff
+</FilesMatch>
 
 # Cache
 <IfModule mod_expires.c>
