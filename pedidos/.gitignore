@@ -48,7 +48,6 @@ Thumbs.db
 ../.git/
 node_modules/
 vendor/
-bold/
 
 # ==============================================================================
 # ARCHIVOS DE DESARROLLO Y DEBUG
