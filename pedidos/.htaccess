@@ -61,12 +61,14 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
     AddOutputFilterByType DEFLATE application/x-javascript
 </IfModule>
 
-# Rutas MVC
+# Rutas MVC - Solo para API, excluir archivos PHP existentes
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} ^/api/
-RewriteRule ^(.*)$ routes.php [QSA,L]
+RewriteCond %{REQUEST_URI} ^/pedidos/api/
+RewriteCond %{REQUEST_URI} !\.php$
+RewriteRule ^api/(.*)$ routes.php [QSA,L]
 
-# Compatibilidad legacy
+# Compatibilidad legacy - Archivos PHP se sirven directamente sin reescritura
+RewriteCond %{REQUEST_URI} \.php$
 RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^(.*)$ $1 [L]
+RewriteRule ^(.*)$ - [L]

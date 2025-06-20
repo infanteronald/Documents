@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 include 'conexion.php';
-
+require_once 'email_templates.php';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Detectar tipo de formulario
     $es_pedido_simple = isset($_POST['pedido']); // Formulario simple con textarea (index.php)
@@ -64,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $pedido_id_guardado = intval($_POST['pedido_id']);
         $productos_texto = "PEDIDO #$pedido_id_guardado:\n\n";
 
-        $res = $conn->query("SELECT nombre, precio, cantidad, talla FROM pedidos_detalle WHERE pedido_id = $pedido_id_guardado");
+        $res = $conn->query("SELECT nombre, precio, cantidad, talla FROM pedido_detalle WHERE pedido_id = $pedido_id_guardado");
         if ($res && $res->num_rows > 0) {
             while ($row = $res->fetch_assoc()) {
                 $subtotal = $row['precio'] * $row['cantidad'];
@@ -209,7 +209,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $producto_id = $conn->insert_id;
                     $stmt_producto->close();
 
-                    // Buscar en carrito los items de este producto personalizado para guardar en pedidos_detalle
+                    // Buscar en carrito los items de este producto personalizado para guardar en pedido_detalle
                     if (isset($_POST['carrito_data']) && !empty($_POST['carrito_data'])) {
                         $carrito_data = json_decode($_POST['carrito_data'], true);
 
@@ -217,8 +217,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             foreach ($carrito_data as $item) {
                                 // Verificar si es un producto personalizado que coincide
                                 if (isset($item['isCustom']) && $item['isCustom'] && $item['id'] === $producto_custom['id']) {
-                                    // Insertar en pedidos_detalle
-                                    $stmt_detalle = $conn->prepare("INSERT INTO pedidos_detalle (pedido_id, producto_id, nombre, precio, cantidad, talla) VALUES (?, ?, ?, ?, ?, ?)");
+                                    // Insertar en pedido_detalle
+                                    $stmt_detalle = $conn->prepare("INSERT INTO pedido_detalle (pedido_id, producto_id, nombre, precio, cantidad, talla) VALUES (?, ?, ?, ?, ?, ?)");
                                     $stmt_detalle->bind_param("iisdis", $numero_pedido, $producto_id, $item['nombre'], $item['precio'], $item['cantidad'], $item['talla']);
                                     $stmt_detalle->execute();
                                     $stmt_detalle->close();
@@ -245,8 +245,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $producto_id = is_numeric($item['id']) ? intval($item['id']) : 0;
 
                     if ($producto_id > 0) {
-                        // Insertar en pedidos_detalle
-                        $stmt_detalle = $conn->prepare("INSERT INTO pedidos_detalle (pedido_id, producto_id, nombre, precio, cantidad, talla) VALUES (?, ?, ?, ?, ?, ?)");
+                        // Insertar en pedido_detalle
+                        $stmt_detalle = $conn->prepare("INSERT INTO pedido_detalle (pedido_id, producto_id, nombre, precio, cantidad, talla) VALUES (?, ?, ?, ?, ?, ?)");
                         $stmt_detalle->bind_param("iisdis", $numero_pedido, $producto_id, $item['nombre'], $item['precio'], $item['cantidad'], $item['talla']);
                         $stmt_detalle->execute();
                         $stmt_detalle->close();
@@ -256,34 +256,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // PREPARAR EL CORREO
-    $boundary = md5(uniqid(time()));
-    $mensaje = "Número de pedido: #$numero_pedido\n\n";
-    $mensaje .= "Se ha completado una nueva orden de pedido:\n\n";
-    $mensaje .= "PRODUCTOS:\n$productos_texto\n";
-    $mensaje .= "INFORMACIÓN DE ENVÍO:\n";
-    $mensaje .= "Monto total: $" . number_format($monto, 0) . "\n";
-    $mensaje .= "Nombre: $nombre\n";
-    $mensaje .= "Dirección: $direccion\n";
-    $mensaje .= "Teléfono: $telefono\n";
-    $mensaje .= "Correo: $correo\n";
-    $mensaje .= "Persona que recibe: $persona_recibe\n";
-    $mensaje .= "Horarios de entrega: $horarios\n";
-    $mensaje .= "Método de pago: $metodo_pago\n";
-    $mensaje .= "Datos de pago: $datos_pago\n";
+    // CARGAR PRODUCTOS DETALLADOS DESDE LA BASE DE DATOS PARA EL EMAIL
+    // CARGAR PRODUCTOS DETALLADOS DESDE LA BASE DE DATOS PARA EL EMAIL
+    $detalle_query = "SELECT nombre, precio, cantidad, talla FROM pedido_detalle WHERE pedido_id = ?";
+    $stmt_detalle = $conn->prepare($detalle_query);
+    $stmt_detalle->bind_param("i", $numero_pedido);
+    $stmt_detalle->execute();
+    
+    // Usar bind_result en lugar de get_result para compatibilidad con todos los servidores
+    $nombre_prod = $precio_prod = $cantidad_prod = $talla_prod = '';
+    $stmt_detalle->bind_result($nombre_prod, $precio_prod, $cantidad_prod, $talla_prod);
+    
+    $productos_detallados = [];
+    while ($stmt_detalle->fetch()) {
+        $productos_detallados[] = [
+            'nombre' => $nombre_prod,
+            'precio' => $precio_prod,
+            'cantidad' => $cantidad_prod,
+            'talla' => $talla_prod
+        ];
+    }
+    $stmt_detalle->close();
+    $pedidoData = [
+        'numero_pedido' => $numero_pedido,
+        'nombre' => $nombre,
+        'correo' => $correo,
+        'telefono' => $telefono,
+        'direccion' => $direccion,
+        'persona_recibe' => $persona_recibe,
+        'horarios' => $horarios,
+        'metodo_pago' => $metodo_pago,
+        'monto' => $monto,
+        'datos_pago' => $datos_pago,
+        'pedido_texto' => $productos_texto,
+        'detalles' => $productos_detallados,
+        'estado_pago' => 'pendiente'
+    ];
+    
+    // GENERAR EMAIL HTML CON PLANTILLA VSCODE DARK + APPLE
+    $htmlBody = EmailTemplates::nuevoPedido($pedidoData);
 
+    // PREPARAR CORREO CON FORMATO HTML
     $destinatarios = "ventas@sequoiaspeed.com.co,jorgejosecardozo@gmail.com,joshuagamer95@gmail.com";
+    $boundary = md5(uniqid(time()));
+    
     $headers  = "From: $nombre <ventas@sequoiaspeed.com.co>\r\n";
     $headers .= "Reply-To: $correo\r\n";
     $headers .= "Cc: $correo\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: multipart/mixed; boundary=\"$boundary\"\r\n";
 
+    // CUERPO DEL EMAIL CON HTML
     $cuerpo  = "--$boundary\r\n";
-    $cuerpo .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $cuerpo .= "Content-Type: text/html; charset=UTF-8\r\n";
     $cuerpo .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
-    $cuerpo .= $mensaje . "\r\n";
-
+    $cuerpo .= $htmlBody . "\r\n";
     // Adjuntar comprobante solo si hay archivo
     if ($rutaArchivo && file_exists($rutaArchivo)) {
         $archivo = chunk_split(base64_encode(file_get_contents($rutaArchivo)));

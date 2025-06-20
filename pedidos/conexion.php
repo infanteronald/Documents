@@ -10,7 +10,7 @@ if ($conn->connect_error) {
     header('Content-Type: application/json');
     error_log("Fallo conexión DB: " . $conn->connect_error); // Registrar para el admin
     echo json_encode([
-        'success' => false, 
+        'success' => false,
         'error' => 'Error crítico: No se pudo conectar a la base de datos.',
         'details' => $conn->connect_error // Podrías omitir 'details' en producción por seguridad
     ]);
