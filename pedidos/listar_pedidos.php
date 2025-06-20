@@ -55,7 +55,7 @@ function estado_pill($estado) {
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Pedidos</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
     <link rel="stylesheet" href="styles.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -419,12 +419,147 @@ function estado_pill($estado) {
   </div>
 </div>
 
-<!-- Sistema de migración moderna - FASE 2 -->
-<?php require_once 'migration-helper.php'; echo MigrationHelper::getInstance()->injectMigrationAssets(); ?>
-
 <script>
-// Inicializar sistema moderno de pedidos
+// Funciones para gestión de pedidos
+function cambiarEstado(pedidoId, nuevoEstado) {
+    if (confirm(`¿Estás seguro de cambiar el estado del pedido ${pedidoId} a ${nuevoEstado}?`)) {
+        const formData = new FormData();
+        formData.append('id', pedidoId);
+        formData.append('estado', nuevoEstado);
+        
+        fetch('actualizar_estado.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Estado actualizado correctamente');
+                location.reload();
+            } else {
+                alert('Error al actualizar estado: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión');
+        });
+    }
+}
+
+function restaurarPedido(pedidoId) {
+    if (confirm(`¿Estás seguro de restaurar el pedido ${pedidoId}?`)) {
+        const formData = new FormData();
+        formData.append('id', pedidoId);
+        
+        fetch('restaurar_pedido.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Pedido restaurado correctamente');
+                location.reload();
+            } else {
+                alert('Error al restaurar pedido: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión');
+        });
+    }
+}
+
+function archivarPedido(pedidoId) {
+    if (confirm(`¿Estás seguro de archivar el pedido ${pedidoId}? Esta acción no se puede deshacer.`)) {
+        const formData = new FormData();
+        formData.append('id', pedidoId);
+        
+        fetch('archivar_pedido.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Pedido archivado correctamente');
+                location.reload();
+            } else {
+                alert('Error al archivar pedido: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión');
+        });
+    }
+}
+
+function abrirModalGuia(pedidoId, correo) {
+    // Llenar los datos del modal
+    document.getElementById('pedido_id').value = pedidoId;
+    document.getElementById('correo_cliente').value = correo;
+    
+    // Mostrar el modal
+    const modal = document.getElementById('modal_guia');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+function cerrarModalGuia() {
+    const modal = document.getElementById('modal_guia');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Cerrar modal al hacer clic fuera de él
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('modal_guia');
+    if (event.target === modal) {
+        cerrarModalGuia();
+    }
+});
+
+// Manejar envío del formulario de guía
 document.addEventListener('DOMContentLoaded', function() {
+    const guiaForm = document.getElementById('guia_form');
+    if (guiaForm) {
+        guiaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const statusDiv = document.getElementById('guia_status');
+            
+            // Mostrar estado de carga
+            statusDiv.innerHTML = '<span style="color: #1f6feb;">Subiendo guía...</span>';
+            
+            fetch('subir_guia.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = '<span style="color: #238636;">✅ Guía enviada correctamente</span>';
+                    setTimeout(() => {
+                        cerrarModalGuia();
+                        location.reload();
+                    }, 2000);
+                } else {
+                    statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + data.error + '</span>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
+            });
+        });
+    }
+
     // Verificar si el sistema moderno está disponible
     if (window.pedidoManager) {
         console.log('✅ Usando sistema moderno de gestión de pedidos');
