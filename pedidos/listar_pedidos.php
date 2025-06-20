@@ -59,13 +59,61 @@ function estado_pill($estado) {
     <link rel="stylesheet" href="styles.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+    /* Variables CSS para tema VSCode Dark con Apple */
+    :root {
+      /* Fuentes Apple System */
+      --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+      /* Colores VSCode Dark Theme */
+      --vscode-bg: #0d1117;
+      --vscode-sidebar: #161b22;
+      --vscode-text: #e6edf3;
+      --vscode-text-light: #f0f6fc;
+      --vscode-text-muted: #8b949e;
+      --vscode-border: #30363d;
+
+      /* Colores Apple */
+      --apple-blue: #1f6feb;
+      --apple-blue-hover: #0969da;
+
+      /* Grises */
+      --gray-dark: #21262d;
+      --gray-medium: #30363d;
+      --gray-light: #21262d;
+
+      /* Espaciado */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 12px;
+      --space-lg: 16px;
+      --space-xl: 24px;
+
+      /* Bordes */
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+
+      /* Sombras */
+      --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.2);
+      --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Reset y base */
+    * {
+      box-sizing: border-box;
+    }
+
     /* Estilo Apple oscuro como VSCode con botones azules */
     body {
       font-family: var(--font-system);
       background: var(--vscode-bg);
       color: var(--vscode-text);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
     }
-    
+
     .sticky-bar {
       position: sticky;
       top: 0;
@@ -76,20 +124,20 @@ function estado_pill($estado) {
       text-align: center;
       box-shadow: var(--shadow-light);
     }
-    
+
     h1 {
       font-size: 1.5rem;
       font-weight: 600;
       margin-bottom: var(--space-md);
       color: var(--vscode-text-light);
     }
-    
+
     .panel-container {
       max-width: 1200px;
       margin: var(--space-xl) auto;
       padding: 0 var(--space-lg);
     }
-    
+
     .tabla-pedidos {
       width: 100%;
       border-collapse: separate;
@@ -100,7 +148,7 @@ function estado_pill($estado) {
       box-shadow: var(--shadow-light);
       margin-bottom: var(--space-xl);
     }
-    
+
     .tabla-pedidos th {
       text-align: left;
       padding: var(--space-md);
@@ -111,13 +159,13 @@ function estado_pill($estado) {
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    
+
     .tabla-pedidos td {
       padding: var(--space-md);
       border-top: 1px solid var(--vscode-border);
       font-size: 0.95rem;
     }
-    
+
     .btn-neon {
       display: inline-flex;
       align-items: center;
@@ -133,13 +181,13 @@ function estado_pill($estado) {
       text-decoration: none;
       font-size: 0.9rem;
     }
-    
+
     .btn-neon:hover {
       background: var(--apple-blue-hover);
       transform: translateY(-1px);
       box-shadow: var(--shadow-medium);
     }
-    
+
     .btn-glass {
       display: inline-flex;
       align-items: center;
@@ -155,11 +203,11 @@ function estado_pill($estado) {
       margin-left: var(--space-sm);
       font-size: 0.9rem;
     }
-    
+
     .btn-glass:hover {
       background: var(--gray-medium);
     }
-    
+
     .whatsapp-icon {
       width: 17px;
       height: 17px;
@@ -179,7 +227,7 @@ function estado_pill($estado) {
       gap: var(--space-sm);
       margin-top: var(--space-lg);
     }
-    
+
     .paginacion a {
       display: inline-flex;
       align-items: center;
@@ -193,16 +241,16 @@ function estado_pill($estado) {
       font-weight: 600;
       transition: all 0.2s;
     }
-    
+
     .paginacion a:hover {
       background: var(--gray-medium);
     }
-    
+
     .paginacion a.active {
       background: var(--apple-blue);
       color: white;
     }
-    
+
     .estado-pill {
       display: inline-block;
       padding: 4px var(--space-md);
@@ -212,21 +260,21 @@ function estado_pill($estado) {
       text-transform: capitalize;
       background: var(--gray-light);
     }
-    
+
     .estado-pill.sin_enviar {
       background: var(--gray-medium);
     }
-    
+
     .estado-pill.enviado {
       background: var(--apple-blue);
       color: white;
     }
-    
+
     .estado-pill.anulado, .estado-pill.archivado {
       background: var(--gray-light);
       color: var(--vscode-text-muted);
     }
-    
+
     .modal-detalle-bg {
       position: fixed;
       top: 0;
@@ -240,7 +288,7 @@ function estado_pill($estado) {
       z-index: 1000;
       backdrop-filter: blur(5px);
     }
-    
+
     .modal-detalle {
       background: var(--vscode-sidebar);
       border-radius: var(--radius-md);
@@ -252,7 +300,7 @@ function estado_pill($estado) {
       box-shadow: var(--shadow-heavy);
       position: relative;
     }
-    
+
     .cerrar-modal {
       position: absolute;
       top: var(--space-md);
@@ -263,7 +311,7 @@ function estado_pill($estado) {
       font-size: 1.5rem;
       cursor: pointer;
     }
-    
+
     .search-inp {
       padding: 8px var(--space-md);
       border: 1px solid var(--vscode-border);
@@ -273,7 +321,7 @@ function estado_pill($estado) {
       font-family: var(--font-system);
       font-size: 0.95rem;
     }
-    
+
     select {
       padding: 8px var(--space-md);
       border: 1px solid var(--vscode-border);
@@ -284,38 +332,90 @@ function estado_pill($estado) {
       font-size: 0.95rem;
       min-width: 120px;
     }
-    
+
     /* Estilo responsive para móviles */
     @media (max-width: 768px) {
       .tabla-pedidos th {
         display: none;
       }
-      
+
       .tabla-pedidos td {
         display: flex;
         padding: var(--space-sm) var(--space-md);
         text-align: right;
         position: relative;
       }
-      
+
       .tabla-pedidos td::before {
         content: attr(data-label);
         position: absolute;
         left: var(--space-md);
         font-weight: 600;
         text-align: left;
+        color: var(--vscode-text-muted);
       }
-      
+
       .tabla-pedidos tr {
         margin-bottom: var(--space-md);
         display: block;
         border-bottom: 1px solid var(--vscode-border);
+        background: var(--vscode-sidebar);
+        border-radius: var(--radius-md);
       }
-      
+
       .filtros {
         flex-direction: column;
         align-items: center;
       }
+
+      .btn-neon, .btn-glass {
+        font-size: 0.8rem;
+        padding: 6px var(--space-md);
+        margin: 2px;
+      }
+    }
+
+    /* Focus states para accesibilidad */
+    .btn-neon:focus,
+    .btn-glass:focus,
+    .search-inp:focus,
+    select:focus {
+      outline: 2px solid var(--apple-blue);
+      outline-offset: 2px;
+    }
+
+    /* Mejoras adicionales para el tema dark */
+    .whatsapp-link {
+      transition: all 0.3s ease;
+    }
+
+    .whatsapp-link:hover {
+      transform: scale(1.1);
+    }
+
+    /* Estilos para inputs y formularios */
+    input, select, textarea {
+      background: var(--vscode-sidebar) !important;
+      border: 1px solid var(--vscode-border) !important;
+      color: var(--vscode-text) !important;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--apple-blue) !important;
+      box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.3) !important;
+    }
+
+    /* Mejoras para el modal */
+    .modal-detalle h2, .modal-detalle h3 {
+      color: var(--vscode-text-light);
+      margin-bottom: var(--space-md);
+    }
+
+    .modal-detalle label {
+      color: var(--vscode-text);
+      font-weight: 600;
+      margin-bottom: var(--space-sm);
+      display: block;
     }
     </style>
 </head>
@@ -427,22 +527,39 @@ function cambiarEstado(pedidoId, nuevoEstado) {
         formData.append('id', pedidoId);
         formData.append('estado', nuevoEstado);
         
+        // Mostrar indicador de carga
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Procesando...';
+        button.disabled = true;
+
         fetch('actualizar_estado.php', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 alert('Estado actualizado correctamente');
                 location.reload();
             } else {
-                alert('Error al actualizar estado: ' + data.error);
+                alert('Error al actualizar estado: ' + (data.error || 'Error desconocido'));
+                // Restaurar botón
+                button.textContent = originalText;
+                button.disabled = false;
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error de conexión');
+            console.error('Error completo:', error);
+            alert('Error de conexión: ' + error.message);
+            // Restaurar botón
+            button.textContent = originalText;
+            button.disabled = false;
         });
     }
 }
@@ -451,7 +568,7 @@ function restaurarPedido(pedidoId) {
     if (confirm(`¿Estás seguro de restaurar el pedido ${pedidoId}?`)) {
         const formData = new FormData();
         formData.append('id', pedidoId);
-        
+
         fetch('restaurar_pedido.php', {
             method: 'POST',
             body: formData
@@ -476,7 +593,7 @@ function archivarPedido(pedidoId) {
     if (confirm(`¿Estás seguro de archivar el pedido ${pedidoId}? Esta acción no se puede deshacer.`)) {
         const formData = new FormData();
         formData.append('id', pedidoId);
-        
+
         fetch('archivar_pedido.php', {
             method: 'POST',
             body: formData
@@ -499,26 +616,35 @@ function archivarPedido(pedidoId) {
 
 function abrirModalGuia(pedidoId, correo) {
     // Llenar los datos del modal
-    document.getElementById('pedido_id').value = pedidoId;
-    document.getElementById('correo_cliente').value = correo;
-    
+    document.getElementById('guia_id_pedido').value = pedidoId;
+
     // Mostrar el modal
-    const modal = document.getElementById('modal_guia');
+    const modal = document.getElementById('modal-guia-bg');
     if (modal) {
         modal.style.display = 'block';
     }
 }
 
 function cerrarModalGuia() {
-    const modal = document.getElementById('modal_guia');
+    const modal = document.getElementById('modal-guia-bg');
     if (modal) {
         modal.style.display = 'none';
+    }
+    // Limpiar el formulario
+    const form = document.getElementById('formGuia');
+    if (form) {
+        form.reset();
+    }
+    // Limpiar estado
+    const statusDiv = document.getElementById('guia_status');
+    if (statusDiv) {
+        statusDiv.innerHTML = '';
     }
 }
 
 // Cerrar modal al hacer clic fuera de él
 window.addEventListener('click', function(event) {
-    const modal = document.getElementById('modal_guia');
+    const modal = document.getElementById('modal-guia-bg');
     if (event.target === modal) {
         cerrarModalGuia();
     }
@@ -526,17 +652,17 @@ window.addEventListener('click', function(event) {
 
 // Manejar envío del formulario de guía
 document.addEventListener('DOMContentLoaded', function() {
-    const guiaForm = document.getElementById('guia_form');
+    const guiaForm = document.getElementById('formGuia');
     if (guiaForm) {
         guiaForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const formData = new FormData(this);
             const statusDiv = document.getElementById('guia_status');
-            
+
             // Mostrar estado de carga
-            statusDiv.innerHTML = '<span style="color: #1f6feb;">Subiendo guía...</span>';
-            
+            statusDiv.innerHTML = '<span style="color: var(--apple-blue);">Subiendo guía...</span>';
+
             fetch('subir_guia.php', {
                 method: 'POST',
                 body: formData
@@ -566,11 +692,22 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.log('⚡ Usando funcionalidades legacy de pedidos');
     }
-    
+
     // Mantener funcionalidades específicas de esta página
     if (typeof initializeListaPedidos === 'function') {
         initializeListaPedidos();
     }
+
+    // Manejar clic en ver detalle
+    document.querySelectorAll('.ver-detalle').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const pedidoId = this.getAttribute('data-id');
+
+            // Abrir en nueva ventana para ver el detalle
+            window.open(`ver_detalle_pedido.php?id=${pedidoId}`, '_blank');
+        });
+    });
 });
 </script>
 </body>
