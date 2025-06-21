@@ -526,7 +526,7 @@ function cambiarEstado(pedidoId, nuevoEstado) {
         const formData = new FormData();
         formData.append('id', pedidoId);
         formData.append('estado', nuevoEstado);
-        
+
         // Mostrar indicador de carga
         const button = event.target;
         const originalText = button.textContent;
