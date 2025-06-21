@@ -5,37 +5,46 @@ ini_set('display_errors', 1);
 include 'conexion.php';
 
 // Filtros
-$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'hoy';
+$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'todos';
 $buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $limite = 20;
 $offset = ($page - 1) * $limite;
 
-// Filtro avanzado que excluye archivados en todos menos "archivados"
+// Filtro avanzado usando los nuevos campos de estado booleanos
 switch($filtro) {
     case 'hoy':
-        $where = "DATE(fecha) = CURDATE() AND estado!='archivado'";
+        $where = "DATE(fecha) = CURDATE() AND archivado = '0'";
         break;
     case 'semana':
-        $where = "YEARWEEK(fecha,1) = YEARWEEK(CURDATE(),1) AND estado!='archivado'";
+        $where = "YEARWEEK(fecha,1) = YEARWEEK(CURDATE(),1) AND archivado = '0'";
         break;
     case 'quincena':
-        $where = "fecha >= CURDATE() - INTERVAL 15 DAY AND estado!='archivado'";
+        $where = "fecha >= CURDATE() - INTERVAL 15 DAY AND archivado = '0'";
         break;
     case 'mes':
-        $where = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE()) AND estado!='archivado'";
+        $where = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE()) AND archivado = '0'";
         break;
     case 'archivados':
-        $where = "estado='archivado'";
+        $where = "archivado = '1'";
+        break;
+    case 'anulados':
+        $where = "anulado = '1'";
+        break;
+    case 'enviados':
+        $where = "enviado = '1' AND archivado = '0'";
+        break;
+    case 'todos':
+        $where = "1=1"; // Mostrar todos los pedidos sin filtro
         break;
     default:
-        $where = "estado!='archivado'";
+        $where = "archivado = '0'"; // Por defecto, no mostrar archivados
 }
 if($buscar){
     $buscarSql = $conn->real_escape_string($buscar);
     $where .= " AND (nombre LIKE '%$buscarSql%' OR telefono LIKE '%$buscarSql%' OR id = '$buscarSql' OR correo LIKE '%$buscarSql%')";
 }
-$result = $conn->query("SELECT SQL_CALC_FOUND_ROWS id, nombre, telefono, correo, monto, estado, fecha, persona_recibe, direccion, horarios, metodo_pago, datos_pago, comprobante, guia, nota_interna FROM pedidos_detal WHERE $where ORDER BY fecha DESC LIMIT $limite OFFSET $offset");
+$result = $conn->query("SELECT SQL_CALC_FOUND_ROWS id, nombre, telefono, correo, monto, estado, fecha, persona_recibe, direccion, horarios, metodo_pago, datos_pago, comprobante, guia, nota_interna, enviado, archivado, anulado, tiene_guia, tiene_comprobante FROM pedidos_detal WHERE $where ORDER BY fecha DESC LIMIT $limite OFFSET $offset");
 $pedidos = [];
 while ($row = $result->fetch_assoc()) {
     $pedidos[] = $row;
@@ -44,10 +53,32 @@ $total_result = $conn->query("SELECT FOUND_ROWS() as total");
 $total_pedidos = $total_result->fetch_assoc()['total'];
 $total_paginas = ceil($total_pedidos / $limite);
 
-function estado_pill($estado) {
-    $txt = ucfirst(str_replace('_',' ',$estado));
-    if($estado=='archivado') $txt = 'Archivado';
-    return '<span class="estado-pill '.$estado.'">'.$txt.'</span>';
+function estado_pill($pedido) {
+    $estados = [];
+
+    // Verificar cada estado booleano
+    if ($pedido['anulado'] == '1') {
+        $estados[] = '<span class="estado-pill anulado">Anulado</span>';
+    }
+    if ($pedido['archivado'] == '1') {
+        $estados[] = '<span class="estado-pill archivado">Archivado</span>';
+    }
+    if ($pedido['enviado'] == '1') {
+        $estados[] = '<span class="estado-pill enviado">Enviado</span>';
+    }
+    if ($pedido['tiene_guia'] == '1') {
+        $estados[] = '<span class="estado-pill guia">Con Guía</span>';
+    }
+    if ($pedido['tiene_comprobante'] == '1') {
+        $estados[] = '<span class="estado-pill comprobante">Con Comprobante</span>';
+    }
+
+    // Si no tiene estados específicos, mostrar "Pendiente"
+    if (empty($estados)) {
+        $estados[] = '<span class="estado-pill sin_enviar">Pendiente</span>';
+    }
+
+    return implode(' ', $estados);
 }
 ?>
 <!DOCTYPE html>
@@ -263,6 +294,7 @@ function estado_pill($estado) {
 
     .estado-pill.sin_enviar {
       background: var(--gray-medium);
+      color: var(--vscode-text);
     }
 
     .estado-pill.enviado {
@@ -270,9 +302,26 @@ function estado_pill($estado) {
       color: white;
     }
 
-    .estado-pill.anulado, .estado-pill.archivado {
+    .estado-pill.anulado {
+      background: #da3633;
+      color: white;
+    }
+
+    .estado-pill.archivado {
       background: var(--gray-light);
       color: var(--vscode-text-muted);
+    }
+
+    .estado-pill.guia {
+      background: #238636;
+      color: white;
+      font-size: 0.75rem;
+    }
+
+    .estado-pill.comprobante {
+      background: #fb8500;
+      color: white;
+      font-size: 0.75rem;
     }
 
     .modal-detalle-bg {
@@ -429,6 +478,8 @@ function estado_pill($estado) {
                 <option value="semana" <?php if($filtro=='semana') echo "selected";?>>Semana</option>
                 <option value="quincena" <?php if($filtro=='quincena') echo "selected";?>>Últimos 15 días</option>
                 <option value="mes" <?php if($filtro=='mes') echo "selected";?>>Mes</option>
+                <option value="enviados" <?php if($filtro=='enviados') echo "selected";?>>Enviados</option>
+                <option value="anulados" <?php if($filtro=='anulados') echo "selected";?>>Anulados</option>
                 <option value="archivados" <?php if($filtro=='archivados') echo "selected";?>>Archivados</option>
                 <option value="todos" <?php if($filtro=='todos') echo "selected";?>>Todos</option>
             </select>
@@ -466,7 +517,7 @@ function estado_pill($estado) {
                   </a>
                 </td>
                 <td data-label="Monto"><b>$<?php echo number_format($p['monto'],0,',','.');?></b></td>
-                <td data-label="Estado"><?php echo estado_pill($p['estado']);?></td>
+                <td data-label="Estado"><?php echo estado_pill($p);?></td>
                 <td data-label="Acciones">
                     <?php if($p['estado']=='sin_enviar'): ?>
                         <button class="btn-neon" onclick="abrirModalGuia(<?php echo $p['id'];?>,'<?php echo htmlspecialchars($p['correo']);?>')">Marcar Enviado</button>

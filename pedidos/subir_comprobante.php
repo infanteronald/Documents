@@ -52,7 +52,7 @@ if(!move_uploaded_file($archivo['tmp_name'], $rutaArchivo)){
 }
 
 // Actualizar base de datos
-$stmt = $conn->prepare("UPDATE pedidos_detal SET comprobante = ? WHERE id = ?");
+$stmt = $conn->prepare("UPDATE pedidos_detal SET comprobante = ?, tiene_comprobante = '1' WHERE id = ?");
 $stmt->bind_param("si", $nombreComprobante, $id);
 
 if(!$stmt->execute()) {

@@ -30,8 +30,8 @@ if(!move_uploaded_file($_FILES['guia']['tmp_name'], $rutaArchivo)){
     exit;
 }
 
-// Guarda la ruta de la guía (opcional, en BD)
-$conn->query("UPDATE pedidos_detal SET estado='enviado', guia='$nombreGuia' WHERE id=$id");
+// Guarda la ruta de la guía y actualiza los estados booleanos
+$conn->query("UPDATE pedidos_detal SET enviado='1', tiene_guia='1', guia='$nombreGuia' WHERE id=$id");
 
 // --- Enviar email al cliente con la guía adjunta ---
 $correo_cliente = $p['correo'];
