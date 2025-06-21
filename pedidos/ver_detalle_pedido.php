@@ -1377,6 +1377,72 @@ if ($id && $id > 0) {
                 </div>
                 <?php endif; ?>
 
+                <!-- Módulos de Gestión de Archivos -->
+                <div class="gestion-archivos" style="margin-top: 40px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
+
+                        <!-- Módulo: Guía de Envío -->
+                        <div class="modulo-archivos">
+                            <div class="info-card" style="text-align: center; padding: 25px;">
+                                <h3 style="color: #1f6feb; margin-bottom: 15px;">📦 Guía de Envío</h3>
+
+                                <?php
+                                $guia_actual = getField($p, 'guia', '');
+                                if (!empty($guia_actual) && file_exists("guias/" . $guia_actual)): ?>
+                                    <!-- Guía existente -->
+                                    <div style="margin-bottom: 15px;">
+                                        <p style="color: #238636; font-weight: 600;">✅ Guía cargada</p>
+                                        <a href="guias/<?php echo h($guia_actual); ?>" target="_blank" class="btn-print" style="margin: 10px 0; background: #238636;">
+                                            <span>👁️</span> Ver Guía
+                                        </a>
+                                    </div>
+                                    <button onclick="abrirModalGuia()" class="btn" style="background: #fb8500;">
+                                        <span>🔄</span> Cambiar Guía
+                                    </button>
+                                <?php else: ?>
+                                    <!-- Sin guía -->
+                                    <div style="margin-bottom: 15px;">
+                                        <p style="color: #8b949e;">📋 Sin guía de envío</p>
+                                    </div>
+                                    <button onclick="abrirModalGuia()" class="btn-print">
+                                        <span>📤</span> Subir Guía
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Módulo: Comprobante de Pago -->
+                        <div class="modulo-archivos">
+                            <div class="info-card" style="text-align: center; padding: 25px;">
+                                <h3 style="color: #1f6feb; margin-bottom: 15px;">💳 Comprobante de Pago</h3>
+
+                                <?php
+                                $comprobante_actual = getField($p, 'comprobante', '');
+                                if (!empty($comprobante_actual) && file_exists("comprobantes/" . $comprobante_actual)): ?>
+                                    <!-- Comprobante existente -->
+                                    <div style="margin-bottom: 15px;">
+                                        <p style="color: #238636; font-weight: 600;">✅ Comprobante cargado</p>
+                                        <a href="comprobantes/<?php echo h($comprobante_actual); ?>" target="_blank" class="btn-print" style="margin: 10px 0; background: #238636;">
+                                            <span>👁️</span> Ver Comprobante
+                                        </a>
+                                    </div>
+                                    <button onclick="abrirModalComprobante()" class="btn" style="background: #fb8500;">
+                                        <span>🔄</span> Cambiar Comprobante
+                                    </button>
+                                <?php else: ?>
+                                    <!-- Sin comprobante -->
+                                    <div style="margin-bottom: 15px;">
+                                        <p style="color: #8b949e;">📋 Sin comprobante de pago</p>
+                                    </div>
+                                    <button onclick="abrirModalComprobante()" class="btn-print">
+                                        <span>📤</span> Subir Comprobante
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="print-section" style="margin-top: 40px;">
                     <div class="print-card">
                         <button onclick="imprimirPedido()" class="btn-print">
@@ -1411,6 +1477,295 @@ if ($id && $id > 0) {
                 imprimirPedido();
             }
         });
+    </script>
+
+    <!-- Modal para Subir Guía de Envío -->
+    <div id="modalGuia" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="color: #1f6feb; margin: 0;">📦 Subir Guía de Envío</h3>
+                <button onclick="cerrarModalGuia()" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formGuia" enctype="multipart/form-data" style="text-align: center;">
+                    <input type="hidden" name="pedido_id" value="<?php echo h($p['id'] ?? ''); ?>">
+                    <div style="margin-bottom: 20px;">
+                        <label for="archivoGuia" style="display: block; margin-bottom: 10px; font-weight: 600;">
+                            Seleccionar archivo de guía:
+                        </label>
+                        <input type="file" id="archivoGuia" name="guia" accept="image/*,.pdf" required
+                               style="width: 100%; padding: 10px; border: 2px dashed #3d444d; border-radius: 8px; background: #21262d;">
+                        <small style="color: #8b949e; display: block; margin-top: 5px;">
+                            Formatos: JPG, PNG, PDF (máx. 5MB)
+                        </small>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" onclick="cerrarModalGuia()" class="btn" style="background: #6e7681;">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-print">
+                            <span>📤</span> Subir Guía
+                        </button>
+                    </div>
+                </form>
+                <div id="statusGuia" style="margin-top: 15px; text-align: center;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Subir Comprobante de Pago -->
+    <div id="modalComprobante" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="color: #1f6feb; margin: 0;">💳 Subir Comprobante de Pago</h3>
+                <button onclick="cerrarModalComprobante()" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formComprobante" enctype="multipart/form-data" style="text-align: center;">
+                    <input type="hidden" name="pedido_id" value="<?php echo h($p['id'] ?? ''); ?>">
+                    <div style="margin-bottom: 20px;">
+                        <label for="archivoComprobante" style="display: block; margin-bottom: 10px; font-weight: 600;">
+                            Seleccionar comprobante de pago:
+                        </label>
+                        <input type="file" id="archivoComprobante" name="comprobante" accept="image/*,.pdf" required
+                               style="width: 100%; padding: 10px; border: 2px dashed #3d444d; border-radius: 8px; background: #21262d;">
+                        <small style="color: #8b949e; display: block; margin-top: 5px;">
+                            Formatos: JPG, PNG, PDF (máx. 5MB)
+                        </small>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" onclick="cerrarModalComprobante()" class="btn" style="background: #6e7681;">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-print">
+                            <span>📤</span> Subir Comprobante
+                        </button>
+                    </div>
+                </form>
+                <div id="statusComprobante" style="margin-top: 15px; text-align: center;"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    /* Estilos para los modales */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background: #161b22;
+        border: 1px solid #3d444d;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 25px;
+        border-bottom: 1px solid #3d444d;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: #8b949e;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+        background: #3d444d;
+        color: #e6edf3;
+    }
+
+    .modal-body {
+        padding: 25px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .modulo-archivos .info-card {
+        transition: all 0.3s ease;
+        border: 1px solid #3d444d;
+    }
+
+    .modulo-archivos .info-card:hover {
+        border-color: #1f6feb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(31, 111, 235, 0.15);
+    }
+
+    /* Responsive para modales */
+    @media (max-width: 768px) {
+        .modal-content {
+            width: 95%;
+            margin: 10px;
+        }
+
+        .modal-header,
+        .modal-body {
+            padding: 15px 20px;
+        }
+
+        .modal-actions {
+            flex-direction: column;
+        }
+
+        .gestion-archivos > div {
+            grid-template-columns: 1fr !important;
+        }
+    }
+    </style>
+
+    <script>
+    // Funciones para los modales
+    function abrirModalGuia() {
+        document.getElementById('modalGuia').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModalGuia() {
+        document.getElementById('modalGuia').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        // Limpiar formulario
+        document.getElementById('formGuia').reset();
+        document.getElementById('statusGuia').innerHTML = '';
+    }
+
+    function abrirModalComprobante() {
+        document.getElementById('modalComprobante').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModalComprobante() {
+        document.getElementById('modalComprobante').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        // Limpiar formulario
+        document.getElementById('formComprobante').reset();
+        document.getElementById('statusComprobante').innerHTML = '';
+    }
+
+    // Cerrar modales con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModalGuia();
+            cerrarModalComprobante();
+        }
+    });
+
+    // Cerrar modales al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-overlay')) {
+            cerrarModalGuia();
+            cerrarModalComprobante();
+        }
+    });
+
+    // Manejar envío de guía
+    document.getElementById('formGuia').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const statusDiv = document.getElementById('statusGuia');
+        const submitBtn = this.querySelector('button[type="submit"]');
+
+        // Estado de carga
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳</span> Subiendo...';
+        statusDiv.innerHTML = '<span style="color: #1f6feb;">📤 Subiendo guía...</span>';
+
+        fetch('subir_guia.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Guía subida correctamente</span>';
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al subir guía') + '</span>';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>📤</span> Subir Guía';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>📤</span> Subir Guía';
+        });
+    });
+
+    // Manejar envío de comprobante
+    document.getElementById('formComprobante').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const statusDiv = document.getElementById('statusComprobante');
+        const submitBtn = this.querySelector('button[type="submit"]');
+
+        // Estado de carga
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳</span> Subiendo...';
+        statusDiv.innerHTML = '<span style="color: #1f6feb;">📤 Subiendo comprobante...</span>';
+
+        fetch('subir_comprobante.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Comprobante subido correctamente</span>';
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al subir comprobante') + '</span>';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>📤</span> Subir Comprobante';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>📤</span> Subir Comprobante';
+        });
+    });
     </script>
 </body>
 </html>
