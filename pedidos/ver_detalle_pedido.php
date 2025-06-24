@@ -22,12 +22,14 @@ function getField($array, $field, $default = 'No disponible') {
     // Mapeo de campos alternativos comunes
     $fieldMappings = [
         'nombre_cliente' => ['nombre_cliente', 'nombre', 'cliente_nombre', 'client_name'],
-        'email_cliente' => ['email_cliente', 'email', 'cliente_email', 'client_email'],
+        'email_cliente' => ['email_cliente', 'correo', 'email', 'cliente_email', 'client_email'],
         'telefono_cliente' => ['telefono_cliente', 'telefono', 'cliente_telefono', 'phone'],
         'fecha_pedido' => ['fecha_pedido', 'fecha', 'created_at', 'date_created'],
         'direccion_entrega' => ['direccion_entrega', 'direccion', 'address', 'delivery_address'],
-        'metodo_pago' => ['metodo_pago', 'pago', 'payment_method', 'tipo_pago'],
-        'notas' => ['notas', 'observaciones', 'comments', 'notes']
+        'metodo_pago' => ['metodo_pago', 'metodo_pago', 'pago', 'payment_method', 'tipo_pago'],
+        'persona_recibe' => ['persona_recibe', 'recibe', 'recipient', 'receiver'],
+        'horarios' => ['horarios', 'horario', 'schedule', 'delivery_time'],
+        'nota_interna' => ['nota_interna', 'notas', 'observaciones', 'comments', 'notes']
     ];
 
     // Intentar con el campo directo primero
@@ -72,6 +74,55 @@ if ($id && $id > 0) {
         if ($result && mysqli_num_rows($result) > 0) {
             $pedido_encontrado = true;
             $p = mysqli_fetch_assoc($result);
+
+            // Mapeo específico para campos críticos (especialmente teléfono para WhatsApp)
+            if (empty($p['telefono']) && !empty($p['telefono_cliente'])) {
+                $p['telefono'] = $p['telefono_cliente'];
+            }
+            if (empty($p['telefono']) && !empty($p['cliente_telefono'])) {
+                $p['telefono'] = $p['cliente_telefono'];
+            }
+            if (empty($p['telefono']) && !empty($p['phone'])) {
+                $p['telefono'] = $p['phone'];
+            }
+
+            // Mapeo para nombre del cliente
+            if (empty($p['nombre_cliente']) && !empty($p['nombre'])) {
+                $p['nombre_cliente'] = $p['nombre'];
+            }
+            if (empty($p['nombre_cliente']) && !empty($p['client_name'])) {
+                $p['nombre_cliente'] = $p['client_name'];
+            }
+
+            // Función para determinar el estado basándose en las columnas booleanas
+            function determinarEstado($p) {
+                if ($p['anulado'] == 1) {
+                    return ['texto' => 'Anulado', 'clase' => 'cancelado'];
+                }
+                if ($p['archivado'] == 1) {
+                    return ['texto' => 'Archivado', 'clase' => 'archivado'];
+                }
+
+                // Determinar estado de pago
+                $estado_pago = '';
+                if ($p['pagado'] == 1) {
+                    $estado_pago = 'Pago Confirmado';
+                    $clase_pago = 'pago-confirmado';
+                } else {
+                    $estado_pago = 'Pago Pendiente';
+                    $clase_pago = 'pago-pendiente';
+                }
+
+                if ($p['enviado'] == 1) {
+                    return ['texto' => $estado_pago . ' • Enviado', 'clase' => $clase_pago . ' enviado'];
+                }
+
+                // Estado de pago como principal
+                return ['texto' => $estado_pago, 'clase' => $clase_pago];
+            }
+
+            // Obtener el estado dinámico
+            $estado_dinamico = determinarEstado($p);
 
             // Debug: Mostrar campos disponibles (comentar en producción)
             // echo "<pre>DEBUG - Campos disponibles: " . print_r(array_keys($p), true) . "</pre>";
@@ -156,11 +207,11 @@ if ($id && $id > 0) {
             width: auto;
             height: auto;
             display: block;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             position: relative;
             z-index: 1;
             object-fit: contain;
             flex-shrink: 0;
+            margin-right: 15px;
         }
 
         .header-content {
@@ -201,38 +252,75 @@ if ($id && $id > 0) {
 
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
         }
 
         .info-card {
-            background: #30363d;
+            background: linear-gradient(135deg, #30363d 0%, #2d333b 100%);
             border: 1px solid #3d444d;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 12px 16px;
             transition: all 0.3s ease;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .info-card:hover {
             border-color: #1f6feb;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(31, 111, 235, 0.15);
         }
 
         .info-card h3 {
             color: #1f6feb;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+            line-height: 1.2;
         }
 
         .info-card p {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 500;
-            margin: 4px 0;
+            margin: 2px 0;
+            line-height: 1.3;
+        }
+
+        .info-card.compact {
+            padding: 10px 14px;
+            min-height: 60px;
+        }
+
+        .info-card.compact h3 {
+            font-size: 0.75rem;
+            margin-bottom: 3px;
+        }
+
+        .info-card.compact p {
+            font-size: 0.9rem;
+        }
+
+        /* Tarjeta especial para información principal */
+        .info-card.primary {
+            background: linear-gradient(135deg, #1f6feb 0%, #0969da 100%);
+            color: white;
+            border-color: #0969da;
+        }
+
+        .info-card.primary h3 {
+            color: #ffffff;
+            opacity: 0.9;
+        }
+
+        .info-card.primary p {
+            color: #ffffff;
+            font-weight: 600;
         }
 
         .productos-section {
@@ -340,6 +428,16 @@ if ($id && $id > 0) {
             color: white;
         }
 
+        .status.enviado {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            color: white;
+        }
+
+        .status.archivado {
+            background: linear-gradient(135deg, #6e7681 0%, #8b949e 100%);
+            color: white;
+        }
+
         .status.confirmado {
             background: linear-gradient(135deg, #1f6feb 0%, #0969da 100%);
             color: white;
@@ -348,6 +446,23 @@ if ($id && $id > 0) {
         .status.cancelado {
             background: linear-gradient(135deg, #da3633 0%, #f85149 100%);
             color: white;
+        }
+
+        .status.pago-pendiente {
+            background: linear-gradient(135deg, #da3633 0%, #f85149 100%);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .status.pago-confirmado {
+            background: linear-gradient(135deg, #238636 0%, #3fb950 100%);
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
 
         .form-section {
@@ -644,7 +759,7 @@ if ($id && $id > 0) {
             }
 
             .info-grid {
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                grid-template-columns: repeat(3, 1fr);
                 gap: 15px;
             }
 
@@ -699,40 +814,73 @@ if ($id && $id > 0) {
                 max-width: 50px;
                 max-height: 50px;
                 border-radius: 4px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
                 flex-shrink: 0; /* No se contraiga */
             }
 
             .content {
-                padding: 20px 15px;
+                padding: 15px 10px;
             }
 
             .info-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                margin-bottom: 25px;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 15px;
             }
 
             .info-card {
-                padding: 18px;
-                border-radius: 8px;
-                border: 1px solid #3d444d;
-                background: #30363d;
+                padding: 8px 10px;
+                min-height: 45px;
+                border-radius: 6px;
+            }
+
+            .info-card.compact {
+                padding: 6px 8px;
+                min-height: 40px;
+            }
+
+            .info-card.primary {
+                padding: 8px 10px;
+                min-height: 45px;
             }
 
             .info-card h3 {
-                font-size: 0.8rem;
-                margin-bottom: 8px;
-                color: #1f6feb;
-                font-weight: 600;
+                font-size: 0.65rem;
+                margin-bottom: 1px;
+                letter-spacing: 0.2px;
             }
 
             .info-card p {
-                font-size: 1.1rem;
-                line-height: 1.4;
-                color: #e6edf3;
-                margin: 4px 0;
-                word-break: break-word;
+                font-size: 0.8rem;
+                line-height: 1.1;
+                margin: 1px 0;
+            }
+
+            .info-card.compact h3 {
+                font-size: 0.6rem;
+                margin-bottom: 1px;
+            }
+
+            .info-card.compact p {
+                font-size: 0.75rem;
+                line-height: 1.1;
+            }
+
+            /* Cliente span 3 en móvil pero más compacto */
+            .info-card[style*="grid-column: span 3"] {
+                grid-column: span 3;
+                padding: 8px 10px;
+                min-height: 45px;
+            }
+
+            .info-card[style*="grid-column: span 3"] p {
+                margin: 1px 0;
+            }
+
+            /* Email más pequeño en móvil */
+            .info-card[style*="grid-column: span 2"] p[style*="font-size: 0.85rem"] {
+                font-size: 0.7rem !important;
+                opacity: 0.7;
+                margin-top: 2px;
             }
 
             .section-title {
@@ -845,6 +993,110 @@ if ($id && $id > 0) {
             }
         }
 
+        /* Media query para pantallas muy pequeñas - Ultra compacto */
+        @media (max-width: 480px) {
+            body {
+                padding: 3px;
+                font-size: 14px;
+            }
+
+            .container {
+                border-radius: 6px;
+            }
+
+            .header {
+                padding: 12px 10px;
+                min-height: 60px;
+            }
+
+            .header h1 {
+                font-size: 1.2rem;
+            }
+
+            .header .subtitle {
+                font-size: 0.8rem;
+            }
+
+            .logo {
+                max-width: 40px;
+                max-height: 40px;
+            }
+
+            .content {
+                padding: 10px 8px;
+            }
+
+            .info-grid {
+                gap: 6px;
+                margin-bottom: 12px;
+            }
+
+            .info-card {
+                padding: 6px 8px;
+                min-height: 38px;
+                border-radius: 4px;
+            }
+
+            .info-card.compact {
+                padding: 5px 6px;
+                min-height: 35px;
+            }
+
+            .info-card.primary {
+                padding: 6px 8px;
+                min-height: 38px;
+            }
+
+            .info-card h3 {
+                font-size: 0.6rem;
+                margin-bottom: 1px;
+            }
+
+            .info-card p {
+                font-size: 0.75rem;
+                line-height: 1.0;
+                margin: 0;
+            }
+
+            .info-card.compact h3 {
+                font-size: 0.55rem;
+            }
+
+            .info-card.compact p {
+                font-size: 0.7rem;
+            }
+
+            .info-card[style*="grid-column: span 2"] {
+                padding: 6px 8px;
+                min-height: 38px;
+            }
+
+            .info-card[style*="grid-column: span 2"] p[style*="font-size: 0.85rem"] {
+                font-size: 0.65rem !important;
+                opacity: 0.7;
+                margin-top: 1px;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+
+            .productos-table {
+                font-size: 0.8rem;
+            }
+
+            .productos-table th {
+                padding: 8px 6px;
+                font-size: 0.7rem;
+            }
+
+            .productos-table td {
+                padding: 8px 6px;
+                font-size: 0.75rem;
+            }
+        }
+
         /* Móviles pequeños */
         @media (max-width: 480px) {
             body {
@@ -858,9 +1110,11 @@ if ($id && $id > 0) {
 
             .header {
                 padding: 15px 12px;
-                flex-direction: column;
-                text-align: center;
+                flex-direction: row;
+                text-align: left;
                 gap: 12px;
+                justify-content: flex-start;
+                align-items: center;
             }
 
             .header h1 {
@@ -1064,6 +1318,10 @@ if ($id && $id > 0) {
                 display: none; /* Ocultar tabla en pantallas muy pequeñas */
             }
 
+            .total-compacto {
+                display: none !important; /* Ocultar total de tabla en vista móvil */
+            }
+
             .productos-mobile {
                 display: block !important;
             }
@@ -1224,6 +1482,195 @@ if ($id && $id > 0) {
         .info-card:focus-within {
             border-color: #58a6ff;
             box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+        }        /* Grid ultra compacto para móviles pequeños */
+        @media (max-width: 480px) {
+            .info-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 4px;
+            }
+
+            /* Cliente y Dirección aparecen primero */
+            .info-card[style*="grid-column: span 3"] {
+                grid-column: span 3;
+                order: -1;
+            }
+
+            /* Acciones ultra compactas en móvil */
+            .acciones-ultra-compactas {
+                margin-top: 15px !important;
+            }
+
+            .grid-acciones {
+                gap: 3px !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+            }
+
+            .accion-micro {
+                padding: 6px 2px !important;
+                border-radius: 4px !important;
+            }
+
+            .accion-micro div:first-child {
+                font-size: 0.55rem !important;
+                margin-bottom: 2px !important;
+            }
+
+            .accion-micro div:not(:first-child) {
+                font-size: 0.5rem !important;
+                margin-bottom: 2px !important;
+            }
+
+            .accion-micro button,
+            .accion-micro a {
+                font-size: 0.5rem !important;
+                padding: 2px 1px !important;
+                border-radius: 2px !important;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .info-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 3px;
+            }
+
+            .info-card[style*="grid-column: span 3"] {
+                grid-column: span 2;
+                order: -1;
+            }
+
+            /* Acciones súper compactas */
+            .grid-acciones {
+                gap: 2px !important;
+            }
+
+            .accion-micro {
+                padding: 4px 1px !important;
+            }
+
+            .accion-micro div:first-child {
+                font-size: 0.5rem !important;
+                margin-bottom: 1px !important;
+            }
+
+            .accion-micro div:not(:first-child) {
+                font-size: 0.45rem !important;
+                margin-bottom: 1px !important;
+            }
+
+            .accion-micro button,
+            .accion-micro a {
+                font-size: 0.45rem !important;
+                padding: 1px !important;
+            }
+
+            /* Estilos responsivos para nuevas secciones */
+            .estado-management,
+            .notas-section,
+            .editar-cliente-section,
+            .comunicacion-section,
+            .metricas-section {
+                margin: 10px 0 !important;
+                padding: 12px !important;
+            }
+
+            .estado-management > div:first-of-type,
+            .editar-cliente-section #formulario-edicion > div:first-child,
+            .editar-cliente-section #formulario-edicion > div:last-of-type {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+
+            .comunicacion-section > div:last-of-type {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+
+            .metricas-section > div:last-of-type {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+            }
+
+            .metric-card {
+                padding: 10px !important;
+                font-size: 0.8rem !important;
+            }
+        }
+
+        /* Mejoras para el total compacto */
+        .total-compacto {
+            transition: all 0.3s ease;
+        }
+
+        .total-compacto:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(31, 111, 235, 0.2);
+        }
+
+        /* Responsive para total compacto */
+        @media (max-width: 768px) {
+            .total-compacto {
+                max-width: 250px !important;
+                margin: 8px auto !important;
+                padding: 6px 10px !important;
+                text-align: center !important;
+            }
+
+            .total-compacto div {
+                font-size: 0.8rem !important;
+            }
+
+            .total-compacto span:last-child {
+                font-size: 1rem !important;
+                margin-left: 6px !important;
+            }
+
+            .total-mobile-compacto {
+                margin: 6px 0 !important;
+                padding: 4px 8px !important;
+            }
+
+            .total-mobile-compacto div {
+                font-size: 0.75rem !important;
+            }
+
+            .total-mobile-compacto span:last-child {
+                font-size: 0.9rem !important;
+                margin-left: 4px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .total-compacto {
+                max-width: 200px !important;
+                margin: 6px auto !important;
+                padding: 4px 8px !important;
+                border-radius: 4px !important;
+            }
+
+            .total-compacto div {
+                font-size: 0.75rem !important;
+            }
+
+            .total-compacto span:last-child {
+                font-size: 0.9rem !important;
+                margin-left: 4px !important;
+            }
+
+            .total-mobile-compacto {
+                margin: 4px 0 !important;
+                padding: 3px 6px !important;
+            }
+
+            .total-mobile-compacto div {
+                font-size: 0.7rem !important;
+            }
+
+            .total-mobile-compacto span:last-child {
+                font-size: 0.8rem !important;
+                margin-left: 3px !important;
+            }
         }
     </style>
 </head>
@@ -1233,7 +1680,7 @@ if ($id && $id > 0) {
             <img src="logo.png" alt="Sequoia Speed" class="logo" onerror="this.style.display='none'">
             <div class="header-content">
                 <h1>Sequoia Speed</h1>
-                <p class="subtitle">Detalles del Pedido</p>
+                <p class="subtitle">Detalles del Pedido<?php if ($pedido_encontrado) echo ' #' . h($p['id']); ?></p>
             </div>
         </div>
 
@@ -1269,52 +1716,275 @@ if ($id && $id > 0) {
                     </div>
                 <?php endif; ?>
             <?php else: ?>
+                <!-- Resumen compacto del pedido -->
                 <div class="info-grid">
-                    <div class="info-card">
-                        <h3>Número de Pedido</h3>
-                        <p><strong>#<?php echo h($p['id']); ?></strong></p>
-                    </div>
-
-                    <div class="info-card">
+                    <!-- Primera fila: Cliente -->
+                    <div class="info-card" style="grid-column: span 3;">
                         <h3>Cliente</h3>
-                        <p><?php echo h(getField($p, 'nombre_cliente', 'Sin nombre')); ?></p>
-                        <p style="font-size: 0.9rem; opacity: 0.8;"><?php echo h(getField($p, 'email_cliente', 'Sin email')); ?></p>
+                        <p><?php echo h($p['nombre'] ?? 'Sin nombre'); ?></p>
+                        <p style="font-size: 0.85rem; opacity: 0.8;"><?php echo h($p['correo'] ?? 'Sin email'); ?></p>
                     </div>
 
-                    <div class="info-card">
-                        <h3>Teléfono</h3>
-                        <p><?php echo h(getField($p, 'telefono_cliente', 'Sin teléfono')); ?></p>
+                    <!-- Segunda fila: Dirección -->
+                    <?php if (!empty($p['direccion'] ?? '')): ?>
+                    <div class="info-card" style="grid-column: span 3;">
+                        <h3>Dirección</h3>
+                        <p style="font-size: 0.9rem; line-height: 1.3;"><?php echo h($p['direccion']); ?></p>
                     </div>
+                    <?php endif; ?>
 
-                    <div class="info-card">
-                        <h3>Estado</h3>
-                        <p><span class="status <?php echo strtolower(h(getField($p, 'estado', 'pendiente'))); ?>"><?php echo h(getField($p, 'estado', 'Pendiente')); ?></span></p>
-                    </div>
-
-                    <div class="info-card">
+                    <!-- Tercera fila: Fecha, Estado, Enviado -->
+                    <div class="info-card compact">
                         <h3>Fecha</h3>
                         <p><?php
-                            $fecha = getField($p, 'fecha_pedido', '');
+                            $fecha = $p['fecha'] ?? '';
                             if ($fecha && $fecha != 'No disponible') {
-                                echo date('d/m/Y H:i', strtotime($fecha));
+                                echo date('d/m/Y', strtotime($fecha));
                             } else {
-                                echo 'Fecha no disponible';
+                                echo 'N/A';
                             }
                         ?></p>
                     </div>
 
-                    <div class="info-card">
-                        <h3>Método de Pago</h3>
-                        <p><?php echo h(getField($p, 'metodo_pago', 'No especificado')); ?></p>
+                    <div class="info-card compact">
+                        <h3>Estado</h3>
+                        <p><span class="status <?php echo $estado_dinamico['clase']; ?>"><?php echo $estado_dinamico['texto']; ?></span></p>
+                    </div>
+
+                    <div class="info-card compact">
+                        <h3>Enviado</h3>
+                        <p><?php echo ($p['enviado'] == 1) ? '✅ Sí' : '❌ No'; ?></p>
+                    </div>
+
+                    <!-- Cuarta fila: Pagado, Pago, Teléfono -->
+                    <div class="info-card compact">
+                        <h3>Pagado</h3>
+                        <p><?php echo ($p['pagado'] == 1) ? '✅ Sí' : '❌ No'; ?></p>
+                    </div>
+
+                    <div class="info-card compact">
+                        <h3>Pago</h3>
+                        <p><?php echo h($p['metodo_pago'] ?? 'N/A'); ?></p>
+                    </div>
+
+                    <div class="info-card compact">
+                        <h3>Teléfono</h3>
+                        <p><?php echo h($p['telefono'] ?? 'N/A'); ?></p>
                     </div>
                 </div>
 
-                <?php if (!empty(getField($p, 'direccion_entrega', ''))): ?>
-                <div class="info-card" style="margin-bottom: 30px;">
-                    <h3>🚚 Dirección de Entrega</h3>
-                    <p><?php echo h(getField($p, 'direccion_entrega')); ?></p>
+                <!-- Gestión de Estados -->
+                <div class="estado-management" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        🔄 Gestión del Pedido
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: end;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Cambiar Estado:</label>
+                            <select id="nuevo-estado" style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
+                                <option value="pago-pendiente" <?php echo (strpos($estado_dinamico['clase'], 'pago-pendiente') !== false) ? 'selected' : ''; ?>>💳 Pago Pendiente</option>
+                                <option value="pago-confirmado" <?php echo (strpos($estado_dinamico['clase'], 'pago-confirmado') !== false) ? 'selected' : ''; ?>>✅ Pago Confirmado</option>
+                                <option value="enviado" <?php echo (strpos($estado_dinamico['clase'], 'enviado') !== false) ? 'selected' : ''; ?>>🚚 Enviado</option>
+                                <option value="archivado" <?php echo ($estado_dinamico['clase'] == 'archivado') ? 'selected' : ''; ?>>📦 Archivado</option>
+                                <option value="cancelado" <?php echo ($estado_dinamico['clase'] == 'cancelado') ? 'selected' : ''; ?>>❌ Cancelado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button onclick="cambiarEstadoPedido()" class="btn-print" style="width: 100%;">
+                                <span>🔄</span> Actualizar Estado
+                            </button>
+                        </div>
+                    </div>
+                    <div id="estado-status" style="margin-top: 10px; text-align: center;"></div>
                 </div>
-                <?php endif; ?>
+
+                <!-- Agregar Comentario al Cliente -->
+                <div class="notas-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        � Agregar Comentario al Cliente
+                    </h3>
+                    <div style="margin-bottom: 15px;">
+                        <textarea id="nueva-nota" placeholder="Agregar nota interna (visible solo para el equipo)..."
+                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3; resize: vertical; font-family: inherit;"></textarea>
+                    </div>
+                    <div style="text-align: right;">
+                        <button onclick="agregarNota()" class="btn-print">
+                            <span>💾</span> Guardar Nota
+                        </button>
+                    </div>
+                    <div id="notas-status" style="margin-top: 10px; text-align: center;"></div>
+
+                    <!-- Historial de Notas -->
+                    <div class="historial-notas" style="margin-top: 20px;">
+                        <h4 style="color: #8b949e; font-size: 0.9rem; margin-bottom: 10px;">📋 Historial de Notas:</h4>
+                        <div id="lista-notas" style="max-height: 200px; overflow-y: auto;">
+                            <?php
+                            // Buscar notas existentes (usando el campo nota_interna si existe)
+                            $notas_existentes = $p['nota_interna'] ?? '';
+                            if (!empty($notas_existentes)):
+                            ?>
+                            <div class="nota-item" style="background: #21262d; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #1f6feb;">
+                                <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 4px;">
+                                    📅 Nota anterior
+                                </div>
+                                <div style="color: #e6edf3; line-height: 1.4;">
+                                    <?php echo nl2br(h($notas_existentes)); ?>
+                                </div>
+                            </div>
+                            <?php else: ?>
+                            <div style="color: #8b949e; font-style: italic; padding: 10px; text-align: center;">
+                                No hay notas registradas
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edición de Datos del Cliente -->
+                <div class="editar-cliente-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        ✏️ Editar Información del Cliente
+                    </h3>
+
+                    <div style="text-align: right; margin-bottom: 15px;">
+                        <button id="btn-habilitar-edicion" onclick="habilitarEdicion()" class="btn" style="background: #fb8500;">
+                            <span>✏️</span> Editar Información
+                        </button>
+                    </div>
+
+                    <div id="formulario-edicion" style="display: none;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Nombre Completo:</label>
+                                <input type="text" id="edit-nombre" value="<?php echo h($p['nombre'] ?? ''); ?>"
+                                       style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Teléfono:</label>
+                                <input type="tel" id="edit-telefono" value="<?php echo h($p['telefono'] ?? ''); ?>"
+                                       style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Email:</label>
+                            <input type="email" id="edit-correo" value="<?php echo h($p['correo'] ?? ''); ?>"
+                                   style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Dirección de Entrega:</label>
+                            <textarea id="edit-direccion" style="width: 100%; height: 80px; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3; resize: vertical; font-family: inherit;"><?php echo h($p['direccion'] ?? ''); ?></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Persona que Recibe:</label>
+                                <input type="text" id="edit-persona-recibe" value="<?php echo h($p['persona_recibe'] ?? ''); ?>"
+                                       style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Horarios de Entrega:</label>
+                                <input type="text" id="edit-horarios" value="<?php echo h($p['horarios'] ?? ''); ?>"
+                                       style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; justify-content: center;">
+                            <button onclick="guardarCambiosCliente()" class="btn-print">
+                                <span>💾</span> Guardar Cambios
+                            </button>
+                            <button onclick="cancelarEdicion()" class="btn" style="background: #6e7681;">
+                                <span>❌</span> Cancelar
+                            </button>
+                        </div>
+
+                        <div id="edicion-status" style="margin-top: 15px; text-align: center;"></div>
+                    </div>
+                </div>
+
+                <!-- Comunicación con Cliente -->
+                <div class="comunicacion-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        📧 Comunicación con Cliente
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <button onclick="enviarEmailCliente('actualizacion')" class="btn" style="background: #238636; padding: 12px; font-size: 0.9rem;">
+                            <span>📤</span> Enviar Actualización
+                        </button>
+                        <button onclick="enviarEmailCliente('seguimiento')" class="btn" style="background: #1f6feb; padding: 12px; font-size: 0.9rem;">
+                            <span>🔍</span> Solicitar Seguimiento
+                        </button>
+                        <button onclick="confirmarEntregaConGuia()" class="btn" style="background: #fb8500; padding: 12px; font-size: 0.9rem;">
+                            <span>📦</span> Confirmar Entrega
+                        </button>
+                        <?php if (!empty($p['telefono'])): ?>
+                        <a href="tel:<?php echo h($p['telefono']); ?>" class="btn" style="background: #6e7681; padding: 12px; font-size: 0.9rem; text-decoration: none; text-align: center;">
+                            <span>📞</span> Llamar Cliente
+                        </a>
+                        <a href="#" onclick="abrirWhatsApp('<?php echo h($p['telefono']); ?>', '<?php echo h($p['nombre_cliente'] ?? 'Cliente'); ?>', '<?php echo h($p['id'] ?? ''); ?>')" class="btn" style="background: #25d366; padding: 12px; font-size: 0.9rem; text-decoration: none; text-align: center;">
+                            <span>💬</span> WhatsApp
+                        </a>
+                        <?php endif; ?>
+                    </div>
+
+                    <div id="comunicacion-status" style="margin-top: 15px; text-align: center;"></div>
+                </div>
+
+                <!-- Métricas del Pedido -->
+                <div class="metricas-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        📊 Métricas del Pedido
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
+                        <div class="metric-card" style="background: #21262d; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #3d444d;">
+                            <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">⏱️ Tiempo transcurrido</div>
+                            <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem;">
+                                <?php
+                                $fecha_pedido = $p['fecha'] ?? '';
+                                if ($fecha_pedido && $fecha_pedido != 'No disponible') {
+                                    $fecha_creacion = new DateTime($fecha_pedido);
+                                    $ahora = new DateTime();
+                                    $diferencia = $ahora->diff($fecha_creacion);
+
+                                    if ($diferencia->days > 0) {
+                                        echo $diferencia->days . ' días';
+                                    } elseif ($diferencia->h > 0) {
+                                        echo $diferencia->h . ' horas';
+                                    } else {
+                                        echo $diferencia->i . ' minutos';
+                                    }
+                                } else {
+                                    echo 'N/A';
+                                }
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" style="background: #21262d; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #3d444d;">
+                            <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">💰 Valor total</div>
+                            <div style="color: #238636; font-weight: 700; font-size: 1.2rem;">
+                                $<?php echo number_format($total_productos, 0, ',', '.'); ?>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" style="background: #21262d; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #3d444d;">
+                            <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">📦 Productos</div>
+                            <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem;">
+                                <?php echo count($productos); ?> item<?php echo count($productos) != 1 ? 's' : ''; ?>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" style="background: #21262d; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #3d444d;">
+                            <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">💳 Método de pago</div>
+                            <div style="color: #e6edf3; font-weight: 600; font-size: 0.9rem;">
+                                <?php echo h($p['metodo_pago'] ?? 'N/A'); ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <?php if (!empty($productos)): ?>
                 <div class="productos-section">
@@ -1346,6 +2016,14 @@ if ($id && $id > 0) {
                         </table>
                     </div>
 
+                    <!-- Total compacto debajo de la tabla -->
+                    <div class="total-compacto" style="text-align: right; margin: 10px 0; padding: 8px 12px; background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); border: 1px solid #1f6feb; border-radius: 6px; max-width: 300px; margin-left: auto;">
+                        <div style="font-size: 0.85rem; color: #1f6feb; font-weight: 600; line-height: 1.2;">
+                            <span style="opacity: 0.8;">Total del pedido:</span>
+                            <span style="font-size: 1.1rem; font-weight: 700; margin-left: 8px;">$<?php echo number_format($total_productos, 0, ',', '.'); ?></span>
+                        </div>
+                    </div>
+
                     <!-- Vista de cards para móviles muy pequeños -->
                     <div class="productos-mobile" style="display: none;">
                         <?php foreach ($productos as $producto): ?>
@@ -1359,96 +2037,72 @@ if ($id && $id > 0) {
                             </div>
                         </div>
                         <?php endforeach; ?>
-                    </div>
 
-                    <div class="total-section">
-                        <div class="total-card">
-                            <h3>Total del Pedido</h3>
-                            <div class="amount">$<?php echo number_format($total_productos, 0, ',', '.'); ?></div>
+                        <!-- Total compacto para móvil -->
+                        <div class="total-mobile-compacto" style="text-align: center; margin: 8px 0; padding: 6px 10px; background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); border: 1px solid #1f6feb; border-radius: 4px;">
+                            <div style="font-size: 0.8rem; color: #1f6feb; font-weight: 600; line-height: 1.2;">
+                                <span style="opacity: 0.8;">Total:</span>
+                                <span style="font-size: 1rem; font-weight: 700; margin-left: 6px;">$<?php echo number_format($total_productos, 0, ',', '.'); ?></span>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <?php endif; ?>
 
-                <?php if (!empty(getField($p, 'notas', ''))): ?>
+                <?php if (!empty($p['nota_interna'] ?? '')): ?>
                 <div class="info-card" style="margin-top: 30px;">
-                    <h3>📝 Notas Adicionales</h3>
-                    <p><?php echo nl2br(h(getField($p, 'notas'))); ?></p>
+                    <h3>� Comentarios del Cliente</h3>
+                    <p><?php echo nl2br(h($p['nota_interna'])); ?></p>
                 </div>
                 <?php endif; ?>
 
-                <!-- Módulos de Gestión de Archivos -->
-                <div class="gestion-archivos" style="margin-top: 40px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <!-- Acciones Ultra Compactas -->
+                <div class="acciones-ultra-compactas" style="margin-top: 20px;">
+                    <div class="grid-acciones" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-width: 500px; margin: 0 auto;">
 
-                        <!-- Módulo: Guía de Envío -->
-                        <div class="modulo-archivos">
-                            <div class="info-card" style="text-align: center; padding: 25px;">
-                                <h3 style="color: #1f6feb; margin-bottom: 15px;">📦 Guía de Envío</h3>
-
-                                <?php
-                                $guia_actual = getField($p, 'guia', '');
-                                if (!empty($guia_actual) && file_exists("guias/" . $guia_actual)): ?>
-                                    <!-- Guía existente -->
-                                    <div style="margin-bottom: 15px;">
-                                        <p style="color: #238636; font-weight: 600;">✅ Guía cargada</p>
-                                        <a href="guias/<?php echo h($guia_actual); ?>" target="_blank" class="btn-print" style="margin: 10px 0; background: #238636;">
-                                            <span>👁️</span> Ver Guía
-                                        </a>
-                                    </div>
-                                    <button onclick="abrirModalGuia()" class="btn" style="background: #fb8500;">
-                                        <span>🔄</span> Cambiar Guía
-                                    </button>
-                                <?php else: ?>
-                                    <!-- Sin guía -->
-                                    <div style="margin-bottom: 15px;">
-                                        <p style="color: #8b949e;">📋 Sin guía de envío</p>
-                                    </div>
-                                    <button onclick="abrirModalGuia()" class="btn-print">
-                                        <span>📤</span> Subir Guía
-                                    </button>
-                                <?php endif; ?>
-                            </div>
+                        <!-- Guía -->
+                        <div class="accion-micro" style="text-align: center; background: #30363d; border: 1px solid #3d444d; border-radius: 6px; padding: 8px 4px;">
+                            <div style="font-size: 0.65rem; color: #1f6feb; font-weight: 600; margin-bottom: 3px; line-height: 1;">📦 GUÍA</div>
+                            <?php
+                            $guia_actual = $p['guia'] ?? '';
+                            if (!empty($guia_actual) && file_exists("guias/" . $guia_actual)): ?>
+                                <div style="margin-bottom: 3px; font-size: 0.6rem; color: #238636; line-height: 1;">✅ Cargada</div>
+                                <a href="guias/<?php echo h($guia_actual); ?>" target="_blank"
+                                   style="display: inline-block; background: #238636; color: white; padding: 2px 6px; border-radius: 3px; text-decoration: none; font-size: 0.6rem; margin-bottom: 2px; line-height: 1;">Ver</a>
+                                <button onclick="abrirModalGuia()"
+                                        style="display: block; width: 100%; background: #fb8500; color: white; border: none; padding: 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Cambiar</button>
+                            <?php else: ?>
+                                <div style="margin-bottom: 3px; font-size: 0.6rem; color: #8b949e; line-height: 1;">Sin guía</div>
+                                <button onclick="abrirModalGuia()"
+                                        style="width: 100%; background: #1f6feb; color: white; border: none; padding: 4px 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Subir</button>
+                            <?php endif; ?>
                         </div>
 
-                        <!-- Módulo: Comprobante de Pago -->
-                        <div class="modulo-archivos">
-                            <div class="info-card" style="text-align: center; padding: 25px;">
-                                <h3 style="color: #1f6feb; margin-bottom: 15px;">💳 Comprobante de Pago</h3>
-
-                                <?php
-                                $comprobante_actual = getField($p, 'comprobante', '');
-                                if (!empty($comprobante_actual) && file_exists("comprobantes/" . $comprobante_actual)): ?>
-                                    <!-- Comprobante existente -->
-                                    <div style="margin-bottom: 15px;">
-                                        <p style="color: #238636; font-weight: 600;">✅ Comprobante cargado</p>
-                                        <a href="comprobantes/<?php echo h($comprobante_actual); ?>" target="_blank" class="btn-print" style="margin: 10px 0; background: #238636;">
-                                            <span>👁️</span> Ver Comprobante
-                                        </a>
-                                    </div>
-                                    <button onclick="abrirModalComprobante()" class="btn" style="background: #fb8500;">
-                                        <span>🔄</span> Cambiar Comprobante
-                                    </button>
-                                <?php else: ?>
-                                    <!-- Sin comprobante -->
-                                    <div style="margin-bottom: 15px;">
-                                        <p style="color: #8b949e;">📋 Sin comprobante de pago</p>
-                                    </div>
-                                    <button onclick="abrirModalComprobante()" class="btn-print">
-                                        <span>📤</span> Subir Comprobante
-                                    </button>
-                                <?php endif; ?>
-                            </div>
+                        <!-- Comprobante -->
+                        <div class="accion-micro" style="text-align: center; background: #30363d; border: 1px solid #3d444d; border-radius: 6px; padding: 8px 4px;">
+                            <div style="font-size: 0.65rem; color: #1f6feb; font-weight: 600; margin-bottom: 3px; line-height: 1;">💳 COMPROBANTE</div>
+                            <?php
+                            $comprobante_actual = $p['comprobante'] ?? '';
+                            if (!empty($comprobante_actual) && file_exists("comprobantes/" . $comprobante_actual)): ?>
+                                <div style="margin-bottom: 3px; font-size: 0.6rem; color: #238636; line-height: 1;">✅ Cargado</div>
+                                <a href="comprobantes/<?php echo h($comprobante_actual); ?>" target="_blank"
+                                   style="display: inline-block; background: #238636; color: white; padding: 2px 6px; border-radius: 3px; text-decoration: none; font-size: 0.6rem; margin-bottom: 2px; line-height: 1;">Ver</a>
+                                <button onclick="abrirModalComprobante()"
+                                        style="display: block; width: 100%; background: #fb8500; color: white; border: none; padding: 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Cambiar</button>
+                            <?php else: ?>
+                                <div style="margin-bottom: 3px; font-size: 0.6rem; color: #8b949e; line-height: 1;">Sin comprobante</div>
+                                <button onclick="abrirModalComprobante()"
+                                        style="width: 100%; background: #1f6feb; color: white; border: none; padding: 4px 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Subir</button>
+                            <?php endif; ?>
                         </div>
-                    </div>
-                </div>
 
-                <div class="print-section" style="margin-top: 40px;">
-                    <div class="print-card">
-                        <button onclick="imprimirPedido()" class="btn-print">
-                            <span class="print-icon">🖨️</span>
-                            Imprimir Pedido
-                        </button>
+                        <!-- Imprimir -->
+                        <div class="accion-micro" style="text-align: center; background: #30363d; border: 1px solid #3d444d; border-radius: 6px; padding: 8px 4px;">
+                            <div style="font-size: 0.65rem; color: #1f6feb; font-weight: 600; margin-bottom: 3px; line-height: 1;">🖨️ IMPRIMIR</div>
+                            <div style="margin-bottom: 3px; font-size: 0.6rem; color: #8b949e; line-height: 1;">PDF Pedido</div>
+                            <button onclick="imprimirPedido()"
+                                    style="width: 100%; background: #6e7681; color: white; border: none; padding: 4px 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Imprimir</button>
+                        </div>
                     </div>
                 </div>
             <?php endif; ?>
@@ -1456,7 +2110,314 @@ if ($id && $id > 0) {
     </div>
 
     <script>
-        function imprimirPedido() {
+    // Funciones para gestión de estados
+    function cambiarEstadoPedido() {
+        const nuevoEstado = document.getElementById('nuevo-estado').value;
+        const statusDiv = document.getElementById('estado-status');
+        const pedidoId = <?php echo json_encode($p['id'] ?? ''); ?>;
+
+        if (!nuevoEstado || !pedidoId) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error: Datos inválidos</span>';
+            return;
+        }
+
+        // Mostrar estado de carga
+        statusDiv.innerHTML = '<span style="color: #1f6feb;">🔄 Actualizando estado...</span>';
+
+        const formData = new FormData();
+        formData.append('id', pedidoId);
+        formData.append('estado', nuevoEstado);
+
+        fetch('actualizar_estado.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Estado actualizado correctamente</span>';
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al actualizar estado') + '</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
+        });
+    }
+
+    // Funciones para gestión de notas
+    function agregarNota() {
+        const nuevaNota = document.getElementById('nueva-nota').value.trim();
+        const statusDiv = document.getElementById('notas-status');
+        const pedidoId = <?php echo json_encode($p['id'] ?? ''); ?>;
+
+        if (!nuevaNota) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Por favor ingresa una nota</span>';
+            return;
+        }
+
+        if (!pedidoId) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error: ID de pedido no válido</span>';
+            return;
+        }
+
+        // Mostrar estado de carga
+        statusDiv.innerHTML = '<span style="color: #1f6feb;">💾 Guardando nota...</span>';
+
+        const formData = new FormData();
+        formData.append('pedido_id', pedidoId);
+        formData.append('nota', nuevaNota);
+
+        fetch('agregar_nota.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Nota guardada correctamente</span>';
+                document.getElementById('nueva-nota').value = '';
+
+                // Agregar nota al historial
+                agregarNotaAlHistorial(nuevaNota, 'Ahora');
+
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 3000);
+            } else {
+                statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al guardar nota') + '</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
+        });
+    }
+
+    function agregarNotaAlHistorial(nota, fecha) {
+        const listaNotes = document.getElementById('lista-notas');
+
+        // Crear elemento de nota
+        const notaDiv = document.createElement('div');
+        notaDiv.className = 'nota-item';
+        notaDiv.style.cssText = 'background: #21262d; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #238636;';
+
+        notaDiv.innerHTML = `
+            <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 4px;">
+                📅 ${fecha} - Sistema
+            </div>
+            <div style="color: #e6edf3; line-height: 1.4;">
+                ${nota.replace(/\n/g, '<br>')}
+            </div>
+        `;
+
+        // Insertar al principio
+        listaNotes.insertBefore(notaDiv, listaNotes.firstChild);
+
+        // Remover mensaje de "no hay notas" si existe
+        const sinNotas = listaNotes.querySelector('[style*="font-style: italic"]');
+        if (sinNotas) {
+            sinNotas.remove();
+        }
+    }
+
+    // Funciones para edición de cliente
+    function habilitarEdicion() {
+        document.getElementById('formulario-edicion').style.display = 'block';
+        document.getElementById('btn-habilitar-edicion').style.display = 'none';
+    }
+
+    function cancelarEdicion() {
+        document.getElementById('formulario-edicion').style.display = 'none';
+        document.getElementById('btn-habilitar-edicion').style.display = 'block';
+
+        // Restaurar valores originales
+        document.getElementById('edit-nombre').value = <?php echo json_encode($p['nombre'] ?? ''); ?>;
+        document.getElementById('edit-correo').value = <?php echo json_encode($p['correo'] ?? ''); ?>;
+        document.getElementById('edit-telefono').value = <?php echo json_encode($p['telefono'] ?? ''); ?>;
+        document.getElementById('edit-direccion').value = <?php echo json_encode($p['direccion'] ?? ''); ?>;
+        document.getElementById('edit-persona-recibe').value = <?php echo json_encode($p['persona_recibe'] ?? ''); ?>;
+        document.getElementById('edit-horarios').value = <?php echo json_encode($p['horarios'] ?? ''); ?>;
+
+        document.getElementById('edicion-status').innerHTML = '';
+    }
+
+    function guardarCambiosCliente() {
+        const statusDiv = document.getElementById('edicion-status');
+        const pedidoId = <?php echo json_encode($p['id'] ?? ''); ?>;
+
+        const datos = {
+            pedido_id: pedidoId,
+            nombre: document.getElementById('edit-nombre').value.trim(),
+            correo: document.getElementById('edit-correo').value.trim(),
+            telefono: document.getElementById('edit-telefono').value.trim(),
+            direccion: document.getElementById('edit-direccion').value.trim(),
+            persona_recibe: document.getElementById('edit-persona-recibe').value.trim(),
+            horarios: document.getElementById('edit-horarios').value.trim()
+        };
+
+        if (!datos.nombre || !datos.correo) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Nombre y email son obligatorios</span>';
+            return;
+        }
+
+        // Validar email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(datos.correo)) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Email no válido</span>';
+            return;
+        }
+
+        statusDiv.innerHTML = '<span style="color: #1f6feb;">💾 Guardando cambios...</span>';
+
+        const formData = new FormData();
+        Object.keys(datos).forEach(key => {
+            formData.append(key, datos[key]);
+        });
+
+        fetch('actualizar_cliente.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Datos actualizados correctamente</span>';
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al actualizar datos') + '</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
+        });
+    }
+
+    // Funciones para comunicación con cliente
+    function enviarEmailCliente(tipo) {
+        const statusDiv = document.getElementById('comunicacion-status');
+        const pedidoId = <?php echo json_encode($p['id'] ?? ''); ?>;
+        const clienteEmail = <?php echo json_encode($p['correo'] ?? ''); ?>;
+
+        if (!clienteEmail) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ No hay email del cliente registrado</span>';
+            return;
+        }
+
+        statusDiv.innerHTML = '<span style="color: #1f6feb;">📧 Enviando email...</span>';
+
+        const formData = new FormData();
+        formData.append('pedido_id', pedidoId);
+        formData.append('tipo_email', tipo);
+        formData.append('cliente_email', clienteEmail);
+
+        fetch('enviar_email_cliente.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Email enviado correctamente</span>';
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 5000);
+            } else {
+                statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al enviar email') + '</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
+        });
+    }
+
+    // Función para confirmar entrega con guía
+    function confirmarEntregaConGuia() {
+        const statusDiv = document.getElementById('comunicacion-status');
+        const pedidoId = <?php echo json_encode($p['id'] ?? ''); ?>;
+        const clienteEmail = <?php echo json_encode($p['correo'] ?? ''); ?>;
+        const guiaActual = <?php echo json_encode($p['guia'] ?? ''); ?>;
+
+        // Verificar que hay email del cliente
+        if (!clienteEmail) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ No hay email del cliente registrado</span>';
+            return;
+        }
+
+        // Verificar que hay guía de envío
+        if (!guiaActual || guiaActual.trim() === '') {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ El pedido no tiene guía de envío, debes adjuntar guía de envío para poder notificar al cliente</span>';
+            return;
+        }
+
+        statusDiv.innerHTML = '<span style="color: #1f6feb;">📧 Enviando confirmación de entrega con guía...</span>';
+
+        const formData = new FormData();
+        formData.append('pedido_id', pedidoId);
+        formData.append('tipo_email', 'entrega_con_guia');
+        formData.append('cliente_email', clienteEmail);
+        formData.append('guia_archivo', guiaActual);
+
+        fetch('enviar_email_cliente.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Guía enviada por correo al cliente exitosamente</span>';
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 5000);
+            } else {
+                statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al enviar email con guía') + '</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
+        });
+    }
+
+    // Función para abrir WhatsApp
+    function abrirWhatsApp(telefono, nombreCliente, pedidoId) {
+        // Limpiar el número de teléfono (remover espacios, guiones, etc.)
+        let numeroLimpio = telefono.replace(/\D/g, '');
+
+        // Si el número no empieza con código de país, asumir Colombia (+57)
+        if (!numeroLimpio.startsWith('57') && numeroLimpio.length === 10) {
+            numeroLimpio = '57' + numeroLimpio;
+        }
+
+        // Mensaje predefinido
+        const mensaje = `Hola ${nombreCliente}, te contactamos desde Sequoia Speed sobre tu pedido #${pedidoId}. ¿En qué podemos ayudarte?`;
+
+        // Crear la URL de WhatsApp
+        const whatsappUrl = `https://wa.me/${numeroLimpio}?text=${encodeURIComponent(mensaje)}`;
+
+        // Abrir WhatsApp en una nueva ventana/pestaña
+        window.open(whatsappUrl, '_blank');
+
+        // Mostrar confirmación en el estado
+        const statusDiv = document.getElementById('comunicacion-status');
+        if (statusDiv) {
+            statusDiv.innerHTML = '<span style="color: #25d366;">💬 WhatsApp abierto - Mensaje predefinido copiado</span>';
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 3000);
+        }
+    }
+
+    // Funciones existentes para modales e impresión
+    function imprimirPedido() {
             // Configurar la impresión
             const originalTitle = document.title;
             document.title = 'Pedido #<?php echo h($p['id'] ?? ''); ?> - Sequoia Speed';
@@ -1499,6 +2460,17 @@ if ($id && $id > 0) {
                             Formatos: JPG, PNG, PDF (máx. 5MB)
                         </small>
                     </div>
+
+                    <div style="margin-bottom: 20px; padding: 15px; background: #21262d; border-radius: 8px; border: 1px solid #3d444d;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #e6edf3;">
+                            <input type="checkbox" id="marcarEnviado" style="width: auto; margin: 0;">
+                            <span style="font-weight: 600;">🚚 Marcar pedido como ENVIADO</span>
+                        </label>
+                        <small style="color: #8b949e; display: block; margin-top: 5px; margin-left: 25px;">
+                            ✅ Recomendado: Si el pedido ya fue despachado, marca esta opción para actualizar el estado automáticamente.
+                        </small>
+                    </div>
+
                     <div class="modal-actions">
                         <button type="button" onclick="cerrarModalGuia()" class="btn" style="background: #6e7681;">
                             Cancelar
@@ -1696,8 +2668,12 @@ if ($id && $id > 0) {
         e.preventDefault();
 
         const formData = new FormData(this);
+        const marcarEnviado = document.getElementById('marcarEnviado').checked;
         const statusDiv = document.getElementById('statusGuia');
         const submitBtn = this.querySelector('button[type="submit"]');
+
+        // Agregar el estado del checkbox al formData
+        formData.append('marcar_enviado', marcarEnviado);
 
         // Estado de carga
         submitBtn.disabled = true;
@@ -1711,7 +2687,11 @@ if ($id && $id > 0) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                statusDiv.innerHTML = '<span style="color: #238636;">✅ Guía subida correctamente</span>';
+                let mensaje = '✅ Guía subida correctamente';
+                if (data.marcar_enviado) {
+                    mensaje += ' y pedido marcado como enviado';
+                }
+                statusDiv.innerHTML = '<span style="color: #238636;">' + mensaje + '</span>';
                 setTimeout(() => {
                     location.reload();
                 }, 1500);

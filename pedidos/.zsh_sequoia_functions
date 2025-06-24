@@ -1,16 +1,15 @@
 # ====================================================
 # 🧹 FUNCIONES DE LIMPIEZA PARA SEQUOIA SPEED
-# ====================================================
+# =========    echo "📄 Archivos .md: $md_count"
+    echo "🗄️ Archivos .sql: $sql_count"
+    echo "🔍 Archivos debug_*: $debug_count"
+    echo "🧪 Archivos test/script/temp: $test_count"
+    echo "🔧 Archivos migrate/check/verificar: $migrate_count"=======================================
 
 # Función principal de limpieza completa integrada
 limpiar() {
     local current_dir=$(pwd)
     local project_dir="/Users/ronaldinfante/Documents/pedidos"
-
-    # Determinar modo de ejecución
-
-    # Procesar argumentos
-
 
     echo "🧹 LIMPIADOR COMPLETO DE ARCHIVOS TEMPORALES"
     echo "📂 Cambiando al directorio del proyecto..."
@@ -23,140 +22,90 @@ limpiar() {
     echo "📂 Directorio: $(pwd)"
     echo ""
 
-    # Configurar glob para manejar patrones sin coincidencias
-    setopt NULL_GLOB
-
     local total=0
-    local doc_count=0
-    local test_count=0
-    local script_count=0
-    local backup_count=0
-    local system_count=0
-    local empty_count=0
 
     echo "🎯 INICIANDO LIMPIEZA POR CATEGORÍAS:"
     echo ""
 
+    # Activar modo de expansión de nombres de archivo
+    setopt NULL_GLOB
+
     # ====================================================
-    # 📄 CATEGORÍA 1: DOCUMENTACIÓN TEMPORAL
+    # 📄 BORRAR TODOS LOS ARCHIVOS .MD
     # ====================================================
-    echo "📄 [1/7] Documentación temporal..."
-    for file in README_*.md DUMMY*.md TEST*.md EXAMPLE*.md TUTORIAL*.md; do
+    echo "📄 [1/4] Borrando archivos .md..."
+    local md_count=0
+    for file in *.md; do
         if [[ -f "$file" ]]; then
-            ((doc_count++))
+            ((md_count++))
             ((total++))
             rm -f "$file" && echo "    🗑️  Borrado: $file"
         fi
     done
-    echo "    ✅ Documentos temporales: $doc_count archivos"
+    echo "    ✅ Archivos .md: $md_count archivos"
 
     # ====================================================
-    # 🧪 CATEGORÍA 2: ARCHIVOS DE PRUEBAS NO OFICIALES
+    # �️ BORRAR TODOS LOS ARCHIVOS .SQL
     # ====================================================
     echo ""
-    echo "🧪 [2/7] Archivos de pruebas no oficiales..."
-    for file in test_*.* *.spec.* *.test.* prueba_*.* testing_*.*; do
+    echo "�️ [2/4] Borrando archivos .sql..."
+    local sql_count=0
+    for file in *.sql; do
+        if [[ -f "$file" ]]; then
+            ((sql_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Archivos .sql: $sql_count archivos"
+
+    # ====================================================
+    # � BORRAR ARCHIVOS DEBUG_*
+    # ====================================================
+    echo ""
+    echo "� [3/4] Borrando archivos debug_*..."
+    local debug_count=0
+    for file in debug_*; do
+        if [[ -f "$file" ]]; then
+            ((debug_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Archivos debug_*: $debug_count archivos"
+
+    # ====================================================
+    # 🧪 BORRAR ARCHIVOS TEST_* Y SCRIPT_*
+    # ====================================================
+    echo ""
+    echo "🧪 [4/5] Borrando archivos test_* y script_*..."
+    local test_count=0
+    for file in test_* script_* temp_* prueba_*; do
         if [[ -f "$file" ]]; then
             ((test_count++))
             ((total++))
             rm -f "$file" && echo "    🗑️  Borrado: $file"
         fi
     done
-    echo "    ✅ Archivos de prueba: $test_count archivos"
+    echo "    ✅ Archivos test/script/temp: $test_count archivos"
 
     # ====================================================
-    # 📝 CATEGORÍA 3: SCRIPTS TEMPORALES
+    # 🔧 BORRAR ARCHIVOS DE MIGRACIÓN Y VERIFICACIÓN
     # ====================================================
     echo ""
-    echo "📝 [3/7] Scripts temporales..."
-    for file in script_*.* experiment_*.* draft_*.* scratch_*.* temp_*.*; do
+    echo "🔧 [5/5] Borrando archivos de migración y verificación..."
+    local migrate_count=0
+    for file in migrate_* check_* verificar_* migration_*; do
         if [[ -f "$file" ]]; then
-            ((script_count++))
+            ((migrate_count++))
             ((total++))
             rm -f "$file" && echo "    🗑️  Borrado: $file"
         fi
     done
-    echo "    ✅ Scripts temporales: $script_count archivos"
+    echo "    ✅ Archivos migrate/check/verificar: $migrate_count archivos"
 
-    # ====================================================
-    # 💾 CATEGORÍA 4: ARCHIVOS DE RESPALDO
-    # ====================================================
-    echo ""
-    echo "💾 [4/7] Archivos de respaldo..."
-    for file in *.bak *.old *.backup *~ *.orig *.swp; do
-        if [[ -f "$file" ]]; then
-            ((backup_count++))
-            ((total++))
-            rm -f "$file" && echo "    🗑️  Borrado: $file"
-        fi
-    done
-    echo "    ✅ Archivos de respaldo: $backup_count archivos"
-
-    # ====================================================
-    # 🍎 CATEGORÍA 5: ARCHIVOS DEL SISTEMA
-    # ====================================================
-    echo ""
-    echo "🍎 [5/7] Archivos del sistema..."
-    for file in .DS_Store Thumbs.db desktop.ini .*.tmp; do
-        if [[ -f "$file" ]]; then
-            ((system_count++))
-            ((total++))
-            rm -f "$file" && echo "    🗑️  Borrado: $file"
-        fi
-    done
-
-    # ====================================================
-    # 📭 CATEGORÍA 6: ARCHIVOS VACÍOS
-    # ====================================================
-    # 📭 CATEGORÍA 6: ARCHIVOS VACÍOS (0 bytes)
-    # ====================================================
-    echo ""
-    echo "📭 [6/7] Archivos vacíos (0 bytes)..."
-
-    # Buscar archivos vacíos excluyendo directorios importantes y archivos ocultos
-    local empty_files=$(find . -maxdepth 1 -type f -size 0 -not -name ".*" -not -path "./app/*" -not -path "./public/*" -not -path "./assets/*" 2>/dev/null)
-
-    if [[ -n "$empty_files" ]]; then
-        while IFS= read -r file; do
-            if [[ -f "$file" ]]; then
-                # Verificar que no sea un archivo importante
-                local filename=$(basename "$file")
-                if [[ "$filename" != ".gitkeep" && "$filename" != ".htaccess" && "$filename" != "index.html" ]]; then
-                    # Verificar que no coincida con otros patrones ya manejados
-                    local skip_file=false
-                    case "$filename" in
-                        README_*.md|DUMMY*.md|TEST*.md|EXAMPLE*.md|TUTORIAL*.md) skip_file=true ;;
-                        test_*.*|*.spec.*|*.test.*|prueba_*.*|testing_*.*) skip_file=true ;;
-                        script_*.*|experiment_*.*|draft_*.*|scratch_*.*|temp_*.*) skip_file=true ;;
-                        *.bak|*.old|*.backup|*~|*.orig|*.swp) skip_file=true ;;
-                    esac
-
-                    if [[ "$skip_file" == "false" ]]; then
-                        ((empty_count++))
-                        ((total++))
-                        rm -f "$file" && echo "    🗑️  Borrado archivo vacío: $file"
-                    fi
-                fi
-            fi
-        done <<< "$empty_files"
-    fi
-    echo "    ✅ Archivos vacíos: $empty_count archivos"
-    echo "    ✅ Archivos del sistema: $system_count archivos"
-
-    # ====================================================
-    # 🤖 CATEGORÍA 7: BORRATEMPORALES AUTOMÁTICO
-    # ====================================================
-    echo ""
-    echo "🤖 [7/7] Ejecutando borratemporales..."
-    echo "    🚀 Ejecutando limpieza automática..."
-    # Ejecutar borratemporales (es un alias)
-    source ~/.zshrc 2>/dev/null || true
-    if command -v borratemporales &> /dev/null; then
-        borratemporales
-    else
-        # Fallback directo al script PHP
-        php /Users/ronaldinfante/Documents/pedidos-development/desarrollo/scripts/borratemporales.php 2>/dev/null || echo "    ⚠️ borratemporales no disponible"
-    fi
+    # Desactivar modo NULL_GLOB
+    unsetopt NULL_GLOB
 
     # ====================================================
     # 📊 RESUMEN FINAL
@@ -165,25 +114,19 @@ limpiar() {
     echo "══════════════════════════════════════════"
     echo "📊 RESUMEN DE LIMPIEZA"
     echo "══════════════════════════════════════════"
-    echo "📄 Documentación temporal: $doc_count archivos"
-    echo "🧪 Archivos de prueba: $test_count archivos"
-    echo "📝 Scripts temporales: $script_count archivos"
-    echo "💾 Archivos de respaldo: $backup_count archivos"
-    echo "🍎 Archivos del sistema: $system_count archivos"
-    echo "📭 Archivos vacíos: $empty_count archivos"
+    echo "📄 Archivos .md: $md_count"
+    echo "🗄️ Archivos .sql: $sql_count"
+    echo "� Archivos debug_*: $debug_count"
+    echo "🧪 Archivos test/script/temp: $test_count"
     echo "──────────────────────────────────────────"
-    echo "✅ Total archivos encontrados: $total"
+    echo "✅ Total archivos borrados: $total"
 
     if [[ $total -gt 0 ]]; then
-        echo "🚀 ¡Proyecto completamente limpio!"
+        echo "🚀 ¡Proyecto limpio!"
     else
         echo "🎉 ¡El proyecto ya estaba limpio!"
     fi
-    echo "🤖 Limpieza automática completada con borratemporales"
     echo "══════════════════════════════════════════"
-
-    # Restaurar configuración de glob
-    unsetopt NULL_GLOB
 
     # Regresar al directorio original
     cd "$current_dir"

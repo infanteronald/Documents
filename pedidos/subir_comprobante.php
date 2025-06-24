@@ -51,8 +51,8 @@ if(!move_uploaded_file($archivo['tmp_name'], $rutaArchivo)){
     exit;
 }
 
-// Actualizar base de datos
-$stmt = $conn->prepare("UPDATE pedidos_detal SET comprobante = ?, tiene_comprobante = '1' WHERE id = ?");
+// Actualizar base de datos - marca como pagado y con comprobante
+$stmt = $conn->prepare("UPDATE pedidos_detal SET comprobante = ?, tiene_comprobante = '1', pagado = 1 WHERE id = ?");
 $stmt->bind_param("si", $nombreComprobante, $id);
 
 if(!$stmt->execute()) {

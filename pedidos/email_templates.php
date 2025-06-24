@@ -484,8 +484,8 @@ class EmailTemplates {
 
         $content .= '
         <div class="section" style="text-align: center; margin-top: 32px;">
-            <a href="https://sequoiaspeed.com.co/pedidos/ver_detalle_pedido.php?id=' . $pedidoData['numero_pedido'] . '" class="btn">
-                Ver Detalles Completos
+            <a href="https://sequoiaspeed.com.co/pedidos/ver_detalle_pedido_cliente.php?id=' . $pedidoData['numero_pedido'] . '" class="btn">
+                Ver Mi Pedido
             </a>
         </div>';
 
@@ -545,6 +545,377 @@ class EmailTemplates {
             'Pago Confirmado - Pedido #' . $pedidoData['numero_pedido'],
             $content,
             'Gracias por su confianza en Sequoia Speed.'
+        );
+    }
+
+    /**
+     * Plantilla de email para el equipo cuando un cliente agrega un comentario
+     */
+    public static function generarEmailComentarioEquipo($data) {
+        $content = '
+        <div class="section">
+            <h2>💬 Nuevo Comentario de Cliente</h2>
+            <p style="color: #f0f6fc !important; font-size: 16px; margin-bottom: 24px;">
+                El cliente <strong>' . htmlspecialchars($data['nombre_cliente']) . '</strong> ha agregado un comentario al pedido <strong>#' . $data['numero_pedido'] . '</strong>
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>📝 Comentario del Cliente</h3>
+            <div style="background: #21262d !important; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0;">
+                <p style="color: #e6edf3 !important; font-size: 15px; line-height: 1.6; margin: 0; font-style: italic;">
+                    "' . nl2br(htmlspecialchars($data['comentario'])) . '"
+                </p>
+            </div>
+            <p style="color: #8b949e !important; font-size: 14px; margin-top: 12px;">
+                📅 Fecha: ' . $data['timestamp'] . '<br>
+                👤 Cliente: ' . htmlspecialchars($data['nombre_cliente']) . '<br>
+                📧 Email: ' . htmlspecialchars($data['correo_cliente']) . '
+            </p>
+        </div>
+
+        <div class="section" style="text-align: center; margin-top: 32px;">
+            <a href="https://sequoiaspeed.com.co/pedidos/ver_detalle_pedido.php?id=' . $data['numero_pedido'] . '" class="btn">
+                Ver Pedido Completo
+            </a>
+        </div>';
+
+        return self::getMainTemplate(
+            '💬 Nuevo Comentario - Pedido #' . $data['numero_pedido'],
+            $content,
+            'Notificación automática del sistema de comentarios.'
+        );
+    }
+
+    /**
+     * Plantilla de email de confirmación para el cliente
+     */
+    public static function generarEmailComentarioCliente($data) {
+        $content = '
+        <div class="section">
+            <h2>✅ Comentario Recibido</h2>
+            <p style="color: #f0f6fc !important; font-size: 16px; margin-bottom: 24px;">
+                Hola <strong>' . htmlspecialchars($data['nombre_cliente']) . '</strong>,<br><br>
+                Hemos recibido tu comentario sobre el pedido <strong>#' . $data['numero_pedido'] . '</strong>.
+                Nuestro equipo lo revisará y te responderemos a la brevedad.
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>💬 Tu Comentario</h3>
+            <div style="background: #21262d !important; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0;">
+                <p style="color: #e6edf3 !important; font-size: 15px; line-height: 1.6; margin: 0;">
+                    ' . nl2br(htmlspecialchars($data['comentario'])) . '
+                </p>
+            </div>
+            <p style="color: #8b949e !important; font-size: 14px; margin-top: 12px;">
+                📅 Fecha: ' . $data['timestamp'] . '
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>📞 ¿Necesitas Ayuda Inmediata?</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Si tu consulta es urgente, puedes contactarnos directamente:
+            </p>
+            <ul style="color: #f0f6fc !important; font-size: 15px; line-height: 1.8; margin: 12px 0; padding-left: 20px;">
+                <li>📧 Email: ventas@sequoiaspeed.com.co</li>
+                <li>📱 WhatsApp: +57 300 123 4567</li>
+                <li>⏰ Horario: Lunes a Viernes 8:00 AM - 6:00 PM</li>
+            </ul>
+        </div>
+
+        <div class="section" style="text-align: center; margin-top: 32px;">
+            <a href="https://sequoiaspeed.com.co/pedidos/ver_detalle_pedido_cliente.php?id=' . $data['numero_pedido'] . '" class="btn">
+                Ver Mi Pedido
+            </a>
+        </div>';
+
+        return self::getMainTemplate(
+            '✅ Comentario Recibido - Pedido #' . $data['numero_pedido'],
+            $content,
+            'Gracias por contactarnos. Te responderemos pronto.'
+        );
+    }
+
+    /**
+     * Plantilla de email para el equipo cuando se cambia el estado de un pedido
+     */
+    public static function generarEmailCambioEstado($data) {
+        $content = '
+        <div class="section">
+            <h2>🔄 Estado de Pedido Actualizado</h2>
+            <p style="color: #f0f6fc !important; font-size: 16px; margin-bottom: 24px;">
+                El pedido <strong>#' . $data['numero_pedido'] . '</strong> ha cambiado su estado a <strong>' . htmlspecialchars($data['nuevo_estado']) . '</strong>
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>📋 Información del Pedido</h3>
+            <div style="background: #21262d !important; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0;">
+                <p style="color: #e6edf3 !important; font-size: 15px; line-height: 1.6; margin: 0;">
+                    <strong>Cliente:</strong> ' . htmlspecialchars($data['nombre_cliente']) . '<br>
+                    <strong>Email:</strong> ' . htmlspecialchars($data['correo_cliente']) . '<br>
+                    <strong>Teléfono:</strong> ' . htmlspecialchars($data['telefono_cliente']) . '<br>
+                    <strong>Monto:</strong> $' . number_format($data['monto'], 0, ',', '.') . '<br>
+                    <strong>Nuevo Estado:</strong> <span style="color: #3fb950 !important; font-weight: bold;">' . htmlspecialchars($data['nuevo_estado']) . '</span>
+                </p>
+            </div>
+            <p style="color: #8b949e !important; font-size: 14px; margin-top: 12px;">
+                📅 Actualizado: ' . $data['timestamp'] . '
+            </p>
+        </div>
+
+        <div class="section" style="text-align: center; margin-top: 32px;">
+            <a href="https://sequoiaspeed.com.co/pedidos/ver_detalle_pedido.php?id=' . $data['numero_pedido'] . '" class="btn">
+                Ver Pedido Completo
+            </a>
+        </div>';
+
+        return self::getMainTemplate(
+            $data['nuevo_estado'] . ' - Pedido #' . $data['numero_pedido'],
+            $content,
+            'Notificación automática del sistema de pedidos.'
+        );
+    }
+
+    /**
+     * Plantilla de email para el cliente cuando se cambia el estado de su pedido
+     */
+    public static function generarEmailCambioEstadoCliente($data) {
+        $content = '
+        <div class="section">
+            <h2>📦 Tu Pedido ha sido Actualizado</h2>
+            <p style="color: #f0f6fc !important; font-size: 16px; margin-bottom: 24px;">
+                Hola <strong>' . htmlspecialchars($data['nombre_cliente']) . '</strong>,<br><br>
+                Te informamos que tu pedido <strong>#' . $data['numero_pedido'] . '</strong> ha sido actualizado.
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>🔄 Nuevo Estado</h3>
+            <div style="background: #21262d !important; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0; text-align: center;">
+                <p style="color: #3fb950 !important; font-size: 24px; font-weight: bold; margin: 0;">
+                    ' . htmlspecialchars($data['nuevo_estado']) . '
+                </p>
+            </div>
+            <p style="color: #8b949e !important; font-size: 14px; margin-top: 12px;">
+                📅 Actualizado: ' . $data['timestamp'] . '
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>📞 ¿Tienes Preguntas?</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos:
+            </p>
+            <ul style="color: #f0f6fc !important; font-size: 15px; line-height: 1.8; margin: 12px 0; padding-left: 20px;">
+                <li>📧 Email: ventas@sequoiaspeed.com.co</li>
+                <li>📱 WhatsApp: +57 300 123 4567</li>
+                <li>⏰ Horario: Lunes a Viernes 8:00 AM - 6:00 PM</li>
+            </ul>
+        </div>
+
+        <div class="section" style="text-align: center; margin-top: 32px;">
+            <a href="https://sequoiaspeed.com.co/pedidos/ver_detalle_pedido_cliente.php?id=' . $data['numero_pedido'] . '" class="btn">
+                Ver Mi Pedido
+            </a>
+        </div>';
+
+        return self::getMainTemplate(
+            $data['nuevo_estado'] . ' - Pedido #' . $data['numero_pedido'] . ' - Sequoia Speed',
+            $content,
+            'Tu pedido ha sido actualizado. ¡Gracias por confiar en nosotros!'
+        );
+    }
+
+    /**
+     * Email de actualización del pedido
+     */
+    public static function emailActualizacionPedido($pedido_id, $nombre_cliente, $pedido) {
+        $content = '
+        <div class="hero">
+            <h1>📢 Actualización de tu Pedido</h1>
+            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', tenemos novedades sobre tu pedido</p>
+        </div>
+
+        <div class="section">
+            <h3>📦 Información del Pedido</h3>
+            <div class="order-info">
+                <div class="order-item">
+                    <span class="label">Número de Pedido:</span>
+                    <span class="value">#' . $pedido_id . '</span>
+                </div>
+                <div class="order-item">
+                    <span class="label">Estado Actual:</span>
+                    <span class="value status-processing">En Procesamiento</span>
+                </div>
+                <div class="order-item">
+                    <span class="label">Fecha:</span>
+                    <span class="value">' . date('d/m/Y', strtotime($pedido['fecha'] ?? 'now')) . '</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📋 Detalles de la Actualización</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Te contactamos para informarte sobre el estado actual de tu pedido. 
+                Nuestro equipo está trabajando en el procesamiento de tu pedido y te mantendremos 
+                informado sobre cualquier novedad importante.
+            </p>
+        </div>
+
+        <div class="section">
+            <h3>📞 ¿Tienes Preguntas?</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos.
+            </p>
+        </div>';
+
+        return self::getMainTemplate(
+            'Actualización de tu pedido #' . $pedido_id . ' - Sequoia Speed',
+            $content,
+            '¡Gracias por confiar en Sequoia Speed!'
+        );
+    }
+
+    /**
+     * Email de solicitud de seguimiento
+     */
+    public static function emailSolicitudSeguimiento($pedido_id, $nombre_cliente, $pedido) {
+        $content = '
+        <div class="hero">
+            <h1>🔍 Solicitud de Seguimiento</h1>
+            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', nos gustaría conocer tu experiencia</p>
+        </div>
+
+        <div class="section">
+            <h3>📦 Sobre tu Pedido #' . $pedido_id . '</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Nos gustaría conocer tu experiencia con este pedido:
+            </p>
+            <ul style="color: #f0f6fc !important; font-size: 15px; line-height: 1.8; margin: 12px 0; padding-left: 20px;">
+                <li>¿Has recibido tu pedido?</li>
+                <li>¿Todo llegó en perfecto estado?</li>
+                <li>¿Hay algo que podamos mejorar?</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>💌 Tu Opinión Importa</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Tu opinión es muy importante para nosotros y nos ayuda a mejorar nuestro servicio.
+                Por favor responde este email con cualquier comentario o sugerencia.
+            </p>
+        </div>';
+
+        return self::getMainTemplate(
+            'Solicitud de seguimiento - Pedido #' . $pedido_id,
+            $content,
+            '¡Gracias por elegirnos!'
+        );
+    }
+
+    /**
+     * Email de confirmación de entrega
+     */
+    public static function emailConfirmacionEntrega($pedido_id, $nombre_cliente, $pedido) {
+        $content = '
+        <div class="hero">
+            <h1>✅ Entrega Confirmada</h1>
+            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', tu pedido ha sido entregado</p>
+        </div>
+
+        <div class="section">
+            <h3>📦 Pedido Entregado</h3>
+            <div class="order-info">
+                <div class="order-item">
+                    <span class="label">Número de Pedido:</span>
+                    <span class="value">#' . $pedido_id . '</span>
+                </div>
+                <div class="order-item">
+                    <span class="label">Estado:</span>
+                    <span class="value status-delivered">✅ Entregado</span>
+                </div>
+                <div class="order-item">
+                    <span class="label">Fecha de Entrega:</span>
+                    <span class="value">' . date('d/m/Y H:i') . '</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🎉 ¡Gracias por tu Compra!</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Nos complace informarte que tu pedido ha sido marcado como entregado.
+                Esperamos que todo haya llegado en perfectas condiciones y que estés satisfecho con tu compra.
+            </p>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Si tienes algún inconveniente o pregunta sobre tu pedido, por favor contáctanos inmediatamente.
+            </p>
+        </div>';
+
+        return self::getMainTemplate(
+            'Confirmación de entrega - Pedido #' . $pedido_id,
+            $content,
+            '¡Gracias por confiar en Sequoia Speed!'
+        );
+    }
+
+    /**
+     * Email de entrega con guía
+     */
+    public static function emailEntregaConGuia($pedido_id, $nombre_cliente, $pedido) {
+        $content = '
+        <div class="hero">
+            <h1>📦 Tu Pedido Está en Camino</h1>
+            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', tu pedido ya fue enviado</p>
+        </div>
+
+        <div class="section">
+            <h3>🚚 Información de Envío</h3>
+            <div class="order-info">
+                <div class="order-item">
+                    <span class="label">Número de Pedido:</span>
+                    <span class="value">#' . $pedido_id . '</span>
+                </div>
+                <div class="order-item">
+                    <span class="label">Estado:</span>
+                    <span class="value status-shipping">🚚 En Tránsito</span>
+                </div>
+                <div class="order-item">
+                    <span class="label">Fecha de Envío:</span>
+                    <span class="value">' . date('d/m/Y H:i') . '</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📄 Guía de Envío Adjunta</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Te enviamos adjunta la guía de envío para que puedas hacer seguimiento de tu pedido.
+                Con esta guía podrás rastrear el estado de tu envío directamente con la transportadora.
+            </p>
+            <div style="background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <p style="color: #58a6ff !important; font-weight: 600; margin: 0;">
+                    📎 Archivo adjunto: guia_envio_pedido_' . $pedido_id . '.pdf
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📱 Seguimiento del Envío</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                Utiliza la guía adjunta para hacer seguimiento en tiempo real de tu envío.
+                Si tienes alguna pregunta sobre tu envío, no dudes en contactarnos.
+            </p>
+        </div>';
+
+        return self::getMainTemplate(
+            '📦 Guía de envío - Pedido #' . $pedido_id . ' - Sequoia Speed',
+            $content,
+            '¡Gracias por confiar en Sequoia Speed!'
         );
     }
 }

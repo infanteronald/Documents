@@ -34,6 +34,12 @@ switch($filtro) {
     case 'enviados':
         $where = "enviado = '1' AND archivado = '0'";
         break;
+    case 'pago_pendiente':
+        $where = "pagado = '0' AND archivado = '0' AND anulado = '0'";
+        break;
+    case 'pago_confirmado':
+        $where = "pagado = '1' AND archivado = '0' AND anulado = '0'";
+        break;
     case 'todos':
         $where = "1=1"; // Mostrar todos los pedidos sin filtro
         break;
@@ -44,7 +50,7 @@ if($buscar){
     $buscarSql = $conn->real_escape_string($buscar);
     $where .= " AND (nombre LIKE '%$buscarSql%' OR telefono LIKE '%$buscarSql%' OR id = '$buscarSql' OR correo LIKE '%$buscarSql%')";
 }
-$result = $conn->query("SELECT SQL_CALC_FOUND_ROWS id, nombre, telefono, correo, monto, estado, fecha, persona_recibe, direccion, horarios, metodo_pago, datos_pago, comprobante, guia, nota_interna, enviado, archivado, anulado, tiene_guia, tiene_comprobante FROM pedidos_detal WHERE $where ORDER BY fecha DESC LIMIT $limite OFFSET $offset");
+$result = $conn->query("SELECT SQL_CALC_FOUND_ROWS id, nombre, telefono, correo, monto, estado, fecha, persona_recibe, direccion, horarios, metodo_pago, datos_pago, comprobante, guia, nota_interna, enviado, archivado, anulado, tiene_guia, tiene_comprobante, pagado FROM pedidos_detal WHERE $where ORDER BY fecha DESC LIMIT $limite OFFSET $offset");
 $pedidos = [];
 while ($row = $result->fetch_assoc()) {
     $pedidos[] = $row;
@@ -56,26 +62,29 @@ $total_paginas = ceil($total_pedidos / $limite);
 function estado_pill($pedido) {
     $estados = [];
 
-    // Verificar cada estado booleano
-    if ($pedido['anulado'] == '1') {
-        $estados[] = '<span class="estado-pill anulado">Anulado</span>';
-    }
-    if ($pedido['archivado'] == '1') {
-        $estados[] = '<span class="estado-pill archivado">Archivado</span>';
-    }
-    if ($pedido['enviado'] == '1') {
-        $estados[] = '<span class="estado-pill enviado">Enviado</span>';
-    }
-    if ($pedido['tiene_guia'] == '1') {
-        $estados[] = '<span class="estado-pill guia">Con Guía</span>';
-    }
-    if ($pedido['tiene_comprobante'] == '1') {
-        $estados[] = '<span class="estado-pill comprobante">Con Comprobante</span>';
+    // Verificar estado de pago primero
+    if ($pedido['pagado'] == '1') {
+        $estados[] = '<span class="estado-pill pago-confirmado">Pago Confirmado</span>';
+    } else {
+        $estados[] = '<span class="estado-pill pago-pendiente">Pago Pendiente</span>';
     }
 
-    // Si no tiene estados específicos, mostrar "Pendiente"
-    if (empty($estados)) {
-        $estados[] = '<span class="estado-pill sin_enviar">Pendiente</span>';
+    // Verificar otros estados
+    if ($pedido['anulado'] == '1') {
+        $estados = ['<span class="estado-pill anulado">Anulado</span>']; // Reemplazar todo si está anulado
+    } else {
+        if ($pedido['archivado'] == '1') {
+            $estados[] = '<span class="estado-pill archivado">Archivado</span>';
+        }
+        if ($pedido['enviado'] == '1') {
+            $estados[] = '<span class="estado-pill enviado">Enviado</span>';
+        }
+        if ($pedido['tiene_guia'] == '1') {
+            $estados[] = '<span class="estado-pill guia">Con Guía</span>';
+        }
+        if ($pedido['tiene_comprobante'] == '1') {
+            $estados[] = '<span class="estado-pill comprobante">Con Comprobante</span>';
+        }
     }
 
     return implode(' ', $estados);
@@ -324,6 +333,18 @@ function estado_pill($pedido) {
       font-size: 0.75rem;
     }
 
+    .estado-pill.pago-pendiente {
+      background: #f85149;
+      color: white;
+      font-weight: 700;
+    }
+
+    .estado-pill.pago-confirmado {
+      background: #3fb950;
+      color: white;
+      font-weight: 700;
+    }
+
     .modal-detalle-bg {
       position: fixed;
       top: 0;
@@ -478,6 +499,8 @@ function estado_pill($pedido) {
                 <option value="semana" <?php if($filtro=='semana') echo "selected";?>>Semana</option>
                 <option value="quincena" <?php if($filtro=='quincena') echo "selected";?>>Últimos 15 días</option>
                 <option value="mes" <?php if($filtro=='mes') echo "selected";?>>Mes</option>
+                <option value="pago_pendiente" <?php if($filtro=='pago_pendiente') echo "selected";?>>Pago Pendiente</option>
+                <option value="pago_confirmado" <?php if($filtro=='pago_confirmado') echo "selected";?>>Pago Confirmado</option>
                 <option value="enviados" <?php if($filtro=='enviados') echo "selected";?>>Enviados</option>
                 <option value="anulados" <?php if($filtro=='anulados') echo "selected";?>>Anulados</option>
                 <option value="archivados" <?php if($filtro=='archivados') echo "selected";?>>Archivados</option>

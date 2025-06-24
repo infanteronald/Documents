@@ -410,6 +410,8 @@ if ($pedido_id) {
         <option value="Transfiya">Transfiya</option>
         <option value="Bancolombia">Bancolombia</option>
         <option value="Provincial">Provincial</option>
+        <option value="Addi">Addi</option>
+        <option value="Sistecredito">Sistecredito</option>
         <option value="PSE Bold">PSE Bold</option>
         <option value="Botón Bancolombia">Botón Bancolombia</option>
         <option value="Tarjeta de Crédito o Débito">Tarjeta de Crédito o Débito</option>
@@ -434,6 +436,8 @@ if ($pedido_id) {
       if (value === "Nequi" || value === "Transfiya") info = "<b>Nequi / Transfiya:</b> 3213260357";
       else if (value === "Bancolombia") info = "<b>Bancolombia:</b> Ahorros 03500000175 Ronald Infante";
       else if (value === "Provincial") info = "<b>Provincial:</b> Ahorros 0958004765 Ronald Infante";
+      else if (value === "Addi") info = "<b>Addi:</b> Pago en cuotas flexibles - Registra tu pedido y completa el proceso con Addi";
+      else if (value === "Sistecredito") info = "<b>Sistecredito:</b> Financiación inmediata - Completa tu compra con crédito rápido";
       else if (value === "PSE Bold") {
         console.log('🔥 Método Bold seleccionado: PSE Bold');
         info = `<div class="pse-bold-container">
