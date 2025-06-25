@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (!empty($archivo_guia)) {
                 // Envío con adjunto usando HTML
                 $boundary = md5(time());
-                
+
                 $headers = "From: Sequoia Speed <$from>\r\n";
                 $headers .= "Reply-To: $from\r\n";
                 $headers .= "MIME-Version: 1.0\r\n";
@@ -98,10 +98,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Adjuntar guía
                 $archivo_contenido = file_get_contents($archivo_guia);
                 $archivo_encoded = chunk_split(base64_encode($archivo_contenido));
-                
+
                 $extension = pathinfo($archivo_guia, PATHINFO_EXTENSION);
                 $content_type = ($extension === 'pdf') ? 'application/pdf' : 'image/jpeg';
-                
+
                 $mensaje_completo .= "--$boundary\r\n";
                 $mensaje_completo .= "Content-Type: $content_type; name=\"guia_envio_pedido_{$pedido_id}.$extension\"\r\n";
                 $mensaje_completo .= "Content-Disposition: attachment; filename=\"guia_envio_pedido_{$pedido_id}.$extension\"\r\n";

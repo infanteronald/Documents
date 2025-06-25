@@ -760,8 +760,8 @@ class EmailTemplates {
         <div class="section">
             <h3>📋 Detalles de la Actualización</h3>
             <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
-                Te contactamos para informarte sobre el estado actual de tu pedido. 
-                Nuestro equipo está trabajando en el procesamiento de tu pedido y te mantendremos 
+                Te contactamos para informarte sobre el estado actual de tu pedido.
+                Nuestro equipo está trabajando en el procesamiento de tu pedido y te mantendremos
                 informado sobre cualquier novedad importante.
             </p>
         </div>

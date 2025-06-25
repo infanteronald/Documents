@@ -184,8 +184,7 @@ if ($id && $id > 0) {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
+            object-fit: contain;
         }
 
         .header-text h1 {
@@ -635,7 +634,7 @@ if ($id && $id > 0) {
         <?php if ($pedido_encontrado): ?>
             <div class="header">
                 <div class="header-left">
-                    <div class="logo">S</div>
+                    <img src="logo.png" alt="Sequoia Speed" class="logo" onerror="this.style.display='none'">
                     <div class="header-text">
                         <h1>Pedido #<?php echo h($p['id']); ?></h1>
                         <p>Cliente: <?php echo h(getField($p, 'nombre_cliente')); ?></p>
@@ -820,7 +819,7 @@ if ($id && $id > 0) {
         <?php else: ?>
             <div class="header">
                 <div class="header-left">
-                    <div class="logo">S</div>
+                    <img src="logo.png" alt="Sequoia Speed" class="logo" onerror="this.style.display='none'">
                     <div class="header-text">
                         <h1>Error</h1>
                         <p>Pedido no encontrado</p>

@@ -14,6 +14,7 @@
 		"explorer.incrementalNaming": "smart",
 		"git.autoRepositoryDetection": false,
 		"search.smartCase": true,
-		"terminal.integrated.enablePersistentSessions": false
+		"terminal.integrated.enablePersistentSessions": false,
+		"php.version": "8.1"
 	}
 }

@@ -137,6 +137,291 @@ if ($id && $id > 0) {
                     $total_productos += floatval($item['precio']) * intval($item['cantidad']);
                 }
             }
+
+            // ===== ESTADÍSTICAS AVANZADAS DEL CLIENTE =====
+            $cliente_stats = [];
+            $correo_cliente = $p['correo'] ?? $p['email'] ?? $p['cliente_email'] ?? '';
+            $telefono_cliente = $p['telefono'] ?? $p['telefono_cliente'] ?? $p['phone'] ?? '';
+
+            if (!empty($correo_cliente) || !empty($telefono_cliente)) {
+                try {
+                    // Escapar valores para seguridad
+                    $correo_safe = mysqli_real_escape_string($conn, $correo_cliente);
+                    $telefono_safe = mysqli_real_escape_string($conn, $telefono_cliente);
+
+                    // 1. Customer Lifetime Value (LTV) - Calculado desde pedido_detalle
+                    $ltv_query = "SELECT
+                        COUNT(DISTINCT p.id) as total_pedidos,
+                        COALESCE(SUM(pd.precio * pd.cantidad), 0) as valor_total_historico,
+                        COALESCE(AVG(pd.precio * pd.cantidad), 0) as ticket_promedio,
+                        MIN(p.fecha) as primer_pedido,
+                        MAX(p.fecha) as ultimo_pedido,
+                        SUM(CASE WHEN p.pagado = 1 THEN 1 ELSE 0 END) as pedidos_pagados,
+                        SUM(CASE WHEN p.enviado = '1' THEN 1 ELSE 0 END) as pedidos_enviados
+                    FROM pedidos_detal p
+                    LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
+                    WHERE (p.correo = '$correo_safe' OR p.telefono = '$telefono_safe')
+                    AND p.anulado = '0'";
+
+                    $ltv_result = mysqli_query($conn, $ltv_query);
+                    if ($ltv_result && $ltv_row = mysqli_fetch_assoc($ltv_result)) {
+                        $cliente_stats['ltv'] = $ltv_row;
+                    }
+
+                    // 2. Análisis de comportamiento - método de pago preferido
+                    $comportamiento_query = "SELECT
+                        metodo_pago,
+                        COUNT(*) as veces_usado
+                    FROM pedidos_detal
+                    WHERE (correo = '$correo_safe' OR telefono = '$telefono_safe')
+                    AND anulado = '0'
+                    AND metodo_pago IS NOT NULL
+                    AND metodo_pago != ''
+                    GROUP BY metodo_pago
+                    ORDER BY veces_usado DESC
+                    LIMIT 1";
+
+                    $comp_result = mysqli_query($conn, $comportamiento_query);
+                    if ($comp_result && $comp_row = mysqli_fetch_assoc($comp_result)) {
+                        $cliente_stats['metodo_preferido'] = $comp_row;
+                    }
+
+                    // 3. Productos más comprados por este cliente (si hay tabla de detalle)
+                    $productos_query = "SELECT
+                        pd.nombre,
+                        SUM(pd.cantidad) as total_comprado,
+                        COUNT(*) as veces_pedido
+                    FROM pedidos_detal p
+                    JOIN pedido_detalle pd ON p.id = pd.pedido_id
+                    WHERE (p.correo = '$correo_safe' OR p.telefono = '$telefono_safe')
+                    AND p.anulado = '0'
+                    AND pd.nombre IS NOT NULL
+                    AND pd.nombre != ''
+                    GROUP BY pd.nombre
+                    ORDER BY total_comprado DESC
+                    LIMIT 3";
+
+                    $prod_result = mysqli_query($conn, $productos_query);
+                    $cliente_stats['productos_favoritos'] = [];
+                    if ($prod_result) {
+                        while ($prod_row = mysqli_fetch_assoc($prod_result)) {
+                            $cliente_stats['productos_favoritos'][] = $prod_row;
+                        }
+                    }
+
+                    // 4. Análisis temporal - hora preferida para hacer pedidos
+                    $temporal_query = "SELECT
+                        HOUR(fecha) as hora,
+                        COUNT(*) as pedidos_en_hora
+                    FROM pedidos_detal
+                    WHERE (correo = '$correo_safe' OR telefono = '$telefono_safe')
+                    AND anulado = '0'
+                    AND fecha IS NOT NULL
+                    GROUP BY HOUR(fecha)
+                    ORDER BY pedidos_en_hora DESC
+                    LIMIT 1";
+
+                    $temp_result = mysqli_query($conn, $temporal_query);
+                    if ($temp_result && $temp_row = mysqli_fetch_assoc($temp_result)) {
+                        $cliente_stats['hora_preferida'] = $temp_row;
+                    }
+
+                    // 5. Comparativa con promedio general del sistema
+                    $promedio_query = "SELECT
+                        COALESCE(AVG(pd.precio * pd.cantidad), 0) as ticket_promedio_general,
+                        COUNT(DISTINCT p.id) as total_pedidos_sistema
+                    FROM pedidos_detal p
+                    JOIN pedido_detalle pd ON p.id = pd.pedido_id
+                    WHERE p.anulado = '0'";
+
+                    $prom_result = mysqli_query($conn, $promedio_query);
+                    if ($prom_result && $prom_row = mysqli_fetch_assoc($prom_result)) {
+                        $cliente_stats['promedio_general'] = $prom_row;
+                    }
+
+                    // 6. Tiempo de procesamiento promedio
+                    $tiempo_query = "SELECT
+                        COALESCE(AVG(DATEDIFF(NOW(), fecha)), 0) as tiempo_promedio_envio
+                    FROM pedidos_detal
+                    WHERE (correo = '$correo_safe' OR telefono = '$telefono_safe')
+                    AND enviado = '1'
+                    AND anulado = '0'
+                    AND fecha IS NOT NULL";
+
+                    $tiempo_result = mysqli_query($conn, $tiempo_query);
+                    if ($tiempo_result && $tiempo_row = mysqli_fetch_assoc($tiempo_result)) {
+                        $cliente_stats['tiempo_procesamiento'] = $tiempo_row;
+                    }
+
+                    // ===== NUEVAS MÉTRICAS AVANZADAS =====
+
+                    // 7. Tasa de Recurrencia - % de clientes con múltiples compras
+                    $recurrencia_query = "SELECT
+                        COUNT(DISTINCT p.correo) as clientes_totales,
+                        COUNT(DISTINCT CASE WHEN pedidos_cliente >= 2 THEN p.correo END) as clientes_recurrentes
+                    FROM (
+                        SELECT correo, COUNT(*) as pedidos_cliente
+                        FROM pedidos_detal
+                        WHERE anulado = '0'
+                        AND correo IS NOT NULL
+                        AND correo != ''
+                        GROUP BY correo
+                    ) as p";
+
+                    $rec_result = mysqli_query($conn, $recurrencia_query);
+                    if ($rec_result && $rec_row = mysqli_fetch_assoc($rec_result)) {
+                        $total_clientes = intval($rec_row['clientes_totales']);
+                        $clientes_recurrentes = intval($rec_row['clientes_recurrentes']);
+                        $tasa_recurrencia = $total_clientes > 0 ? ($clientes_recurrentes / $total_clientes) * 100 : 0;
+
+                        $cliente_stats['recurrencia'] = [
+                            'tasa_recurrencia_sistema' => $tasa_recurrencia,
+                            'clientes_recurrentes' => $clientes_recurrentes,
+                            'clientes_totales' => $total_clientes
+                        ];
+                    }
+
+                    // 8. Score RFM del cliente
+                    $rfm_query = "SELECT
+                        DATEDIFF(NOW(), MAX(fecha)) as recencia_dias,
+                        COUNT(*) as frecuencia,
+                        COALESCE(SUM(pd.precio * pd.cantidad), 0) as valor_monetario
+                    FROM pedidos_detal p
+                    LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
+                    WHERE (p.correo = '$correo_safe' OR p.telefono = '$telefono_safe')
+                    AND p.anulado = '0'";
+
+                    $rfm_result = mysqli_query($conn, $rfm_query);
+                    if ($rfm_result && $rfm_row = mysqli_fetch_assoc($rfm_result)) {
+                        $recencia = intval($rfm_row['recencia_dias']);
+                        $frecuencia = intval($rfm_row['frecuencia']);
+                        $valor = floatval($rfm_row['valor_monetario']);
+
+                        // Calcular scores RFM (1-5, donde 5 es mejor)
+                        $score_r = $recencia <= 30 ? 5 : ($recencia <= 90 ? 4 : ($recencia <= 180 ? 3 : ($recencia <= 365 ? 2 : 1)));
+                        $score_f = $frecuencia >= 5 ? 5 : ($frecuencia >= 3 ? 4 : ($frecuencia >= 2 ? 3 : ($frecuencia >= 1 ? 2 : 1)));
+                        $score_m = $valor >= 1000000 ? 5 : ($valor >= 500000 ? 4 : ($valor >= 200000 ? 3 : ($valor >= 50000 ? 2 : 1)));
+
+                        // Clasificación RFM
+                        $clasificacion = '';
+                        if ($score_r >= 4 && $score_f >= 4 && $score_m >= 4) {
+                            $clasificacion = '👑 Champions';
+                        } elseif ($score_r >= 3 && $score_f >= 3 && $score_m >= 3) {
+                            $clasificacion = '⭐ Loyal Customers';
+                        } elseif ($score_r >= 4 && $score_f <= 2) {
+                            $clasificacion = '🆕 New Customers';
+                        } elseif ($score_r <= 2 && $score_f >= 3) {
+                            $clasificacion = '💤 At Risk';
+                        } elseif ($score_r <= 2 && $score_f <= 2) {
+                            $clasificacion = '😴 Lost Customers';
+                        } else {
+                            $clasificacion = '🔄 Active';
+                        }
+
+                        $cliente_stats['rfm'] = [
+                            'recencia_dias' => $recencia,
+                            'frecuencia' => $frecuencia,
+                            'valor_monetario' => $valor,
+                            'score_r' => $score_r,
+                            'score_f' => $score_f,
+                            'score_m' => $score_m,
+                            'clasificacion' => $clasificacion
+                        ];
+                    }
+
+                    // 9. Días desde última compra
+                    $ultima_compra_query = "SELECT
+                        DATEDIFF(NOW(), MAX(fecha)) as dias_ultima_compra,
+                        MAX(fecha) as fecha_ultima_compra
+                    FROM pedidos_detal
+                    WHERE (correo = '$correo_safe' OR telefono = '$telefono_safe')
+                    AND anulado = '0'";
+
+                    $ultima_result = mysqli_query($conn, $ultima_compra_query);
+                    if ($ultima_result && $ultima_row = mysqli_fetch_assoc($ultima_result)) {
+                        $cliente_stats['actividad'] = $ultima_row;
+                    }
+
+                    // 10. Tendencia de gasto (últimos 3 pedidos vs anteriores)
+                    $tendencia_query = "SELECT
+                        AVG(CASE WHEN rn <= 3 THEN total_pedido END) as promedio_reciente,
+                        AVG(CASE WHEN rn > 3 THEN total_pedido END) as promedio_anterior
+                    FROM (
+                        SELECT
+                            (SELECT COALESCE(SUM(pd.precio * pd.cantidad), 0)
+                             FROM pedido_detalle pd WHERE pd.pedido_id = p.id) as total_pedido,
+                            ROW_NUMBER() OVER (ORDER BY p.fecha DESC) as rn
+                        FROM pedidos_detal p
+                        WHERE (p.correo = '$correo_safe' OR p.telefono = '$telefono_safe')
+                        AND p.anulado = '0'
+                    ) ranked_orders";
+
+                    $tend_result = mysqli_query($conn, $tendencia_query);
+                    if ($tend_result && $tend_row = mysqli_fetch_assoc($tend_result)) {
+                        $promedio_reciente = floatval($tend_row['promedio_reciente'] ?? 0);
+                        $promedio_anterior = floatval($tend_row['promedio_anterior'] ?? 0);
+
+                        $tendencia = 'estable';
+                        $porcentaje_cambio = 0;
+
+                        if ($promedio_anterior > 0) {
+                            $porcentaje_cambio = (($promedio_reciente - $promedio_anterior) / $promedio_anterior) * 100;
+                            if ($porcentaje_cambio > 15) {
+                                $tendencia = 'creciente';
+                            } elseif ($porcentaje_cambio < -15) {
+                                $tendencia = 'decreciente';
+                            }
+                        } elseif ($promedio_reciente > 0) {
+                            $tendencia = 'nuevo';
+                        }
+
+                        $cliente_stats['tendencia'] = [
+                            'promedio_reciente' => $promedio_reciente,
+                            'promedio_anterior' => $promedio_anterior,
+                            'tendencia' => $tendencia,
+                            'porcentaje_cambio' => $porcentaje_cambio
+                        ];
+                    }
+
+                    // 11. Ranking percentil del cliente
+                    $ranking_query = "SELECT
+                        COUNT(*) as clientes_con_menor_ltv,
+                        (SELECT COUNT(DISTINCT correo) FROM pedidos_detal WHERE anulado = '0' AND correo IS NOT NULL AND correo != '') as total_clientes_sistema
+                    FROM (
+                        SELECT correo, COALESCE(SUM(pd.precio * pd.cantidad), 0) as ltv_cliente
+                        FROM pedidos_detal p
+                        LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
+                        WHERE p.anulado = '0'
+                        AND p.correo IS NOT NULL
+                        AND p.correo != ''
+                        GROUP BY p.correo
+                        HAVING ltv_cliente < (
+                            SELECT COALESCE(SUM(pd2.precio * pd2.cantidad), 0)
+                            FROM pedidos_detal p2
+                            LEFT JOIN pedido_detalle pd2 ON p2.id = pd2.pedido_id
+                            WHERE (p2.correo = '$correo_safe' OR p2.telefono = '$telefono_safe')
+                            AND p2.anulado = '0'
+                        )
+                    ) menores";
+
+                    $rank_result = mysqli_query($conn, $ranking_query);
+                    if ($rank_result && $rank_row = mysqli_fetch_assoc($rank_result)) {
+                        $clientes_menores = intval($rank_row['clientes_con_menor_ltv']);
+                        $total_clientes = intval($rank_row['total_clientes_sistema']);
+                        $percentil = $total_clientes > 0 ? ($clientes_menores / $total_clientes) * 100 : 0;
+
+                        $cliente_stats['ranking'] = [
+                            'percentil' => $percentil,
+                            'posicion' => $clientes_menores + 1,
+                            'total_clientes' => $total_clientes
+                        ];
+                    }
+
+                } catch (Exception $e) {
+                    // Si falla alguna consulta de estadísticas, continuar sin mostrar error
+                    error_log("Error en estadísticas avanzadas: " . $e->getMessage());
+                }
+            }
         } else {
             $error_message = "Pedido #$id no encontrado en el sistema.";
         }
@@ -522,6 +807,11 @@ if ($id && $id > 0) {
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(31, 111, 235, 0.4);
+        }
+
+        /* Contenedor de estadísticas siempre visible */
+        .estadisticas-unificadas {
+            transition: all 0.3s ease;
         }
 
         .print-section {
@@ -1773,6 +2063,67 @@ if ($id && $id > 0) {
                     </div>
                 </div>
 
+                <!-- Productos Solicitados -->
+                <div class="productos-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        📦 Productos Solicitados
+                    </h3>
+
+                    <?php if (!empty($productos)): ?>
+                    <div class="table-container">
+                        <table class="productos-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%;">Producto</th>
+                                    <th style="width: 15%; text-align: center;">Cantidad</th>
+                                    <th style="width: 20%; text-align: right;">Precio Unit.</th>
+                                    <th style="width: 15%; text-align: right;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($productos as $producto): ?>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600; color: #e6edf3; margin-bottom: 2px;">
+                                            <?php echo h($producto['nombre']); ?>
+                                        </div>
+                                        <?php if (!empty($producto['descripcion'])): ?>
+                                        <div style="font-size: 0.85rem; color: #8b949e;">
+                                            <?php echo h($producto['descripcion']); ?>
+                                        </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td style="text-align: center; font-weight: 600;">
+                                        <?php echo h($producto['cantidad']); ?>
+                                    </td>
+                                    <td style="text-align: right; color: #238636; font-weight: 600;">
+                                        $<?php echo number_format($producto['precio'], 0, ',', '.'); ?>
+                                    </td>
+                                    <td style="text-align: right; color: #238636; font-weight: 700;">
+                                        $<?php echo number_format($producto['precio'] * $producto['cantidad'], 0, ',', '.'); ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Total del Pedido -->
+                    <div class="total-section" style="margin-top: 20px; text-align: right;">
+                        <div class="total-card" style="display: inline-block; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: white; padding: 15px 25px; border-radius: 8px;">
+                            <h4 style="margin: 0 0 5px 0; opacity: 0.9; font-size: 0.9rem;">Total del Pedido</h4>
+                            <div class="amount" style="font-size: 1.8rem; font-weight: 700; margin: 0;">
+                                $<?php echo number_format($total_productos, 0, ',', '.'); ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <div style="text-align: center; color: #8b949e; padding: 20px; font-style: italic;">
+                        📦 No hay productos registrados para este pedido
+                    </div>
+                    <?php endif; ?>
+                </div>
+
                 <!-- Gestión de Estados -->
                 <div class="estado-management" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
                     <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
@@ -1798,11 +2149,93 @@ if ($id && $id > 0) {
                     <div id="estado-status" style="margin-top: 10px; text-align: center;"></div>
                 </div>
 
+                <!-- Acciones de Gestión (Guía, Comprobante, Imprimir) -->
+                <div class="acciones-gestion" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        🛠️ Acciones de Gestión
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+
+                        <!-- Guía -->
+                        <div class="accion-card" style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; text-align: center;">
+                            <div style="color: #1f6feb; font-weight: 600; margin-bottom: 10px; font-size: 1rem;">📦 Guía de Envío</div>
+                            <?php
+                            $guia_actual = $p['guia'] ?? '';
+                            if (!empty($guia_actual) && file_exists("guias/" . $guia_actual)): ?>
+                                <div style="margin-bottom: 10px; color: #238636; font-size: 0.9rem;">✅ Guía cargada</div>
+                                <a href="guias/<?php echo h($guia_actual); ?>" target="_blank" class="btn" style="background: #238636; margin-bottom: 8px; width: 100%; padding: 10px;">
+                                    <span>👁️</span> Ver Guía
+                                </a>
+                                <button onclick="abrirModalGuia()" class="btn" style="background: #fb8500; width: 100%; padding: 10px;">
+                                    <span>🔄</span> Cambiar Guía
+                                </button>
+                            <?php else: ?>
+                                <div style="margin-bottom: 10px; color: #8b949e; font-size: 0.9rem;">Sin guía adjunta</div>
+                                <button onclick="abrirModalGuia()" class="btn" style="background: #1f6feb; width: 100%; padding: 12px;">
+                                    <span>📤</span> Subir Guía
+                                </button>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Comprobante -->
+                        <div class="accion-card" style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; text-align: center;">
+                            <div style="color: #1f6feb; font-weight: 600; margin-bottom: 10px; font-size: 1rem;">💳 Comprobante de Pago</div>
+                            <?php
+                            $comprobante_actual = $p['comprobante'] ?? '';
+                            if (!empty($comprobante_actual) && file_exists("comprobantes/" . $comprobante_actual)): ?>
+                                <div style="margin-bottom: 10px; color: #238636; font-size: 0.9rem;">✅ Comprobante cargado</div>
+                                <a href="comprobantes/<?php echo h($comprobante_actual); ?>" target="_blank" class="btn" style="background: #238636; margin-bottom: 8px; width: 100%; padding: 10px;">
+                                    <span>👁️</span> Ver Comprobante
+                                </a>
+                                <button onclick="abrirModalComprobante()" class="btn" style="background: #fb8500; width: 100%; padding: 10px;">
+                                    <span>🔄</span> Cambiar Comprobante
+                                </button>
+                            <?php else: ?>
+                                <div style="margin-bottom: 10px; color: #8b949e; font-size: 0.9rem;">Sin comprobante adjunto</div>
+                                <button onclick="abrirModalComprobante()" class="btn" style="background: #1f6feb; width: 100%; padding: 12px;">
+                                    <span>📤</span> Subir Comprobante
+                                </button>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Imprimir -->
+                        <div class="accion-card" style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; text-align: center;">
+                            <div style="color: #1f6feb; font-weight: 600; margin-bottom: 10px; font-size: 1rem;">🖨️ Imprimir Pedido</div>
+                            <div style="margin-bottom: 10px; color: #8b949e; font-size: 0.9rem;">Generar PDF del pedido</div>
+                            <button onclick="imprimirPedido()" class="btn" style="background: #6e7681; width: 100%; padding: 12px;">
+                                <span>🖨️</span> Imprimir PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Agregar Comentario al Cliente -->
                 <div class="notas-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <!-- Comunicación con Cliente -->
+                <div class="comunicacion-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
                     <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                        � Agregar Comentario al Cliente
+                        📧 Comunicación con Cliente
                     </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <button onclick="confirmarEntregaConGuia()" class="btn" style="background: #fb8500; padding: 12px; font-size: 0.9rem;">
+                            <span>📦</span> Confirmar Entrega
+                        </button>
+                        <?php if (!empty($p['telefono'])): ?>
+                        <a href="tel:<?php echo h($p['telefono']); ?>" class="btn" style="background: #6e7681; padding: 12px; font-size: 0.9rem; text-decoration: none; text-align: center;">
+                            <span>📞</span> Llamar Cliente
+                        </a>
+                        <a href="#" onclick="abrirWhatsApp('<?php echo h($p['telefono']); ?>', '<?php echo h($p['nombre_cliente'] ?? 'Cliente'); ?>', '<?php echo h($p['id'] ?? ''); ?>')" class="btn" style="background: #25d366; padding: 12px; font-size: 0.9rem; text-decoration: none; text-align: center;">
+                            <span>💬</span> WhatsApp
+                        </a>
+                        <?php endif; ?>
+                    </div>
+
+                    <div id="comunicacion-status" style="margin-top: 15px; text-align: center;"></div>
+                </div>
+
+
+
                     <div style="margin-bottom: 15px;">
                         <textarea id="nueva-nota" placeholder="Agregar nota interna (visible solo para el equipo)..."
                                   style="width: 100%; height: 80px; padding: 12px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3; resize: vertical; font-family: inherit;"></textarea>
@@ -1903,35 +2336,6 @@ if ($id && $id > 0) {
                     </div>
                 </div>
 
-                <!-- Comunicación con Cliente -->
-                <div class="comunicacion-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                    <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                        📧 Comunicación con Cliente
-                    </h3>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-                        <button onclick="enviarEmailCliente('actualizacion')" class="btn" style="background: #238636; padding: 12px; font-size: 0.9rem;">
-                            <span>📤</span> Enviar Actualización
-                        </button>
-                        <button onclick="enviarEmailCliente('seguimiento')" class="btn" style="background: #1f6feb; padding: 12px; font-size: 0.9rem;">
-                            <span>🔍</span> Solicitar Seguimiento
-                        </button>
-                        <button onclick="confirmarEntregaConGuia()" class="btn" style="background: #fb8500; padding: 12px; font-size: 0.9rem;">
-                            <span>📦</span> Confirmar Entrega
-                        </button>
-                        <?php if (!empty($p['telefono'])): ?>
-                        <a href="tel:<?php echo h($p['telefono']); ?>" class="btn" style="background: #6e7681; padding: 12px; font-size: 0.9rem; text-decoration: none; text-align: center;">
-                            <span>📞</span> Llamar Cliente
-                        </a>
-                        <a href="#" onclick="abrirWhatsApp('<?php echo h($p['telefono']); ?>', '<?php echo h($p['nombre_cliente'] ?? 'Cliente'); ?>', '<?php echo h($p['id'] ?? ''); ?>')" class="btn" style="background: #25d366; padding: 12px; font-size: 0.9rem; text-decoration: none; text-align: center;">
-                            <span>💬</span> WhatsApp
-                        </a>
-                        <?php endif; ?>
-                    </div>
-
-                    <div id="comunicacion-status" style="margin-top: 15px; text-align: center;"></div>
-                </div>
-
                 <!-- Métricas del Pedido -->
                 <div class="metricas-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
                     <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
@@ -1982,129 +2386,404 @@ if ($id && $id > 0) {
                             <div style="color: #e6edf3; font-weight: 600; font-size: 0.9rem;">
                                 <?php echo h($p['metodo_pago'] ?? 'N/A'); ?>
                             </div>
+                        </div>                    </div>
+
+                    <?php if (!empty($correo_cliente) || !empty($telefono_cliente)): ?>
+
+                    <!-- ===== SISTEMA UNIFICADO DE ESTADÍSTICAS DEL CLIENTE ===== -->
+                    <div class="estadisticas-unificadas" style="margin-top: 30px; background: #30363d; border: 1px solid #3d444d; border-radius: 12px; padding: 25px;">
+
+                        <!-- Encabezado del módulo -->
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <h3 style="color: #f79000; font-size: 1.3rem; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                🚀 Análisis Completo del Cliente
+                            </h3>
+                            <p style="color: #8b949e; font-size: 0.9rem; margin: 0;">
+                                Dashboard integral con todas las métricas de comportamiento, valor y rendimiento
+                            </p>
                         </div>
-                    </div>
-                </div>
 
-                <?php if (!empty($productos)): ?>
-                <div class="productos-section">
-                    <h2 class="section-title">Productos Solicitados</h2>
+                        <!-- SECCIÓN 1: MÉTRICAS PRINCIPALES -->
+                        <div style="margin-bottom: 30px;">
+                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
+                                � Métricas Principales
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
 
-                    <!-- Vista de tabla para pantallas normales -->
-                    <div class="table-container">
-                        <table class="productos-table">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Talla</th>
-                                    <th>Cantidad</th>
-                                    <th>Precio Unit.</th>
-                                    <th>Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($productos as $producto): ?>
-                                <tr>
-                                    <td><strong><?php echo h($producto['nombre']); ?></strong></td>
-                                    <td><?php echo h($producto['talla'] ?? 'N/A'); ?></td>
-                                    <td><?php echo intval($producto['cantidad']); ?></td>
-                                    <td class="precio">$<?php echo number_format(floatval($producto['precio']), 0, ',', '.'); ?></td>
-                                    <td class="precio"><strong>$<?php echo number_format(floatval($producto['precio']) * intval($producto['cantidad']), 0, ',', '.'); ?></strong></td>
-                                </tr>
+                                <!-- LTV -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #1f6feb;">
+                                    <div style="color: #1f6feb; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">👤 LTV Cliente</div>
+                                    <div style="color: #58a6ff; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
+                                        $<?php echo number_format(floatval($cliente_stats['ltv']['valor_total_historico'] ?? 0), 0, ',', '.'); ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        <?php echo intval($cliente_stats['ltv']['total_pedidos'] ?? 0); ?> pedidos realizados
+                                    </div>
+                                </div>
+
+                                <!-- Ticket Promedio -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #23863615 0%, #2ea04315 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #238636;">
+                                    <div style="color: #238636; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">💰 Ticket Promedio</div>
+                                    <div style="color: #3fb950; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
+                                        $<?php echo number_format(floatval($cliente_stats['ltv']['ticket_promedio'] ?? 0), 0, ',', '.'); ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        <?php
+                                        $general = floatval($cliente_stats['promedio_general']['ticket_promedio_general'] ?? 0);
+                                        $cliente_prom = floatval($cliente_stats['ltv']['ticket_promedio'] ?? 0);
+                                        if ($general > 0) {
+                                            $diferencia = (($cliente_prom - $general) / $general) * 100;
+                                            echo ($diferencia > 0 ? '+' : '') . number_format($diferencia, 0) . '% vs promedio';
+                                        } else {
+                                            echo 'vs promedio general';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+
+                                <!-- Score RFM -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #dc262615 0%, #f8514915 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #dc2626;">
+                                    <div style="color: #dc2626; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">📊 Clasificación RFM</div>
+                                    <div style="color: #f87171; font-weight: 700; font-size: 1rem; margin-bottom: 4px; line-height: 1.2;">
+                                        <?php echo h($cliente_stats['rfm']['clasificacion'] ?? '🔄 Active'); ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        R<?php echo intval($cliente_stats['rfm']['score_r'] ?? 0); ?>F<?php echo intval($cliente_stats['rfm']['score_f'] ?? 0); ?>M<?php echo intval($cliente_stats['rfm']['score_m'] ?? 0); ?> •
+                                        <?php echo intval($cliente_stats['rfm']['recencia_dias'] ?? 0); ?> días
+                                    </div>
+                                </div>
+
+                                <!-- Tasa de Éxito -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #a855f715 0%, #9333ea15 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #a855f7;">
+                                    <div style="color: #a855f7; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">📈 Tasa de Éxito</div>
+                                    <div style="color: #c084fc; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
+                                        <?php
+                                        $pagados = intval($cliente_stats['ltv']['pedidos_pagados'] ?? 0);
+                                        $total = intval($cliente_stats['ltv']['total_pedidos'] ?? 0);
+                                        $tasa = $total > 0 ? ($pagados / $total) * 100 : 0;
+                                        echo number_format($tasa, 0) . '%';
+                                        ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        <?php echo $pagados; ?>/<?php echo $total; ?> pedidos pagados
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 2: ANÁLISIS DE COMPORTAMIENTO -->
+                        <div style="margin-bottom: 30px;">
+                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
+                                🧠 Análisis de Comportamiento
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
+
+                                <!-- Última Actividad -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #05966915 0%, #10b98115 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #059669;">
+                                    <div style="color: #059669; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">📅 Última Actividad</div>
+                                    <div style="color: #34d399; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
+                                        <?php
+                                        $dias_ultima = intval($cliente_stats['actividad']['dias_ultima_compra'] ?? 0);
+                                        if ($dias_ultima == 0) {
+                                            echo 'Hoy';
+                                        } elseif ($dias_ultima == 1) {
+                                            echo 'Ayer';
+                                        } else {
+                                            echo $dias_ultima . ' días';
+                                        }
+                                        ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        desde última compra
+                                    </div>
+                                </div>
+
+                                <!-- Tendencia de Gasto -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #ea580c15 0%, #f9731615 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #ea580c;">
+                                    <div style="color: #ea580c; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">📈 Tendencia Gasto</div>
+                                    <div style="color: #fb923c; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">
+                                        <?php
+                                        $tendencia = $cliente_stats['tendencia']['tendencia'] ?? 'estable';
+                                        $cambio = floatval($cliente_stats['tendencia']['porcentaje_cambio'] ?? 0);
+
+                                        if ($tendencia == 'creciente') {
+                                            echo '📈 +' . number_format(abs($cambio), 0) . '%';
+                                        } elseif ($tendencia == 'decreciente') {
+                                            echo '📉 -' . number_format(abs($cambio), 0) . '%';
+                                        } elseif ($tendencia == 'nuevo') {
+                                            echo '🆕 Cliente Nuevo';
+                                        } else {
+                                            echo '➡️ Estable';
+                                        }
+                                        ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        últimos 3 pedidos
+                                    </div>
+                                </div>
+
+                                <!-- Hora Preferida -->
+                                <div class="metric-card-unified" style="background: #21262d; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #3d444d;">
+                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">⏰ Hora Preferida</div>
+                                    <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem; margin-bottom: 4px;">
+                                        <?php
+                                        $hora = intval($cliente_stats['hora_preferida']['hora'] ?? 0);
+                                        if ($hora >= 6 && $hora < 12) {
+                                            echo $hora . ':00 🌅';
+                                        } elseif ($hora >= 12 && $hora < 18) {
+                                            echo $hora . ':00 ☀️';
+                                        } elseif ($hora >= 18 && $hora < 22) {
+                                            echo $hora . ':00 🌆';
+                                        } else {
+                                            echo $hora . ':00 🌙';
+                                        }
+                                        ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        <?php echo intval($cliente_stats['hora_preferida']['pedidos_en_hora'] ?? 0); ?> pedidos en esa hora
+                                    </div>
+                                </div>
+
+                                <!-- Método de Pago Preferido -->
+                                <div class="metric-card-unified" style="background: #21262d; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #3d444d;">
+                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">� Pago Preferido</div>
+                                    <div style="color: #e6edf3; font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; line-height: 1.2;">
+                                        <?php echo h($cliente_stats['metodo_preferido']['metodo_pago'] ?? 'N/A'); ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        usado <?php echo intval($cliente_stats['metodo_preferido']['veces_usado'] ?? 0); ?> veces
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 3: POSICIONAMIENTO Y RENDIMIENTO -->
+                        <div style="margin-bottom: 30px;">
+                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
+                                🏆 Posicionamiento y Rendimiento
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
+
+                                <!-- Ranking Global -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #be185d15 0%, #ec489915 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #be185d;">
+                                    <div style="color: #be185d; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">🏆 Ranking Global</div>
+                                    <div style="color: #f472b6; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
+                                        Top <?php echo number_format(100 - floatval($cliente_stats['ranking']['percentil'] ?? 0), 0); ?>%
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        Posición #<?php echo intval($cliente_stats['ranking']['posicion'] ?? 0); ?> de <?php echo intval($cliente_stats['ranking']['total_clientes'] ?? 0); ?>
+                                    </div>
+                                </div>
+
+                                <!-- Tipo de Cliente -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #fb850015 0%, #fd7e1415 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #fb8500;">
+                                    <div style="color: #fb8500; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">🎯 Tipo de Cliente</div>
+                                    <div style="color: #f0883e; font-weight: 700; font-size: 1rem; margin-bottom: 4px;">
+                                        <?php
+                                        $total_pedidos = intval($cliente_stats['ltv']['total_pedidos'] ?? 0);
+                                        $valor_total = floatval($cliente_stats['ltv']['valor_total_historico'] ?? 0);
+
+                                        if ($total_pedidos >= 5 && $valor_total >= 500000) {
+                                            echo '👑 VIP';
+                                        } elseif ($total_pedidos >= 3 || $valor_total >= 200000) {
+                                            echo '⭐ Recurrente';
+                                        } elseif ($total_pedidos == 1) {
+                                            echo '🆕 Nuevo';
+                                        } else {
+                                            echo '🔄 Activo';
+                                        }
+                                        ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        <?php
+                                        $primer_pedido = $cliente_stats['ltv']['primer_pedido'] ?? '';
+                                        if ($primer_pedido) {
+                                            $fecha_primer = new DateTime($primer_pedido);
+                                            $ahora = new DateTime();
+                                            $antiguedad = $ahora->diff($fecha_primer);
+                                            if ($antiguedad->days > 365) {
+                                                echo 'Cliente desde ' . $antiguedad->y . ' año' . ($antiguedad->y > 1 ? 's' : '');
+                                            } elseif ($antiguedad->days > 30) {
+                                                echo 'Cliente desde ' . intval($antiguedad->days / 30) . ' mes' . (intval($antiguedad->days / 30) > 1 ? 'es' : '');
+                                            } else {
+                                                echo 'Cliente desde ' . $antiguedad->days . ' día' . ($antiguedad->days > 1 ? 's' : '');
+                                            }
+                                        } else {
+                                            echo 'Cliente nuevo';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+
+                                <!-- Tasa de Recurrencia del Sistema -->
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #7c3aed15 0%, #8b5cf615 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #7c3aed;">
+                                    <div style="color: #7c3aed; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">� Recurrencia Sistema</div>
+                                    <div style="color: #a78bfa; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
+                                        <?php
+                                        $tasa_recurrencia = floatval($cliente_stats['recurrencia']['tasa_recurrencia_sistema'] ?? 0);
+                                        echo number_format($tasa_recurrencia, 1) . '%';
+                                        ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        clientes realizan compras múltiples
+                                    </div>
+                                </div>
+
+                                <!-- Tiempo Promedio de Envío -->
+                                <div class="metric-card-unified" style="background: #21262d; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #3d444d;">
+                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">� Tiempo Envío</div>
+                                    <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem; margin-bottom: 4px;">
+                                        <?php
+                                        $tiempo_promedio = floatval($cliente_stats['tiempo_procesamiento']['tiempo_promedio_envio'] ?? 0);
+                                        if ($tiempo_promedio > 0) {
+                                            echo number_format($tiempo_promedio, 1) . ' días';
+                                        } else {
+                                            echo 'N/A';
+                                        }
+                                        ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        promedio histórico
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 4: PRODUCTOS Y PREFERENCIAS -->
+                        <?php if (!empty($cliente_stats['productos_favoritos'])): ?>
+                        <div style="margin-bottom: 30px;">
+                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
+                                🛍️ Productos y Preferencias
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <?php foreach ($cliente_stats['productos_favoritos'] as $index => $producto): ?>
+                                <div class="metric-card-unified" style="background: #21262d; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #3d444d;">
+                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">
+                                        <?php
+                                        if ($index == 0) echo '🥇 Producto #1';
+                                        elseif ($index == 1) echo '🥈 Producto #2';
+                                        else echo '🥉 Producto #3';
+                                        ?>
+                                    </div>
+                                    <div style="color: #e6edf3; font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; line-height: 1.3;">
+                                        <?php echo h($producto['nombre']); ?>
+                                    </div>
+                                    <div style="color: #8b949e; font-size: 0.7rem;">
+                                        <?php echo intval($producto['total_comprado']); ?> unidades • <?php echo intval($producto['veces_pedido']); ?> pedidos
+                                    </div>
+                                </div>
                                 <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Total compacto debajo de la tabla -->
-                    <div class="total-compacto" style="text-align: right; margin: 10px 0; padding: 8px 12px; background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); border: 1px solid #1f6feb; border-radius: 6px; max-width: 300px; margin-left: auto;">
-                        <div style="font-size: 0.85rem; color: #1f6feb; font-weight: 600; line-height: 1.2;">
-                            <span style="opacity: 0.8;">Total del pedido:</span>
-                            <span style="font-size: 1.1rem; font-weight: 700; margin-left: 8px;">$<?php echo number_format($total_productos, 0, ',', '.'); ?></span>
-                        </div>
-                    </div>
-
-                    <!-- Vista de cards para móviles muy pequeños -->
-                    <div class="productos-mobile" style="display: none;">
-                        <?php foreach ($productos as $producto): ?>
-                        <div class="producto-card">
-                            <div class="producto-nombre"><?php echo h($producto['nombre']); ?></div>
-                            <div class="producto-info">
-                                <div><span>Talla:</span> <strong><?php echo h($producto['talla'] ?? 'N/A'); ?></strong></div>
-                                <div><span>Cantidad:</span> <strong><?php echo intval($producto['cantidad']); ?></strong></div>
-                                <div><span>Precio Unit.:</span> <strong>$<?php echo number_format(floatval($producto['precio']), 0, ',', '.'); ?></strong></div>
-                                <div><span>Subtotal:</span> <strong class="precio">$<?php echo number_format(floatval($producto['precio']) * intval($producto['cantidad']), 0, ',', '.'); ?></strong></div>
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
 
-                        <!-- Total compacto para móvil -->
-                        <div class="total-mobile-compacto" style="text-align: center; margin: 8px 0; padding: 6px 10px; background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); border: 1px solid #1f6feb; border-radius: 4px;">
-                            <div style="font-size: 0.8rem; color: #1f6feb; font-weight: 600; line-height: 1.2;">
-                                <span style="opacity: 0.8;">Total:</span>
-                                <span style="font-size: 1rem; font-weight: 700; margin-left: 6px;">$<?php echo number_format($total_productos, 0, ',', '.'); ?></span>
+                        <!-- SECCIÓN 5: INSIGHTS Y RECOMENDACIONES -->
+                        <div>
+                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
+                                💡 Insights y Recomendaciones
+                            </h4>
+                            <div style="background: linear-gradient(135deg, #f7931e15 0%, #f7931e05 100%); border: 1px solid #f7931e; border-radius: 8px; padding: 18px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; font-size: 0.85rem;">
+
+                                    <div style="color: #e6edf3;">
+                                        📊 <strong>Performance General:</strong>
+                                        <?php
+                                        $tasa_exito = $total > 0 ? ($pagados / $total) * 100 : 0;
+                                        if ($tasa_exito >= 80) {
+                                            echo '<span style="color: #3fb950;">Excelente cliente con alta conversión</span>';
+                                        } elseif ($tasa_exito >= 60) {
+                                            echo '<span style="color: #f0883e;">Cliente confiable con buena conversión</span>';
+                                        } else {
+                                            echo '<span style="color: #f85149;">Requiere seguimiento y atención especial</span>';
+                                        }
+                                        ?>
+                                    </div>
+
+                                    <div style="color: #e6edf3;">
+                                        🎯 <strong>Estrategia Recomendada:</strong>
+                                        <?php
+                                        $clasificacion_rfm = $cliente_stats['rfm']['clasificacion'] ?? '';
+                                        if (strpos($clasificacion_rfm, 'Champions') !== false) {
+                                            echo '<span style="color: #f79000;">Programa VIP exclusivo y beneficios premium</span>';
+                                        } elseif (strpos($clasificacion_rfm, 'Loyal') !== false) {
+                                            echo '<span style="color: #58a6ff;">Programa de fidelización y recompensas</span>';
+                                        } elseif (strpos($clasificacion_rfm, 'At Risk') !== false) {
+                                            echo '<span style="color: #f85149;">Campaña de retención urgente y ofertas especiales</span>';
+                                        } elseif (strpos($clasificacion_rfm, 'New') !== false) {
+                                            echo '<span style="color: #3fb950;">Incentivar segunda compra con descuentos</span>';
+                                        } else {
+                                            echo '<span style="color: #8b949e;">Mantener engagement con contenido relevante</span>';
+                                        }
+                                        ?>
+                                    </div>
+
+                                    <div style="color: #e6edf3;">
+                                        📈 <strong>Análisis de Tendencia:</strong>
+                                        <?php
+                                        $tendencia = $cliente_stats['tendencia']['tendencia'] ?? 'estable';
+                                        if ($tendencia == 'creciente') {
+                                            echo '<span style="color: #3fb950;">Cliente en crecimiento - potencial upselling</span>';
+                                        } elseif ($tendencia == 'decreciente') {
+                                            echo '<span style="color: #f85149;">Revisar satisfacción y ofrecer soporte</span>';
+                                        } else {
+                                            echo '<span style="color: #58a6ff;">Comportamiento estable - mantener relación</span>';
+                                        }
+                                        ?>
+                                    </div>
+
+                                    <div style="color: #e6edf3;">
+                                        ⏰ <strong>Estado de Actividad:</strong>
+                                        <?php
+                                        $dias_ultima = intval($cliente_stats['actividad']['dias_ultima_compra'] ?? 0);
+                                        if ($dias_ultima <= 30) {
+                                            echo '<span style="color: #3fb950;">Cliente muy activo - momento ideal para ofertas</span>';
+                                        } elseif ($dias_ultima <= 90) {
+                                            echo '<span style="color: #f0883e;">Cliente activo - mantener comunicación regular</span>';
+                                        } elseif ($dias_ultima <= 180) {
+                                            echo '<span style="color: #f85149;">Riesgo de inactividad - campaña de reactivación</span>';
+                                        } else {
+                                            echo '<span style="color: #6e7681;">Cliente inactivo - estrategia de recuperación</span>';
+                                        }
+                                        ?>
+                                    </div>
+
+                                    <div style="color: #e6edf3;">
+                                        🏆 <strong>Posición Competitiva:</strong>
+                                        <?php
+                                        $percentil = floatval($cliente_stats['ranking']['percentil'] ?? 0);
+                                        if ($percentil >= 90) {
+                                            echo '<span style="color: #f79000;">Top 10% - Cliente elite con máxima prioridad</span>';
+                                        } elseif ($percentil >= 75) {
+                                            echo '<span style="color: #3fb950;">Top 25% - Cliente premium con alta prioridad</span>';
+                                        } elseif ($percentil >= 50) {
+                                            echo '<span style="color: #58a6ff;">Top 50% - Cliente valioso con potencial</span>';
+                                        } else {
+                                            echo '<span style="color: #8b949e;">Gran potencial de crecimiento y desarrollo</span>';
+                                        }
+                                        ?>
+                                    </div>
+
+                                    <div style="color: #e6edf3;">
+                                        🔄 <strong>Contexto del Sistema:</strong>
+                                        <?php
+                                        $tasa_recurrencia = floatval($cliente_stats['recurrencia']['tasa_recurrencia_sistema'] ?? 0);
+                                        if ($tasa_recurrencia >= 50) {
+                                            echo '<span style="color: #3fb950;">Sistema con alta fidelidad de clientes</span>';
+                                        } elseif ($tasa_recurrencia >= 30) {
+                                            echo '<span style="color: #f0883e;">Retención promedio del mercado</span>';
+                                        } else {
+                                            echo '<span style="color: #f85149;">Oportunidad de mejorar estrategia de retención</span>';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
 
-                <?php if (!empty($p['nota_interna'] ?? '')): ?>
-                <div class="info-card" style="margin-top: 30px;">
-                    <h3>� Comentarios del Cliente</h3>
-                    <p><?php echo nl2br(h($p['nota_interna'])); ?></p>
-                </div>
-                <?php endif; ?>
-
-                <!-- Acciones Ultra Compactas -->
-                <div class="acciones-ultra-compactas" style="margin-top: 20px;">
-                    <div class="grid-acciones" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-width: 500px; margin: 0 auto;">
-
-                        <!-- Guía -->
-                        <div class="accion-micro" style="text-align: center; background: #30363d; border: 1px solid #3d444d; border-radius: 6px; padding: 8px 4px;">
-                            <div style="font-size: 0.65rem; color: #1f6feb; font-weight: 600; margin-bottom: 3px; line-height: 1;">📦 GUÍA</div>
-                            <?php
-                            $guia_actual = $p['guia'] ?? '';
-                            if (!empty($guia_actual) && file_exists("guias/" . $guia_actual)): ?>
-                                <div style="margin-bottom: 3px; font-size: 0.6rem; color: #238636; line-height: 1;">✅ Cargada</div>
-                                <a href="guias/<?php echo h($guia_actual); ?>" target="_blank"
-                                   style="display: inline-block; background: #238636; color: white; padding: 2px 6px; border-radius: 3px; text-decoration: none; font-size: 0.6rem; margin-bottom: 2px; line-height: 1;">Ver</a>
-                                <button onclick="abrirModalGuia()"
-                                        style="display: block; width: 100%; background: #fb8500; color: white; border: none; padding: 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Cambiar</button>
-                            <?php else: ?>
-                                <div style="margin-bottom: 3px; font-size: 0.6rem; color: #8b949e; line-height: 1;">Sin guía</div>
-                                <button onclick="abrirModalGuia()"
-                                        style="width: 100%; background: #1f6feb; color: white; border: none; padding: 4px 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Subir</button>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Comprobante -->
-                        <div class="accion-micro" style="text-align: center; background: #30363d; border: 1px solid #3d444d; border-radius: 6px; padding: 8px 4px;">
-                            <div style="font-size: 0.65rem; color: #1f6feb; font-weight: 600; margin-bottom: 3px; line-height: 1;">💳 COMPROBANTE</div>
-                            <?php
-                            $comprobante_actual = $p['comprobante'] ?? '';
-                            if (!empty($comprobante_actual) && file_exists("comprobantes/" . $comprobante_actual)): ?>
-                                <div style="margin-bottom: 3px; font-size: 0.6rem; color: #238636; line-height: 1;">✅ Cargado</div>
-                                <a href="comprobantes/<?php echo h($comprobante_actual); ?>" target="_blank"
-                                   style="display: inline-block; background: #238636; color: white; padding: 2px 6px; border-radius: 3px; text-decoration: none; font-size: 0.6rem; margin-bottom: 2px; line-height: 1;">Ver</a>
-                                <button onclick="abrirModalComprobante()"
-                                        style="display: block; width: 100%; background: #fb8500; color: white; border: none; padding: 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Cambiar</button>
-                            <?php else: ?>
-                                <div style="margin-bottom: 3px; font-size: 0.6rem; color: #8b949e; line-height: 1;">Sin comprobante</div>
-                                <button onclick="abrirModalComprobante()"
-                                        style="width: 100%; background: #1f6feb; color: white; border: none; padding: 4px 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Subir</button>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Imprimir -->
-                        <div class="accion-micro" style="text-align: center; background: #30363d; border: 1px solid #3d444d; border-radius: 6px; padding: 8px 4px;">
-                            <div style="font-size: 0.65rem; color: #1f6feb; font-weight: 600; margin-bottom: 3px; line-height: 1;">🖨️ IMPRIMIR</div>
-                            <div style="margin-bottom: 3px; font-size: 0.6rem; color: #8b949e; line-height: 1;">PDF Pedido</div>
-                            <button onclick="imprimirPedido()"
-                                    style="width: 100%; background: #6e7681; color: white; border: none; padding: 4px 2px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; line-height: 1;">Imprimir</button>
-                        </div>
-                    </div>
-                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -2292,45 +2971,6 @@ if ($id && $id > 0) {
                 }, 1500);
             } else {
                 statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al actualizar datos') + '</span>';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Error de conexión</span>';
-        });
-    }
-
-    // Funciones para comunicación con cliente
-    function enviarEmailCliente(tipo) {
-        const statusDiv = document.getElementById('comunicacion-status');
-        const pedidoId = <?php echo json_encode($p['id'] ?? ''); ?>;
-        const clienteEmail = <?php echo json_encode($p['correo'] ?? ''); ?>;
-
-        if (!clienteEmail) {
-            statusDiv.innerHTML = '<span style="color: #da3633;">❌ No hay email del cliente registrado</span>';
-            return;
-        }
-
-        statusDiv.innerHTML = '<span style="color: #1f6feb;">📧 Enviando email...</span>';
-
-        const formData = new FormData();
-        formData.append('pedido_id', pedidoId);
-        formData.append('tipo_email', tipo);
-        formData.append('cliente_email', clienteEmail);
-
-        fetch('enviar_email_cliente.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                statusDiv.innerHTML = '<span style="color: #238636;">✅ Email enviado correctamente</span>';
-                setTimeout(() => {
-                    statusDiv.innerHTML = '';
-                }, 5000);
-            } else {
-                statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al enviar email') + '</span>';
             }
         })
         .catch(error => {
