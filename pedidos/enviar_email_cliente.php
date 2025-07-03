@@ -22,17 +22,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Obtener datos del pedido
-        $stmt = $conn->prepare("SELECT * FROM pedidos_detal WHERE id = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, nombre, correo, pedido, monto, direccion, telefono, ciudad, barrio, metodo_pago, datos_pago, fecha, estado FROM pedidos_detal WHERE id = ? LIMIT 1");
         $stmt->bind_param("i", $pedido_id);
         $stmt->execute();
-        $result = $stmt->get_result();
 
-        if ($result->num_rows === 0) {
+        // Usar bind_result para compatibilidad
+        $stmt->bind_result($id, $nombre, $correo, $pedido_detalle, $monto, $direccion, $telefono, $ciudad, $barrio, $metodo_pago, $datos_pago, $fecha, $estado);
+
+        if (!$stmt->fetch()) {
+            $stmt->close();
             echo json_encode(['success' => false, 'error' => 'Pedido no encontrado']);
             exit;
         }
 
-        $pedido = $result->fetch_assoc();
+        $stmt->close();
+
+        // Crear array con los datos del pedido
+        $pedido = [
+            'id' => $id,
+            'nombre' => $nombre,
+            'correo' => $correo,
+            'pedido' => $pedido_detalle,
+            'monto' => $monto,
+            'direccion' => $direccion,
+            'telefono' => $telefono,
+            'ciudad' => $ciudad,
+            'barrio' => $barrio,
+            'metodo_pago' => $metodo_pago,
+            'datos_pago' => $datos_pago,
+            'fecha' => $fecha,
+            'estado' => $estado
+        ];
         $nombre_cliente = $pedido['nombre'] ?? 'Cliente';
 
         // Configurar contenido según tipo de email
@@ -136,11 +156,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_nota = $conn->prepare("SELECT nota_interna FROM pedidos_detal WHERE id = ? LIMIT 1");
             $stmt_nota->bind_param("i", $pedido_id);
             $stmt_nota->execute();
-            $result_nota = $stmt_nota->get_result();
 
-            if ($result_nota->num_rows > 0) {
-                $row_nota = $result_nota->fetch_assoc();
-                $notas_existentes = $row_nota['nota_interna'] ?? '';
+            // Usar bind_result para compatibilidad
+            $stmt_nota->bind_result($notas_existentes);
+
+            if ($stmt_nota->fetch()) {
+                $notas_existentes = $notas_existentes ?? '';
 
                 if (!empty($notas_existentes)) {
                     $todas_las_notas = $nota_email . "\n\n" . $notas_existentes;
@@ -148,10 +169,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $todas_las_notas = $nota_email;
                 }
 
+                $stmt_nota->close();
+
                 // Actualizar nota
                 $stmt_update_nota = $conn->prepare("UPDATE pedidos_detal SET nota_interna = ? WHERE id = ? LIMIT 1");
                 $stmt_update_nota->bind_param("si", $todas_las_notas, $pedido_id);
                 $stmt_update_nota->execute();
+                $stmt_update_nota->close();
+            } else {
+                $stmt_nota->close();
+                $todas_las_notas = $nota_email;
+
+                // Actualizar nota
+                $stmt_update_nota = $conn->prepare("UPDATE pedidos_detal SET nota_interna = ? WHERE id = ? LIMIT 1");
+                $stmt_update_nota->bind_param("si", $todas_las_notas, $pedido_id);
+                $stmt_update_nota->execute();
+                $stmt_update_nota->close();
             }
 
             echo json_encode([

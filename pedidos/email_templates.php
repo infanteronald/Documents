@@ -387,12 +387,12 @@ class EmailTemplates {
                 <span class="info-value">' . htmlspecialchars($pedidoData['direccion']) . '</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Persona que recibe:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['persona_recibe']) . '</span>
+                <span class="info-label">Ciudad:</span>
+                <span class="info-value">' . htmlspecialchars($pedidoData['ciudad']) . '</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Horarios:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['horarios']) . '</span>
+                <span class="info-label">Barrio:</span>
+                <span class="info-value">' . htmlspecialchars($pedidoData['barrio']) . '</span>
             </div>
         </div>';
 
@@ -421,6 +421,13 @@ class EmailTemplates {
                             <td class="price">$' . number_format($item['precio'] * $item['cantidad'], 0, ',', '.') . '</td>
                         </tr>';
             }
+
+            // Agregar fila de total
+            $content .= '
+                        <tr style="border-top: 2px solid #30363d;">
+                            <td colspan="3" style="text-align: right; font-weight: bold; color: #f0f6fc !important; padding: 12px 8px;">TOTAL:</td>
+                            <td class="price" style="font-weight: bold; font-size: 16px; color: #58a6ff !important;">$' . number_format($pedidoData['monto'], 0, ',', '.') . ' COP</td>
+                        </tr>';
 
             $content .= '
                     </tbody>
@@ -657,6 +664,8 @@ class EmailTemplates {
                     <strong>Cliente:</strong> ' . htmlspecialchars($data['nombre_cliente']) . '<br>
                     <strong>Email:</strong> ' . htmlspecialchars($data['correo_cliente']) . '<br>
                     <strong>Teléfono:</strong> ' . htmlspecialchars($data['telefono_cliente']) . '<br>
+                    <strong>Ciudad:</strong> ' . htmlspecialchars($data['ciudad_cliente']) . '<br>
+                    <strong>Barrio:</strong> ' . htmlspecialchars($data['barrio_cliente']) . '<br>
                     <strong>Monto:</strong> $' . number_format($data['monto'], 0, ',', '.') . '<br>
                     <strong>Nuevo Estado:</strong> <span style="color: #3fb950 !important; font-weight: bold;">' . htmlspecialchars($data['nuevo_estado']) . '</span>
                 </p>

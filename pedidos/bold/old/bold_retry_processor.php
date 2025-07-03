@@ -560,7 +560,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     echo '<h3>🚀 Acciones</h3>';
     echo '<a href="?action=process" class="btn">🔄 Procesar Cola</a>';
     echo '<a href="bold_webhook_monitor.php" class="btn">📊 Ver Monitor</a>';
-    echo '<a href="index.php" class="btn">🏠 Inicio</a>';
+    echo '<a href="pedido.php" class="btn">🏠 Inicio</a>';
 
     echo '</div></body></html>';
 } elseif ($_GET['action'] === 'process') {

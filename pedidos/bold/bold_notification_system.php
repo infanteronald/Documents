@@ -9,12 +9,12 @@ require_once "conexion.php";
 class BoldNotificationSystem {
     private $conn;
     private $config;
-    
+
     public function __construct($conn) {
         $this->conn = $conn;
         $this->loadConfig();
     }
-    
+
     private function loadConfig() {
         $this->config = [
             'admin_email' => 'ventas@sequoiaspeed.com.co',
@@ -31,7 +31,7 @@ class BoldNotificationSystem {
             ]
         ];
     }
-    
+
     /**
      * Enviar notificación de pago exitoso al cliente
      */
@@ -41,7 +41,7 @@ class BoldNotificationSystem {
             if (!$pedido || empty($pedido['correo'])) {
                 throw new Exception("No se pudo obtener información del pedido o email del cliente");
             }
-            
+
             $emailData = [
                 'to_email' => $pedido['correo'],
                 'to_name' => $pedido['nombre'],
@@ -58,21 +58,21 @@ class BoldNotificationSystem {
                     'website_url' => $this->config['website_url']
                 ]
             ];
-            
+
             $this->sendEmail($emailData, 'customer_success');
-            
+
             // Log de la notificación
             $this->logNotification($pedidoId, 'customer_success', $pedido['correo'], 'sent');
-            
+
             return true;
-            
+
         } catch (Exception $e) {
             error_log("Error enviando notificación de éxito al cliente: " . $e->getMessage());
             $this->logNotification($pedidoId, 'customer_success', $pedido['correo'] ?? '', 'failed', $e->getMessage());
             return false;
         }
     }
-    
+
     /**
      * Enviar notificación de pago pendiente al cliente
      */
@@ -80,7 +80,7 @@ class BoldNotificationSystem {
         try {
             $pedido = $this->getPedidoDetails($pedidoId);
             if (!$pedido || empty($pedido['correo'])) return false;
-            
+
             $emailData = [
                 'to_email' => $pedido['correo'],
                 'to_name' => $pedido['nombre'],
@@ -96,18 +96,18 @@ class BoldNotificationSystem {
                     'website_url' => $this->config['website_url']
                 ]
             ];
-            
+
             $this->sendEmail($emailData, 'customer_pending');
             $this->logNotification($pedidoId, 'customer_pending', $pedido['correo'], 'sent');
-            
+
             return true;
-            
+
         } catch (Exception $e) {
             error_log("Error enviando notificación pendiente al cliente: " . $e->getMessage());
             return false;
         }
     }
-    
+
     /**
      * Enviar notificación de pago fallido al cliente
      */
@@ -115,7 +115,7 @@ class BoldNotificationSystem {
         try {
             $pedido = $this->getPedidoDetails($pedidoId);
             if (!$pedido || empty($pedido['correo'])) return false;
-            
+
             $emailData = [
                 'to_email' => $pedido['correo'],
                 'to_name' => $pedido['nombre'],
@@ -125,23 +125,23 @@ class BoldNotificationSystem {
                     'order_id' => $pedido['pedido'],
                     'amount' => number_format($pedido['monto'], 0, ',', '.'),
                     'error_reason' => $paymentData['error_message'] ?? 'Error en la transacción',
-                    'retry_url' => $this->config['website_url'] . '/index.php?retry=' . $pedido['pedido'],
+                    'retry_url' => $this->config['website_url'] . '/pedido.php?retry=' . $pedido['pedido'],
                     'contact_phone' => $this->config['whatsapp_number'],
                     'alternative_methods' => $this->getAlternativePaymentMethods()
                 ]
             ];
-            
+
             $this->sendEmail($emailData, 'payment_failed');
             $this->logNotification($pedidoId, 'customer_failed', $pedido['correo'], 'sent');
-            
+
             return true;
-            
+
         } catch (Exception $e) {
             error_log("Error enviando notificación de fallo al cliente: " . $e->getMessage());
             return false;
         }
     }
-    
+
     /**
      * Enviar notificación al administrador
      */
@@ -149,15 +149,15 @@ class BoldNotificationSystem {
         try {
             $pedido = $this->getPedidoDetails($pedidoId);
             if (!$pedido) return false;
-            
+
             $statusEmojis = [
                 'success' => '✅',
                 'pending' => '⏳',
                 'failed' => '❌'
             ];
-            
+
             $emoji = $statusEmojis[$status] ?? '📧';
-            
+
             $emailData = [
                 'to_email' => $this->config['admin_email'],
                 'to_name' => 'Administrador Sequoia',
@@ -179,23 +179,23 @@ class BoldNotificationSystem {
                     'webhook_data' => json_encode($paymentData, JSON_PRETTY_PRINT)
                 ]
             ];
-            
+
             $this->sendEmail($emailData, 'admin_notification');
             $this->logNotification($pedidoId, 'admin_notification', $this->config['admin_email'], 'sent');
-            
+
             // Enviar también notificación por WhatsApp si es pago exitoso
             if ($status === 'success') {
                 $this->sendWhatsAppNotification($pedido, $paymentData);
             }
-            
+
             return true;
-            
+
         } catch (Exception $e) {
             error_log("Error enviando notificación al admin: " . $e->getMessage());
             return false;
         }
     }
-    
+
     /**
      * Enviar notificación por WhatsApp (webhook)
      */
@@ -210,39 +210,39 @@ class BoldNotificationSystem {
             $message .= "📞 *Teléfono:* {$pedido['telefono']}\n";
             $message .= "✅ *Estado:* PAGADO\n";
             $message .= "⏰ *Fecha:* " . date('d/m/Y H:i');
-            
+
             // Aquí integrarías con tu API de WhatsApp preferida
             // Por ejemplo: WhatsApp Business API, Twilio, etc.
-            
+
             return true;
-            
+
         } catch (Exception $e) {
             error_log("Error enviando WhatsApp: " . $e->getMessage());
             return false;
         }
     }
-    
+
     /**
      * Obtener detalles del pedido
      */
     private function getPedidoDetails($pedidoId) {
         $stmt = $this->conn->prepare("
-            SELECT * FROM pedidos_detal 
+            SELECT * FROM pedidos_detal
             WHERE id = ? OR bold_order_id = ?
         ");
         $stmt->bind_param("ss", $pedidoId, $pedidoId);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         return $result->fetch_assoc();
     }
-    
+
     /**
      * Enviar email usando PHP mail() o SMTP
      */
     private function sendEmail($emailData, $templateType) {
         $template = $this->loadEmailTemplate($templateType, $emailData['template_data']);
-        
+
         $headers = [
             'MIME-Version: 1.0',
             'Content-type: text/html; charset=utf-8',
@@ -250,42 +250,42 @@ class BoldNotificationSystem {
             'Reply-To: ' . $this->config['from_email'],
             'X-Mailer: Bold PSE Notification System'
         ];
-        
+
         $success = mail(
             $emailData['to_email'],
             $emailData['subject'],
             $template,
             implode("\r\n", $headers)
         );
-        
+
         if (!$success) {
             throw new Exception("Error enviando email a " . $emailData['to_email']);
         }
-        
+
         return true;
     }
-    
+
     /**
      * Cargar y procesar template de email
      */
     private function loadEmailTemplate($templateType, $data) {
         $templateFile = __DIR__ . '/' . ($this->config['templates'][$templateType] ?? '');
-        
+
         if (file_exists($templateFile)) {
             $template = file_get_contents($templateFile);
         } else {
             // Template por defecto si no existe el archivo
             $template = $this->getDefaultTemplate($templateType);
         }
-        
+
         // Reemplazar variables en el template
         foreach ($data as $key => $value) {
             $template = str_replace('{{' . $key . '}}', $value, $template);
         }
-        
+
         return $template;
     }
-    
+
     /**
      * Templates por defecto
      */
@@ -316,7 +316,7 @@ class BoldNotificationSystem {
                         <div class="content">
                             <p>Hola <strong>{{customer_name}}</strong>,</p>
                             <p>Tu pago ha sido procesado exitosamente. Aquí están los detalles de tu pedido:</p>
-                            
+
                             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
                                 <p><strong>Número de Pedido:</strong> {{order_id}}</p>
                                 <p><strong>Monto Pagado:</strong> ${{amount}} COP</p>
@@ -325,12 +325,12 @@ class BoldNotificationSystem {
                                 <p><strong>Fecha de Pago:</strong> {{payment_date}}</p>
                                 <p><strong>Dirección de Entrega:</strong> {{delivery_address}}</p>
                             </div>
-                            
+
                             <p>Nuestro equipo se pondrá en contacto contigo pronto para coordinar la entrega.</p>
                             <p>Si tienes alguna pregunta, puedes contactarnos por WhatsApp:</p>
-                            
+
                             <a href="https://wa.me/{{contact_phone}}" class="button">📱 Contactar por WhatsApp</a>
-                            
+
                             <p>¡Gracias por tu compra!</p>
                         </div>
                         <div class="footer">
@@ -341,7 +341,7 @@ class BoldNotificationSystem {
                 </body>
                 </html>
             ',
-            
+
             'customer_pending' => '
                 <!DOCTYPE html>
                 <html>
@@ -366,13 +366,13 @@ class BoldNotificationSystem {
                         <div class="content">
                             <p>Hola <strong>{{customer_name}}</strong>,</p>
                             <p>Tu pago está siendo procesado. Los pagos PSE pueden tomar algunos minutos en confirmarse.</p>
-                            
+
                             <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9f0a;">
                                 <p><strong>Número de Pedido:</strong> {{order_id}}</p>
                                 <p><strong>Monto:</strong> ${{amount}} COP</p>
                                 <p><strong>Tiempo Estimado:</strong> {{estimated_time}}</p>
                             </div>
-                            
+
                             <p>Te notificaremos tan pronto como se confirme tu pago.</p>
                             <p>Si tienes alguna pregunta, contáctanos por WhatsApp: {{contact_phone}}</p>
                         </div>
@@ -383,7 +383,7 @@ class BoldNotificationSystem {
                 </body>
                 </html>
             ',
-            
+
             'admin_notification' => '
                 <!DOCTYPE html>
                 <html>
@@ -422,7 +422,7 @@ class BoldNotificationSystem {
                                 <tr><th>Dirección</th><td>{{delivery_address}}</td></tr>
                                 <tr><th>Fecha</th><td>{{payment_date}}</td></tr>
                             </table>
-                            
+
                             <h3>Datos del Webhook</h3>
                             <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px;">{{webhook_data}}</pre>
                         </div>
@@ -431,10 +431,10 @@ class BoldNotificationSystem {
                 </html>
             '
         ];
-        
+
         return $templates[$type] ?? '<html><body><h1>Notificación de Pago</h1><p>Template no disponible</p></body></html>';
     }
-    
+
     /**
      * Obtener métodos de pago alternativos
      */
@@ -442,10 +442,13 @@ class BoldNotificationSystem {
         return [
             ['name' => 'Nequi / Transfiya', 'number' => '3213260357'],
             ['name' => 'Bancolombia', 'details' => 'Ahorros 03500000175 Ronald Infante'],
+            ['name' => 'Datafono', 'details' => 'Pago con tarjeta en punto de venta físico'],
+            ['name' => 'Efectivo Bogotá', 'details' => 'Pago presencial en nuestra tienda de Bogotá'],
+            ['name' => 'Efectivo Medellín', 'details' => 'Pago presencial en nuestra tienda de Medellín'],
             ['name' => 'WhatsApp', 'number' => $this->config['whatsapp_number']]
         ];
     }
-    
+
     /**
      * Log de notificaciones enviadas
      */
@@ -456,15 +459,15 @@ class BoldNotificationSystem {
                     pedido_id, notification_type, recipient, status, error_message, created_at
                 ) VALUES (?, ?, ?, ?, ?, NOW())
             ");
-            
+
             $stmt->bind_param("issss", $pedidoId, $type, $recipient, $status, $error);
             $stmt->execute();
-            
+
         } catch (Exception $e) {
             error_log("Error logging notification: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Crear tabla de logs si no existe
      */
@@ -483,7 +486,7 @@ class BoldNotificationSystem {
                 INDEX idx_status (status)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ";
-        
+
         return $this->conn->query($sql);
     }
 }
@@ -491,31 +494,31 @@ class BoldNotificationSystem {
 // Función helper para usar desde otros archivos
 function sendBoldNotification($pedidoId, $status, $paymentData = []) {
     global $conn;
-    
+
     try {
         $notificationSystem = new BoldNotificationSystem($conn);
-        
+
         switch ($status) {
             case 'success':
             case 'approved':
                 $notificationSystem->sendCustomerSuccessNotification($pedidoId, $paymentData);
                 $notificationSystem->sendAdminNotification($pedidoId, 'success', $paymentData);
                 break;
-                
+
             case 'pending':
                 $notificationSystem->sendCustomerPendingNotification($pedidoId, $paymentData);
                 $notificationSystem->sendAdminNotification($pedidoId, 'pending', $paymentData);
                 break;
-                
+
             case 'failed':
             case 'rejected':
                 $notificationSystem->sendCustomerFailedNotification($pedidoId, $paymentData);
                 $notificationSystem->sendAdminNotification($pedidoId, 'failed', $paymentData);
                 break;
         }
-        
+
         return true;
-        
+
     } catch (Exception $e) {
         error_log("Error en sistema de notificaciones: " . $e->getMessage());
         return false;

@@ -16,9 +16,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $nombre = trim($_POST['nombre'] ?? '');
         $correo = trim($_POST['correo'] ?? '');
         $telefono = trim($_POST['telefono'] ?? '');
+        $ciudad = trim($_POST['ciudad'] ?? '');
+        $barrio = trim($_POST['barrio'] ?? '');
         $direccion = trim($_POST['direccion'] ?? '');
-        $persona_recibe = trim($_POST['persona_recibe'] ?? '');
-        $horarios = trim($_POST['horarios'] ?? '');
 
         // Validaciones básicas
         if (!$pedido_id) {
@@ -63,9 +63,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             SET nombre = ?,
                 correo = ?,
                 telefono = ?,
-                direccion = ?,
-                persona_recibe = ?,
-                horarios = ?
+                ciudad = ?,
+                barrio = ?,
+                direccion = ?
             WHERE id = ?
             LIMIT 1
         ");
@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         }
 
-        $stmt->bind_param("ssssssi", $nombre, $correo, $telefono, $direccion, $persona_recibe, $horarios, $pedido_id);
+        $stmt->bind_param("ssssssi", $nombre, $correo, $telefono, $ciudad, $barrio, $direccion, $pedido_id);
 
         if ($stmt->execute()) {
             if ($stmt->affected_rows > 0) {

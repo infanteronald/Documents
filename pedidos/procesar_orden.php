@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo "<!-- carrito_total: " . (isset($_POST['carrito_total']) ? $_POST['carrito_total'] : "NO") . " -->\n";
 
     // Validar campos comunes requeridos
-    $campos_requeridos = ['monto', 'nombre', 'direccion', 'telefono', 'correo', 'persona_recibe', 'horarios', 'metodo_pago'];
+    $campos_requeridos = ['monto', 'nombre', 'direccion', 'telefono', 'ciudad', 'barrio', 'correo', 'metodo_pago'];
 
     // Agregar campo específico según tipo de formulario
     if ($es_pedido_simple) {
@@ -35,12 +35,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Recibe los campos comunes del formulario
     $monto          = $_POST['monto'];
+
+    // Debug temporal - agregar log del monto recibido
+    error_log("DEBUG MONTO: Valor recibido en POST['monto']: " . var_export($monto, true));
+
     $nombre         = $_POST['nombre'];
     $direccion      = $_POST['direccion'];
     $telefono       = $_POST['telefono'];
+    $ciudad         = $_POST['ciudad'];
+    $barrio         = $_POST['barrio'];
     $correo         = $_POST['correo'];
-    $persona_recibe = $_POST['persona_recibe'];
-    $horarios       = $_POST['horarios'];
     $metodo_pago    = $_POST['metodo_pago'];
 
     // Detectar si es un pago Bold (cualquiera de los 3 métodos) y extraer datos específicos
@@ -117,6 +121,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'Provincial':
             $datos_pago = "Ahorros 0958004765 Ronald Infante";
             break;
+        case 'Datafono':
+            $datos_pago = "Pago con tarjeta en punto de venta físico";
+            break;
+        case 'Efectivo_Bogota':
+            $datos_pago = "Pago presencial en tienda de Bogotá";
+            break;
+        case 'Efectivo_Medellin':
+            $datos_pago = "Pago presencial en tienda de Medellín";
+            break;
         case 'PSE':
             $datos_pago = "Solicitar link de pago a su asesor";
             break;
@@ -149,13 +162,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($es_pedido_guardado) {
         // ACTUALIZAR pedido existente
         $pedido_id_guardado = intval($_POST['pedido_id']);
-        $stmt = $conn->prepare("UPDATE pedidos_detal SET pedido = ?, monto = ?, nombre = ?, direccion = ?, telefono = ?, correo = ?, persona_recibe = ?, horarios = ?, metodo_pago = ?, datos_pago = ?, comprobante = ?, estado = 'sin_enviar' WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE pedidos_detal SET pedido = ?, monto = ?, nombre = ?, direccion = ?, telefono = ?, ciudad = ?, barrio = ?, correo = ?, metodo_pago = ?, datos_pago = ?, comprobante = ?, estado = 'sin_enviar' WHERE id = ?");
 
         if (!$stmt) {
             die("Error al preparar la consulta de actualización: " . $conn->error);
         }
 
-        $stmt->bind_param("sdsssssssssi", $productos_texto, $monto, $nombre, $direccion, $telefono, $correo, $persona_recibe, $horarios, $metodo_pago, $datos_pago, $rutaArchivo, $pedido_id_guardado);
+        $stmt->bind_param("sdsssssssssi", $productos_texto, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $pedido_id_guardado);
 
         if (!$stmt->execute()) {
             die("Error al ejecutar la consulta de actualización: " . $stmt->error);
@@ -167,24 +180,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // INSERTAR nuevo pedido
         if ($es_pago_bold && $bold_order_id) {
             // Insertar pedido Bold con campos específicos
-            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, correo, persona_recibe, horarios, metodo_pago, datos_pago, comprobante, estado, bold_order_id, estado_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sin_enviar', ?, 'pendiente')");
+            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, estado, bold_order_id, estado_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sin_enviar', ?, 'pendiente')");
 
             if (!$stmt) {
                 die("Error al preparar la consulta de inserción Bold: " . $conn->error);
             }
 
             $datos_pago = "Pago en proceso - $metodo_pago";
-            $stmt->bind_param("sdssssssssss", $productos_texto, $monto, $nombre, $direccion, $telefono, $correo, $persona_recibe, $horarios, $metodo_pago, $datos_pago, $rutaArchivo, $bold_order_id);
+            $stmt->bind_param("sdssssssssss", $productos_texto, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $bold_order_id);
             echo "<!-- Debug: Insertando pedido Bold con Order ID: $bold_order_id -->\n";
         } else {
             // Insertar pedido normal
-            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, correo, persona_recibe, horarios, metodo_pago, datos_pago, comprobante, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sin_enviar')");
+            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sin_enviar')");
 
             if (!$stmt) {
                 die("Error al preparar la consulta de inserción: " . $conn->error);
             }
 
-            $stmt->bind_param("sdsssssssss", $productos_texto, $monto, $nombre, $direccion, $telefono, $correo, $persona_recibe, $horarios, $metodo_pago, $datos_pago, $rutaArchivo);
+            $stmt->bind_param("sdsssssssss", $productos_texto, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo);
         }
 
         if (!$stmt->execute()) {
@@ -262,13 +275,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt_detalle = $conn->prepare($detalle_query);
     $stmt_detalle->bind_param("i", $numero_pedido);
     $stmt_detalle->execute();
-    
+
     // Usar bind_result en lugar de get_result para compatibilidad con todos los servidores
     $nombre_prod = $precio_prod = $cantidad_prod = $talla_prod = '';
     $stmt_detalle->bind_result($nombre_prod, $precio_prod, $cantidad_prod, $talla_prod);
-    
+
     $productos_detallados = [];
+    $monto_calculado = 0;
     while ($stmt_detalle->fetch()) {
+        $subtotal = $precio_prod * $cantidad_prod;
+        $monto_calculado += $subtotal;
         $productos_detallados[] = [
             'nombre' => $nombre_prod,
             'precio' => $precio_prod,
@@ -277,29 +293,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ];
     }
     $stmt_detalle->close();
+
+    // Usar el monto calculado de los productos si hay detalles, sino usar el monto del POST
+    $monto_final = !empty($productos_detallados) ? $monto_calculado : $monto;
+
     $pedidoData = [
         'numero_pedido' => $numero_pedido,
         'nombre' => $nombre,
         'correo' => $correo,
         'telefono' => $telefono,
+        'ciudad' => $ciudad,
+        'barrio' => $barrio,
         'direccion' => $direccion,
-        'persona_recibe' => $persona_recibe,
-        'horarios' => $horarios,
         'metodo_pago' => $metodo_pago,
-        'monto' => $monto,
+        'monto' => $monto_final,
         'datos_pago' => $datos_pago,
         'pedido_texto' => $productos_texto,
         'detalles' => $productos_detallados,
         'estado_pago' => 'pendiente'
     ];
-    
+
     // GENERAR EMAIL HTML CON PLANTILLA VSCODE DARK + APPLE
     $htmlBody = EmailTemplates::nuevoPedido($pedidoData);
 
     // PREPARAR CORREO CON FORMATO HTML
     $destinatarios = "ventas@sequoiaspeed.com.co,jorgejosecardozo@gmail.com,joshuagamer95@gmail.com";
     $boundary = md5(uniqid(time()));
-    
+
     $headers  = "From: $nombre <ventas@sequoiaspeed.com.co>\r\n";
     $headers .= "Reply-To: $correo\r\n";
     $headers .= "Cc: $correo\r\n";
@@ -332,6 +352,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit;
 } else {
     // Si no es POST, redirigir al inicio
-    header("Location: index.php");
+    header("Location: pedido.php");
     exit;
 }

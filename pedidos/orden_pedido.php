@@ -1529,7 +1529,7 @@ function mostrarUrlPedido(pedidoId) {
     document.getElementById('finalizar-pedido').style.display = 'none';
 
     // Generar la URL del pedido
-    const baseUrl = window.location.origin + window.location.pathname.replace('orden_pedido.php', 'index.php');
+    const baseUrl = window.location.origin + window.location.pathname.replace('orden_pedido.php', 'pedido.php');
     const pedidoUrl = `${baseUrl}?pedido=${pedidoId}`;
 
     // Mostrar la sección de URL

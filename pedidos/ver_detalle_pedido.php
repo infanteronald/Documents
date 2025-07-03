@@ -27,8 +27,6 @@ function getField($array, $field, $default = 'No disponible') {
         'fecha_pedido' => ['fecha_pedido', 'fecha', 'created_at', 'date_created'],
         'direccion_entrega' => ['direccion_entrega', 'direccion', 'address', 'delivery_address'],
         'metodo_pago' => ['metodo_pago', 'metodo_pago', 'pago', 'payment_method', 'tipo_pago'],
-        'persona_recibe' => ['persona_recibe', 'recibe', 'recipient', 'receiver'],
-        'horarios' => ['horarios', 'horario', 'schedule', 'delivery_time'],
         'nota_interna' => ['nota_interna', 'notas', 'observaciones', 'comments', 'notes']
     ];
 
@@ -1962,6 +1960,620 @@ if ($id && $id > 0) {
                 margin-left: 3px !important;
             }
         }
+
+        /* ===== ESTILOS PARA SISTEMA DE PESTAÑAS ===== */
+        .pestanas-contexto {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .pestanas-nav {
+            position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            white-space: nowrap;
+        }
+
+        .tab-button {
+            position: relative;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: max-content;
+        }
+
+        .tab-button:hover {
+            background: rgba(88, 166, 255, 0.1) !important;
+            color: #58a6ff !important;
+        }
+
+        .tab-button.active {
+            background: rgba(31, 111, 235, 0.1);
+        }
+
+        .tab-content {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Tooltips para métricas */
+        .metric-card-unified {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card-unified:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive para pestañas */
+        @media (max-width: 768px) {
+            .pestanas-nav {
+                border-bottom: 1px solid #30363d;
+            }
+
+            .tab-button {
+                font-size: 0.8rem !important;
+                padding: 12px 10px !important;
+                min-width: 33.33%;
+                text-align: center;
+            }
+
+            .pestanas-content {
+                padding: 15px !important;
+            }
+
+            .metric-card-unified {
+                padding: 12px !important;
+            }
+
+            /* Grid responsive para comparativas */
+            .content-estadisticas > div:first-child {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+
+            /* Lista de archivos responsive */
+            .archivo-item {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 10px !important;
+            }
+
+            .archivo-item > div:last-child {
+                align-self: flex-end !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tab-button {
+                font-size: 0.7rem !important;
+                padding: 10px 5px !important;
+            }
+
+            .pestanas-content {
+                padding: 10px !important;
+            }
+
+            /* Grids de 1 columna en móviles pequeños */
+            .pestanas-content [style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Texto más pequeño en móviles */
+            .metric-card-unified .color {
+                font-size: 0.7rem !important;
+            }
+
+            .metric-card-unified div[style*="font-size: 1.3rem"] {
+                font-size: 1.1rem !important;
+            }
+        }
+
+        /* Efectos de hover adicionales */
+        .archivo-item:hover {
+            background: #161b22 !important;
+            border-color: #58a6ff !important;
+            transition: all 0.3s ease;
+        }
+
+        .archivo-item a:hover {
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+
+        /* Loading states */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #21262d 25%, #30363d 50%, #21262d 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* ===== ESTILOS PARA SISTEMA DE PESTAÑAS ===== */
+        .pestanas-contexto {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .pestanas-nav {
+            position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-button {
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-button:hover {
+            background: rgba(88, 166, 255, 0.1) !important;
+            color: #58a6ff !important;
+        }
+
+        .tab-button:active {
+            transform: translateY(1px);
+        }
+
+        .tab-content {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .tab-content.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Efectos de hover para cards de métricas */
+        .metric-card-unified {
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .metric-card-unified:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Animaciones para elementos de archivo */
+        .archivo-item {
+            transition: all 0.3s ease;
+        }
+
+        .archivo-item:hover {
+            background: #161b22 !important;
+            border-color: #58a6ff !important;
+        }
+
+        /* Responsive para pestañas */
+        @media (max-width: 768px) {
+            .pestanas-contexto {
+                margin-left: -10px;
+                margin-right: -10px;
+                border-radius: 8px;
+            }
+
+            .pestanas-nav {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
+                padding-bottom: 2px; /* Para la sombra del scroll */
+            }
+
+            .tab-button {
+                flex: none !important;
+                min-width: 140px !important;
+                padding: 12px 16px !important;
+                font-size: 0.85rem !important;
+                white-space: nowrap;
+                border-bottom: 2px solid transparent !important;
+                border-left: none !important;
+            }
+
+            .tab-button.active {
+                border-bottom-color: #1f6feb !important;
+                background: rgba(31, 111, 235, 0.1) !important;
+            }
+
+            .pestanas-content {
+                padding: 15px !important;
+            }
+
+            /* Simplificar grids en móvil */
+            .pestanas-content [style*="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))"] {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+
+            .pestanas-content [style*="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))"] {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+
+            .pestanas-content [style*="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"] {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
+
+            .pestanas-content [style*="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr))"] {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+            }
+
+            .pestanas-content [style*="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))"] {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+            }
+
+            /* Ajustar cards de métricas */
+            .metric-card-unified {
+                padding: 12px !important;
+                margin-bottom: 10px;
+                text-align: center !important;
+            }
+
+            .metric-card-unified > div:first-child {
+                font-size: 0.75rem !important;
+            }
+
+            .metric-card-unified > div:nth-child(2) {
+                font-size: 1.1rem !important;
+            }
+
+            .metric-card-unified > div:last-child {
+                font-size: 0.65rem !important;
+            }
+
+            /* Ajustar archivos en móvil */
+            .archivo-item {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 10px !important;
+                padding: 12px !important;
+            }
+
+            .archivo-item > div:last-child {
+                align-self: stretch !important;
+                display: flex !important;
+                gap: 8px !important;
+            }
+
+            .archivo-item a {
+                flex: 1 !important;
+                text-align: center !important;
+                font-size: 0.75rem !important;
+                padding: 8px 6px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pestanas-contexto {
+                margin-left: -15px;
+                margin-right: -15px;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+
+            .tab-button {
+                min-width: 120px !important;
+                font-size: 0.8rem !important;
+                padding: 10px 12px !important;
+            }
+
+            /* Simplificar todo a una columna en móviles pequeños */
+            .pestanas-content [style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Títulos más pequeños en pestañas */
+            .pestanas-content h3 {
+                font-size: 1.2rem !important;
+                text-align: center !important;
+                gap: 8px !important;
+            }
+
+            .pestanas-content h4 {
+                font-size: 1rem !important;
+                flex-direction: column !important;
+                text-align: center !important;
+                gap: 5px !important;
+            }
+
+            /* Cards de estadísticas más compactas */
+            .metric-card-unified {
+                padding: 10px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .metric-card-unified > div:first-child {
+                font-size: 0.7rem !important;
+                margin-bottom: 4px !important;
+            }
+
+            .metric-card-unified > div:nth-child(2) {
+                font-size: 1rem !important;
+                margin-bottom: 3px !important;
+            }
+
+            .metric-card-unified > div:last-child {
+                font-size: 0.6rem !important;
+            }
+
+            /* Botones de archivo stack completo */
+            .archivo-item > div:last-child {
+                flex-direction: column !important;
+                gap: 6px !important;
+            }
+
+            .archivo-item a {
+                font-size: 0.7rem !important;
+                padding: 6px 8px !important;
+            }
+
+            /* Ajustar padding del contenido de pestañas */
+            .pestanas-content {
+                padding: 10px !important;
+            }
+
+            /* Tooltips deshabilitados en móvil pequeño para performance */
+            .metric-card-unified[data-tooltip]:hover::after,
+            .metric-card-unified[data-tooltip]:hover::before {
+                display: none !important;
+            }
+
+            /* Texto más pequeño en comparativas */
+            .pestanas-content [style*="font-size: 0.85rem"] {
+                font-size: 0.75rem !important;
+            }
+
+            .pestanas-content [style*="font-size: 0.9rem"] {
+                font-size: 0.8rem !important;
+            }
+
+            /* Optimizaciones específicas para el stepper de progreso en móvil */
+            .progress-stepper {
+                padding: 15px 10px !important;
+                margin-bottom: 15px !important;
+            }
+
+            .progress-stepper .step {
+                padding: 4px !important;
+            }
+
+            .progress-stepper .step > div:first-child {
+                width: 35px !important;
+                height: 35px !important;
+                font-size: 1rem !important;
+            }
+
+            .progress-stepper .step > span {
+                font-size: 0.7rem !important;
+                max-width: 60px;
+                text-align: center;
+                word-wrap: break-word;
+            }
+
+            .progress-stepper .next-action {
+                padding: 12px 8px !important;
+            }
+
+            .progress-stepper .next-action button {
+                font-size: 0.8rem !important;
+                padding: 8px 16px !important;
+                width: 100%;
+                max-width: 280px;
+            }
+
+            /* Optimizaciones específicas para el timeline en móvil */
+            .timeline-section {
+                padding: 15px 10px !important;
+                margin: 15px 0 !important;
+            }
+
+            .timeline-section h3 {
+                font-size: 1.1rem !important;
+                margin-bottom: 15px !important;
+                flex-direction: column !important;
+                text-align: center !important;
+                gap: 5px !important;
+            }
+
+            .add-timeline-entry {
+                padding: 12px !important;
+                margin-bottom: 15px !important;
+            }
+
+            .add-timeline-entry [style*="grid-template-columns: 120px 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            .add-timeline-entry select {
+                margin-bottom: 10px;
+            }
+
+            .add-timeline-entry textarea {
+                height: 50px !important;
+                font-size: 0.9rem !important;
+            }
+
+            /* Eventos del timeline más compactos */
+            .timeline-event {
+                margin-bottom: 15px !important;
+                padding: 10px !important;
+            }
+
+            .timeline-event [style*="padding-left: 50px"] {
+                padding-left: 40px !important;
+            }
+
+            /* Línea del timeline ajustada */
+            #timeline-eventos > div[style*="position: absolute; left: 20px"] {
+                left: 15px !important;
+            }
+
+            /* Iconos del timeline más pequeños */
+            .timeline-event [style*="width: 35px; height: 35px"] {
+                width: 30px !important;
+                height: 30px !important;
+                left: 0px !important;
+                font-size: 0.9rem !important;
+            }
+        }
+
+            .tab-button {
+                font-size: 0.8rem !important;
+                padding: 10px 12px !important;
+            }
+
+            /* Simplificar grids en pantallas muy pequeñas */
+            [style*="grid-template-columns: repeat(auto-fit, minmax("] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Ajustar cards de estadísticas */
+            .metric-card-unified {
+                text-align: left !important;
+                padding: 12px !important;
+            }
+
+            /* Botones de archivo más pequeños */
+            .archivo-item a {
+                font-size: 0.7rem !important;
+                padding: 6px 8px !important;
+            }
+        }
+
+        /* Tooltips para métricas */
+        .metric-card-unified[data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+
+        .metric-card-unified[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #21262d;
+            color: #e6edf3;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+            border: 1px solid #3d444d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            animation: tooltip-fade-in 0.3s ease forwards;
+        }
+
+        .metric-card-unified[data-tooltip]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 94%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid #21262d;
+            z-index: 1001;
+            opacity: 0;
+            animation: tooltip-fade-in 0.3s ease forwards;
+        }
+
+        @keyframes tooltip-fade-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Estados de carga para contenido dinámico */
+        .loading-content {
+            background: linear-gradient(135deg, #21262d15 0%, #30363d15 100%);
+            border: 1px dashed #3d444d;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #8b949e;
+        }
+
+        .loading-content .spinner {
+            animation: spin 1s linear infinite;
+            font-size: 2rem;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mejoras de accesibilidad */
+        .tab-button:focus {
+            outline: 2px solid #1f6feb;
+            outline-offset: 2px;
+        }
+
+        .archivo-item:focus-within {
+            border-color: #1f6feb !important;
+            box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.3);
+        }
+
+        /* Animaciones de entrada para contenido */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Estados de éxito y error */
+        .status-success {
+            background: linear-gradient(135deg, #23863615 0%, #2ea04315 100%);
+            border: 1px solid #238636;
+            color: #3fb950;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .status-error {
+            background: linear-gradient(135deg, #da363315 0%, #f8514915 100%);
+            border: 1px solid #da3633;
+            color: #f85149;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .status-info {
+            background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%);
+            border: 1px solid #1f6feb;
+            color: #58a6ff;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -2006,6 +2618,59 @@ if ($id && $id > 0) {
                     </div>
                 <?php endif; ?>
             <?php else: ?>
+                <!-- ===== HEADER VISUAL DE PROGRESO (STEPPER) ===== -->
+                <div class="progress-stepper" style="background: #30363d; border: 1px solid #3d444d; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; position: relative; margin-bottom: 10px;">
+                        <?php
+                        // Determinar el paso actual basado en el estado del pedido
+                        $estado_actual = strtolower($p['estado'] ?? '');
+                        $pagado = intval($p['pagado'] ?? 0);
+                        $enviado = intval($p['enviado'] ?? 0);
+                        $guia_existe = !empty($p['guia']) && file_exists("guias/" . $p['guia']);
+
+                        $steps = [
+                            'recibido' => ['icon' => '📝', 'label' => 'Recibido', 'active' => true],
+                            'pagado' => ['icon' => '💳', 'label' => 'Pagado', 'active' => $pagado == 1],
+                            'enviado' => ['icon' => '🚚', 'label' => 'Enviado', 'active' => $enviado == 1 || $guia_existe],
+                            'entregado' => ['icon' => '✅', 'label' => 'Entregado', 'active' => strpos($estado_actual, 'entregado') !== false || strpos($estado_actual, 'archivado') !== false]
+                        ];
+
+                        $step_count = 0;
+                        foreach ($steps as $key => $step):
+                            $is_active = $step['active'];
+                            $step_count++;
+                        ?>
+                        <div class="step" style="display: flex; flex-direction: column; align-items: center; z-index: 2; background: #30363d; padding: 8px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 2px solid <?php echo $is_active ? '#238636' : '#6e7681'; ?>; background: <?php echo $is_active ? '#238636' : '#21262d'; ?>; color: <?php echo $is_active ? 'white' : '#8b949e'; ?>; margin-bottom: 5px;">
+                                <?php echo $step['icon']; ?>
+                            </div>
+                            <span style="font-size: 0.8rem; font-weight: 600; color: <?php echo $is_active ? '#238636' : '#8b949e'; ?>;">
+                                <?php echo $step['label']; ?>
+                            </span>
+                        </div>
+                        <?php if ($step_count < count($steps)): ?>
+                        <div style="flex: 1; height: 2px; background: <?php echo $is_active ? '#238636' : '#6e7681'; ?>; margin: 0 10px; z-index: 1;"></div>
+                        <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Próxima acción sugerida -->
+                    <div class="next-action" style="background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); border: 1px solid #1f6feb; border-radius: 8px; padding: 15px; text-align: center;">
+                        <div style="color: #1f6feb; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem;">🎯 Próxima Acción Sugerida</div>
+                        <?php
+                        if (!$pagado) {
+                            echo '<button onclick="window.location.href=\'#comunicacion\'" style="background: #f79009; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">💳 Solicitar Comprobante de Pago</button>';
+                        } elseif (!$guia_existe) {
+                            echo '<button onclick="abrirModalGuia()" style="background: #1f6feb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">📦 Subir Guía de Envío</button>';
+                        } elseif (!$enviado) {
+                            echo '<button onclick="confirmarEntregaConGuia()" style="background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">📧 Notificar Envío al Cliente</button>';
+                        } else {
+                            echo '<button onclick="window.location.href=\'#timeline\'" style="background: #6f42c1; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">✅ Confirmar Entrega</button>';
+                        }
+                        ?>
+                    </div>
+                </div>
+
                 <!-- Resumen compacto del pedido -->
                 <div class="info-grid">
                     <!-- Primera fila: Cliente -->
@@ -2020,6 +2685,16 @@ if ($id && $id > 0) {
                     <div class="info-card" style="grid-column: span 3;">
                         <h3>Dirección</h3>
                         <p style="font-size: 0.9rem; line-height: 1.3;"><?php echo h($p['direccion']); ?></p>
+                        <?php if (!empty($p['ciudad'] ?? '') || !empty($p['barrio'] ?? '')): ?>
+                        <div style="margin-top: 8px; font-size: 0.85rem; opacity: 0.8;">
+                            <?php if (!empty($p['ciudad'] ?? '')): ?>
+                                <span style="margin-right: 15px;">🏙️ <?php echo h($p['ciudad']); ?></span>
+                            <?php endif; ?>
+                            <?php if (!empty($p['barrio'] ?? '')): ?>
+                                <span>🏘️ <?php echo h($p['barrio']); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
 
@@ -2209,13 +2884,155 @@ if ($id && $id > 0) {
                     </div>
                 </div>
 
-                <!-- Agregar Comentario al Cliente -->
-                <div class="notas-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <!-- ===== TIMELINE INTERACTIVO (CENTRO DE COMANDO) ===== -->
+                <div id="timeline" class="timeline-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 12px; padding: 25px; margin: 20px 0;">
+                    <h3 style="color: #f79000; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 1.3rem; border-bottom: 1px solid #3d444d; padding-bottom: 10px;">
+                        ⏱️ Timeline del Pedido - Centro de Comando
+                    </h3>
+
+                    <!-- Agregar nueva entrada al timeline -->
+                    <div class="add-timeline-entry" style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <span style="font-size: 1.2rem;">✏️</span>
+                            <span style="color: #e6edf3; font-weight: 600;">Agregar entrada al timeline</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 120px 1fr; gap: 15px; margin-bottom: 15px;">
+                            <select id="tipo-evento" style="padding: 8px; border: 1px solid #3d444d; border-radius: 6px; background: #0d1117; color: #e6edf3;">
+                                <option value="nota">📝 Nota Interna</option>
+                                <option value="llamada">📞 Llamada</option>
+                                <option value="email">📧 Email Enviado</option>
+                                <option value="whatsapp">💬 WhatsApp</option>
+                                <option value="estado">🔄 Cambio Estado</option>
+                                <option value="archivo">📎 Archivo Subido</option>
+                                <option value="cliente">� Comentario Cliente</option>
+                            </select>
+                            <textarea id="nueva-entrada-timeline" placeholder="Describe la acción realizada, comentario del cliente, o nota interna..."
+                                      style="height: 60px; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #0d1117; color: #e6edf3; resize: vertical; font-family: inherit;"></textarea>
+                        </div>
+                        <div style="text-align: right;">
+                            <button onclick="agregarEntradaTimeline()" class="btn-print" style="background: linear-gradient(135deg, #1f6feb, #0969da);">
+                                <span>➕</span> Agregar al Timeline
+                            </button>
+                        </div>
+                        <div id="timeline-status" style="margin-top: 10px; text-align: center;"></div>
+                    </div>
+
+                    <!-- Timeline de eventos -->
+                    <div id="timeline-eventos" style="position: relative;">
+                        <!-- Línea vertical del timeline -->
+                        <div style="position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, #1f6feb, #0969da);"></div>
+
+                        <?php
+                        // Crear eventos del timeline basados en el estado del pedido
+                        $timeline_events = [];
+
+                        // Evento: Pedido creado
+                        $timeline_events[] = [
+                            'icon' => '📝',
+                            'tipo' => 'sistema',
+                            'titulo' => 'Pedido Creado',
+                            'descripcion' => 'Pedido #' . $p['id'] . ' registrado en el sistema',
+                            'fecha' => $p['fecha'] ?? date('Y-m-d H:i:s'),
+                            'color' => '#1f6feb'
+                        ];
+
+                        // Evento: Pago (si está pagado)
+                        if ($p['pagado'] == 1) {
+                            $timeline_events[] = [
+                                'icon' => '💳',
+                                'tipo' => 'pago',
+                                'titulo' => 'Pago Confirmado',
+                                'descripcion' => 'Pago recibido via ' . ($p['metodo_pago'] ?? 'método no especificado'),
+                                'fecha' => $p['fecha'] ?? date('Y-m-d H:i:s'),
+                                'color' => '#238636'
+                            ];
+                        }
+
+                        // Evento: Guía subida (si existe)
+                        if (!empty($p['guia']) && file_exists("guias/" . $p['guia'])) {
+                            $timeline_events[] = [
+                                'icon' => '📦',
+                                'tipo' => 'envio',
+                                'titulo' => 'Guía de Envío Subida',
+                                'descripcion' => 'Archivo: ' . $p['guia'],
+                                'fecha' => $p['fecha'] ?? date('Y-m-d H:i:s'),
+                                'color' => '#fb8500'
+                            ];
+                        }
+
+                        // Evento: Pedido enviado (si está marcado como enviado)
+                        if ($p['enviado'] == 1) {
+                            $timeline_events[] = [
+                                'icon' => '🚚',
+                                'tipo' => 'envio',
+                                'titulo' => 'Pedido Enviado',
+                                'descripcion' => 'Pedido despachado para entrega',
+                                'fecha' => $p['fecha'] ?? date('Y-m-d H:i:s'),
+                                'color' => '#6f42c1'
+                            ];
+                        }
+
+                        // Evento: Notas existentes (si las hay)
+                        if (!empty($p['nota_interna'])) {
+                            $timeline_events[] = [
+                                'icon' => '📝',
+                                'tipo' => 'nota',
+                                'titulo' => 'Nota Interna',
+                                'descripcion' => $p['nota_interna'],
+                                'fecha' => $p['fecha'] ?? date('Y-m-d H:i:s'),
+                                'color' => '#8b949e'
+                            ];
+                        }
+
+                        // Mostrar eventos del timeline
+                        foreach ($timeline_events as $event):
+                        ?>
+                        <div class="timeline-event" style="position: relative; margin-bottom: 20px; margin-left: 50px;">
+                            <div style="position: absolute; left: -35px; top: 0; width: 30px; height: 30px; border-radius: 50%; background: <?php echo $event['color']; ?>; display: flex; align-items: center; justify-content: center; border: 3px solid #30363d; font-size: 0.9rem;">
+                                <?php echo $event['icon']; ?>
+                            </div>
+                            <div style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <h4 style="color: <?php echo $event['color']; ?>; margin: 0; font-size: 1rem; font-weight: 600;">
+                                        <?php echo h($event['titulo']); ?>
+                                    </h4>
+                                    <span style="color: #8b949e; font-size: 0.8rem;">
+                                        <?php
+                                        $fecha = new DateTime($event['fecha']);
+                                        echo $fecha->format('d/m/Y H:i');
+                                        ?>
+                                    </span>
+                                </div>
+                                <p style="color: #e6edf3; margin: 0; line-height: 1.4; font-size: 0.9rem;">
+                                    <?php echo nl2br(h($event['descripcion'])); ?>
+                                </p>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+
+                        <!-- Placeholder para nuevos eventos -->
+                        <div id="nuevos-eventos-timeline"></div>
+                    </div>
+                </div>
+
                 <!-- Comunicación con Cliente -->
-                <div class="comunicacion-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <div id="comunicacion" class="comunicacion-section" style="background: #30363d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin: 20px 0;">
                     <h3 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
                         📧 Comunicación con Cliente
                     </h3>
+
+                    <!-- Plantillas de Mensajes -->
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Plantillas Rápidas:</label>
+                        <select id="plantilla-mensaje" style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;" onchange="cargarPlantillaMensaje()">
+                            <option value="">Seleccionar plantilla...</option>
+                            <option value="confirmacion-pago">💳 Confirmación de pago recibido</option>
+                            <option value="pedido-enviado">🚚 Tu pedido ha sido enviado</option>
+                            <option value="solicitar-info">❓ Solicitud de información adicional</option>
+                            <option value="confirmar-direccion">📍 Confirmar dirección de entrega</option>
+                            <option value="pedido-listo">✅ Tu pedido está listo para entrega</option>
+                        </select>
+                    </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
                         <button onclick="confirmarEntregaConGuia()" class="btn" style="background: #fb8500; padding: 12px; font-size: 0.9rem;">
@@ -2225,52 +3042,13 @@ if ($id && $id > 0) {
                         <a href="tel:<?php echo h($p['telefono']); ?>" class="btn" style="background: #6e7681; padding: 12px; font-size: 0.9rem; text-decoration: none; text-align: center;">
                             <span>📞</span> Llamar Cliente
                         </a>
-                        <a href="#" onclick="abrirWhatsApp('<?php echo h($p['telefono']); ?>', '<?php echo h($p['nombre_cliente'] ?? 'Cliente'); ?>', '<?php echo h($p['id'] ?? ''); ?>')" class="btn" style="background: #25d366; padding: 12px; font-size: 0.9rem; text-decoration: none; text-align: center;">
-                            <span>💬</span> WhatsApp
-                        </a>
+                        <button onclick="abrirWhatsAppConPlantilla('<?php echo h($p['telefono']); ?>', '<?php echo h($p['nombre'] ?? 'Cliente'); ?>', '<?php echo h($p['id'] ?? ''); ?>')" class="btn" style="background: #25d366; padding: 12px; font-size: 0.9rem;">
+                            <span>💬</span> WhatsApp con Plantilla
+                        </button>
                         <?php endif; ?>
                     </div>
 
                     <div id="comunicacion-status" style="margin-top: 15px; text-align: center;"></div>
-                </div>
-
-
-
-                    <div style="margin-bottom: 15px;">
-                        <textarea id="nueva-nota" placeholder="Agregar nota interna (visible solo para el equipo)..."
-                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3; resize: vertical; font-family: inherit;"></textarea>
-                    </div>
-                    <div style="text-align: right;">
-                        <button onclick="agregarNota()" class="btn-print">
-                            <span>💾</span> Guardar Nota
-                        </button>
-                    </div>
-                    <div id="notas-status" style="margin-top: 10px; text-align: center;"></div>
-
-                    <!-- Historial de Notas -->
-                    <div class="historial-notas" style="margin-top: 20px;">
-                        <h4 style="color: #8b949e; font-size: 0.9rem; margin-bottom: 10px;">📋 Historial de Notas:</h4>
-                        <div id="lista-notas" style="max-height: 200px; overflow-y: auto;">
-                            <?php
-                            // Buscar notas existentes (usando el campo nota_interna si existe)
-                            $notas_existentes = $p['nota_interna'] ?? '';
-                            if (!empty($notas_existentes)):
-                            ?>
-                            <div class="nota-item" style="background: #21262d; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #1f6feb;">
-                                <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 4px;">
-                                    📅 Nota anterior
-                                </div>
-                                <div style="color: #e6edf3; line-height: 1.4;">
-                                    <?php echo nl2br(h($notas_existentes)); ?>
-                                </div>
-                            </div>
-                            <?php else: ?>
-                            <div style="color: #8b949e; font-style: italic; padding: 10px; text-align: center;">
-                                No hay notas registradas
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Edición de Datos del Cliente -->
@@ -2297,6 +3075,16 @@ if ($id && $id > 0) {
                                 <input type="tel" id="edit-telefono" value="<?php echo h($p['telefono'] ?? ''); ?>"
                                        style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
                             </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Ciudad:</label>
+                                <input type="text" id="edit-ciudad" value="<?php echo h($p['ciudad'] ?? ''); ?>"
+                                       style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Barrio:</label>
+                                <input type="text" id="edit-barrio" value="<?php echo h($p['barrio'] ?? ''); ?>"
+                                       style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
+                            </div>
                         </div>
 
                         <div style="margin-bottom: 15px;">
@@ -2308,19 +3096,6 @@ if ($id && $id > 0) {
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Dirección de Entrega:</label>
                             <textarea id="edit-direccion" style="width: 100%; height: 80px; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3; resize: vertical; font-family: inherit;"><?php echo h($p['direccion'] ?? ''); ?></textarea>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Persona que Recibe:</label>
-                                <input type="text" id="edit-persona-recibe" value="<?php echo h($p['persona_recibe'] ?? ''); ?>"
-                                       style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #e6edf3;">Horarios de Entrega:</label>
-                                <input type="text" id="edit-horarios" value="<?php echo h($p['horarios'] ?? ''); ?>"
-                                       style="width: 100%; padding: 10px; border: 1px solid #3d444d; border-radius: 6px; background: #21262d; color: #e6edf3;">
-                            </div>
                         </div>
 
                         <div style="display: flex; gap: 15px; justify-content: center;">
@@ -2406,12 +3181,13 @@ if ($id && $id > 0) {
                         <!-- SECCIÓN 1: MÉTRICAS PRINCIPALES -->
                         <div style="margin-bottom: 30px;">
                             <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
-                                � Métricas Principales
+                                📈 Métricas Principales
                             </h4>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
 
                                 <!-- LTV -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #1f6feb;">
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #1f6feb;"
+                                     data-tooltip="LTV (Lifetime Value): Valor total histórico de todas las compras del cliente. Métrica clave para identificar clientes valiosos.">
                                     <div style="color: #1f6feb; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">👤 LTV Cliente</div>
                                     <div style="color: #58a6ff; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
                                         $<?php echo number_format(floatval($cliente_stats['ltv']['valor_total_historico'] ?? 0), 0, ',', '.'); ?>
@@ -2422,8 +3198,12 @@ if ($id && $id > 0) {
                                 </div>
 
                                 <!-- Ticket Promedio -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #23863615 0%, #2ea04315 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #238636;">
-                                    <div style="color: #238636; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">💰 Ticket Promedio</div>
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #23863615 0%, #2ea04315 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #238636; cursor: help;"
+                                     title="Ticket Promedio: Valor promedio de compra del cliente. Se calcula dividiendo el total gastado por el número de pedidos realizados.">
+                                    <div style="color: #238636; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                        💰 Ticket Promedio
+                                        <span style="font-size: 0.6rem; opacity: 0.7; cursor: help;" title="Valor promedio por pedido del cliente">ℹ️</span>
+                                    </div>
                                     <div style="color: #3fb950; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
                                         $<?php echo number_format(floatval($cliente_stats['ltv']['ticket_promedio'] ?? 0), 0, ',', '.'); ?>
                                     </div>
@@ -2442,8 +3222,12 @@ if ($id && $id > 0) {
                                 </div>
 
                                 <!-- Score RFM -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #dc262615 0%, #f8514915 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #dc2626;">
-                                    <div style="color: #dc2626; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">📊 Clasificación RFM</div>
+                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #dc262615 0%, #f8514915 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #dc2626; cursor: help;"
+                                     title="RFM: Recency (recencia), Frequency (frecuencia), Monetary (monetario). Clasifica al cliente según cuándo, qué tan frecuente y cuánto compra.">
+                                    <div style="color: #dc2626; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                        📊 Clasificación RFM
+                                        <span style="font-size: 0.6rem; opacity: 0.7; cursor: help;" title="RFM analiza Recencia, Frecuencia y Valor Monetario">ℹ️</span>
+                                    </div>
                                     <div style="color: #f87171; font-weight: 700; font-size: 1rem; margin-bottom: 4px; line-height: 1.2;">
                                         <?php echo h($cliente_stats['rfm']['clasificacion'] ?? '🔄 Active'); ?>
                                     </div>
@@ -2785,6 +3569,437 @@ if ($id && $id > 0) {
                 </div>
 
             <?php endif; ?>
+
+            <!-- ===== SISTEMA DE PESTAÑAS DE CONTEXTO ===== -->
+            <div class="pestanas-contexto" style="margin-top: 30px; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; overflow: hidden;">
+
+                <!-- Navegador de Pestañas -->
+                <div class="pestanas-nav" style="display: flex; background: #21262d; border-bottom: 1px solid #30363d;">
+                    <button id="tab-estadisticas" class="tab-button active" onclick="cambiarPestana('estadisticas')"
+                            style="flex: 1; padding: 15px 20px; background: none; border: none; color: #58a6ff; font-weight: 600; cursor: pointer; border-bottom: 2px solid #1f6feb; transition: all 0.3s ease;">
+                        📊 Estadísticas Avanzadas
+                    </button>
+                    <button id="tab-historial" class="tab-button" onclick="cambiarPestana('historial')"
+                            style="flex: 1; padding: 15px 20px; background: none; border: none; color: #8b949e; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s ease;">
+                        🕒 Historial de Pedidos
+                    </button>
+                    <button id="tab-archivos" class="tab-button" onclick="cambiarPestana('archivos')"
+                            style="flex: 1; padding: 15px 20px; background: none; border: none; color: #8b949e; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s ease;">
+                        📁 Archivos y Documentos
+                    </button>
+                </div>
+
+                <!-- Contenido de las Pestañas -->
+                <div class="pestanas-content" style="padding: 25px;">
+
+                    <!-- PESTAÑA 1: ESTADÍSTICAS AVANZADAS -->
+                    <div id="content-estadisticas" class="tab-content active" style="display: block;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <h3 style="color: #f79000; font-size: 1.4rem; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px;">
+                                🎯 Estadísticas Avanzadas y Comparativas
+                            </h3>
+                            <p style="color: #8b949e; font-size: 0.95rem; margin: 0;">
+                                Análisis profundo del rendimiento del cliente comparado con el mercado general
+                            </p>
+                        </div>
+
+                        <!-- Grid de Comparativas -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 25px;">
+
+                            <!-- Comparativa de Conversión -->
+                            <div style="background: linear-gradient(135deg, #23863615 0%, #2ea04315 100%); border: 1px solid #238636; border-radius: 8px; padding: 20px;">
+                                <h4 style="color: #238636; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                    💹 Tasa de Conversión
+                                </h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                                    <div>
+                                        <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">Este Cliente</div>
+                                        <div style="color: #3fb950; font-weight: 700; font-size: 1.5rem;">
+                                            <?php
+                                            $total_pedidos_cliente = intval($cliente_stats['ltv']['total_pedidos'] ?? 0);
+                                            $pagados_cliente = intval($cliente_stats['ltv']['pedidos_pagados'] ?? 0);
+                                            $conversion_cliente = $total_pedidos_cliente > 0 ? ($pagados_cliente / $total_pedidos_cliente) * 100 : 0;
+                                            echo number_format($conversion_cliente, 1) . '%';
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">Promedio General</div>
+                                        <div style="color: #8b949e; font-weight: 600; font-size: 1.5rem;">
+                                            <?php
+                                            $conversion_general = floatval($cliente_stats['promedio_general']['tasa_conversion_general'] ?? 0);
+                                            echo number_format($conversion_general, 1) . '%';
+                                            ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 15px; text-align: center; font-size: 0.85rem;">
+                                    <?php
+                                    $diferencia_conversion = $conversion_cliente - $conversion_general;
+                                    if ($diferencia_conversion > 0) {
+                                        echo '<span style="color: #3fb950;">🔥 +' . number_format($diferencia_conversion, 1) . '% mejor que el promedio</span>';
+                                    } elseif ($diferencia_conversion < 0) {
+                                        echo '<span style="color: #f85149;">📉 ' . number_format($diferencia_conversion, 1) . '% por debajo del promedio</span>';
+                                    } else {
+                                        echo '<span style="color: #58a6ff;">📊 En línea con el promedio general</span>';
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+
+                            <!-- Comparativa de Ticket Promedio -->
+                            <div style="background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); border: 1px solid #1f6feb; border-radius: 8px; padding: 20px;">
+                                <h4 style="color: #1f6feb; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                    💰 Ticket Promedio
+                                </h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                                    <div>
+                                        <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">Este Cliente</div>
+                                        <div style="color: #58a6ff; font-weight: 700; font-size: 1.5rem;">
+                                            $<?php echo number_format(floatval($cliente_stats['ltv']['ticket_promedio'] ?? 0), 0, ',', '.'); ?>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">Promedio General</div>
+                                        <div style="color: #8b949e; font-weight: 600; font-size: 1.5rem;">
+                                            $<?php echo number_format(floatval($cliente_stats['promedio_general']['ticket_promedio_general'] ?? 0), 0, ',', '.'); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 15px; text-align: center; font-size: 0.85rem;">
+                                    <?php
+                                    $ticket_cliente = floatval($cliente_stats['ltv']['ticket_promedio'] ?? 0);
+                                    $ticket_general = floatval($cliente_stats['promedio_general']['ticket_promedio_general'] ?? 0);
+                                    if ($ticket_general > 0) {
+                                        $diferencia_ticket = (($ticket_cliente - $ticket_general) / $ticket_general) * 100;
+                                        if ($diferencia_ticket > 0) {
+                                            echo '<span style="color: #3fb950;">💎 +' . number_format($diferencia_ticket, 0) . '% más valioso</span>';
+                                        } elseif ($diferencia_ticket < 0) {
+                                            echo '<span style="color: #f85149;">📊 ' . number_format($diferencia_ticket, 0) . '% por debajo</span>';
+                                        } else {
+                                            echo '<span style="color: #58a6ff;">📊 Ticket estándar del mercado</span>';
+                                        }
+                                    } else {
+                                        echo '<span style="color: #8b949e;">📊 Datos comparativos no disponibles</span>';
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Análisis de Comportamiento de Compra -->
+                        <div style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                            <h4 style="color: #f79000; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                🧠 Análisis de Comportamiento de Compra
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">🛒 Frecuencia de Compra</div>
+                                    <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem;">
+                                        <?php
+                                        $total_pedidos = intval($cliente_stats['ltv']['total_pedidos'] ?? 0);
+                                        $primer_pedido = $cliente_stats['ltv']['primer_pedido'] ?? '';
+                                        if ($primer_pedido && $total_pedidos > 1) {
+                                            $fecha_primer = new DateTime($primer_pedido);
+                                            $ahora = new DateTime();
+                                            $dias_transcurridos = $ahora->diff($fecha_primer)->days;
+                                            if ($dias_transcurridos > 0) {
+                                                $frecuencia = $dias_transcurridos / $total_pedidos;
+                                                echo 'Cada ' . number_format($frecuencia, 0) . ' días';
+                                            } else {
+                                                echo 'Datos insuficientes';
+                                            }
+                                        } else {
+                                            echo 'Cliente nuevo';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">📈 Estacionalidad</div>
+                                    <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem;">
+                                        <?php
+                                        // Aquí se podría agregar lógica para determinar estacionalidad
+                                        echo 'Todo el año';
+                                        ?>
+                                    </div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">🎯 Fidelidad</div>
+                                    <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem;">
+                                        <?php
+                                        if ($total_pedidos >= 5) {
+                                            echo 'Alta';
+                                        } elseif ($total_pedidos >= 3) {
+                                            echo 'Media';
+                                        } else {
+                                            echo 'Desarrollándose';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">⚡ Velocidad</div>
+                                    <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem;">
+                                        <?php
+                                        $tiempo_promedio = floatval($cliente_stats['tiempo_procesamiento']['tiempo_promedio_pago'] ?? 0);
+                                        if ($tiempo_promedio <= 1) {
+                                            echo 'Inmediata';
+                                        } elseif ($tiempo_promedio <= 24) {
+                                            echo 'Rápida';
+                                        } else {
+                                            echo 'Reflexiva';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Predicciones y Oportunidades -->
+                        <div style="background: linear-gradient(135deg, #7c3aed15 0%, #8b5cf615 100%); border: 1px solid #7c3aed; border-radius: 8px; padding: 20px;">
+                            <h4 style="color: #7c3aed; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                🔮 Predicciones y Oportunidades
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; font-size: 0.9rem;">
+                                <div style="color: #e6edf3;">
+                                    <strong style="color: #a78bfa;">💡 Próxima Compra Estimada:</strong><br>
+                                    <?php
+                                    $frecuencia_dias = 0;
+                                    if ($primer_pedido && $total_pedidos > 1) {
+                                        $fecha_primer = new DateTime($primer_pedido);
+                                        $ahora = new DateTime();
+                                        $dias_transcurridos = $ahora->diff($fecha_primer)->days;
+                                        if ($dias_transcurridos > 0) {
+                                            $frecuencia_dias = $dias_transcurridos / $total_pedidos;
+                                        }
+                                    }
+
+                                    if ($frecuencia_dias > 0) {
+                                        $ultima_compra = $cliente_stats['actividad']['fecha_ultima_compra'] ?? '';
+                                        if ($ultima_compra) {
+                                            $fecha_ultima = new DateTime($ultima_compra);
+                                            $fecha_estimada = clone $fecha_ultima;
+                                            $fecha_estimada->add(new DateInterval('P' . intval($frecuencia_dias) . 'D'));
+                                            echo $fecha_estimada->format('d/m/Y') . ' (aprox.)';
+                                        } else {
+                                            echo 'Datos insuficientes';
+                                        }
+                                    } else {
+                                        echo 'En evaluación (cliente nuevo)';
+                                    }
+                                    ?>
+                                </div>
+                                <div style="color: #e6edf3;">
+                                    <strong style="color: #a78bfa;">🎯 Potencial de Crecimiento:</strong><br>
+                                    <?php
+                                    $ticket_promedio = floatval($cliente_stats['ltv']['ticket_promedio'] ?? 0);
+                                    $ticket_general = floatval($cliente_stats['promedio_general']['ticket_promedio_general'] ?? 0);
+
+                                    if ($ticket_general > 0 && $ticket_promedio < $ticket_general) {
+                                        $potencial = $ticket_general - $ticket_promedio;
+                                        echo 'Alto (+$' . number_format($potencial, 0, ',', '.') . ' por pedido)';
+                                    } elseif ($total_pedidos < 3) {
+                                        echo 'En desarrollo (cliente nuevo)';
+                                    } else {
+                                        echo 'Optimizado (cliente maduro)';
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 2: HISTORIAL DE PEDIDOS -->
+                    <div id="content-historial" class="tab-content" style="display: none;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <h3 style="color: #58a6ff; font-size: 1.4rem; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px;">
+                                🕒 Historial Completo de Pedidos
+                            </h3>
+                            <p style="color: #8b949e; font-size: 0.95rem; margin: 0;">
+                                Cronología detallada de todas las transacciones del cliente
+                            </p>
+                        </div>
+
+                        <!-- Filtros del Historial -->
+                        <div style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: center;">
+                                <div>
+                                    <label style="display: block; color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">🗓️ Período:</label>
+                                    <select id="filtro-periodo" style="width: 100%; padding: 8px; background: #0d1117; border: 1px solid #3d444d; border-radius: 4px; color: #e6edf3;">
+                                        <option value="todos">Todos los pedidos</option>
+                                        <option value="30">Últimos 30 días</option>
+                                        <option value="90">Últimos 3 meses</option>
+                                        <option value="365">Último año</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">📋 Estado:</label>
+                                    <select id="filtro-estado" style="width: 100%; padding: 8px; background: #0d1117; border: 1px solid #3d444d; border-radius: 4px; color: #e6edf3;">
+                                        <option value="todos">Todos los estados</option>
+                                        <option value="pagado">Pagados</option>
+                                        <option value="pendiente">Pendientes</option>
+                                        <option value="enviado">Enviados</option>
+                                        <option value="entregado">Entregados</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">💰 Rango:</label>
+                                    <select id="filtro-monto" style="width: 100%; padding: 8px; background: #0d1117; border: 1px solid #3d444d; border-radius: 4px; color: #e6edf3;">
+                                        <option value="todos">Todos los montos</option>
+                                        <option value="bajo">Menos de $50,000</option>
+                                        <option value="medio">$50,000 - $200,000</option>
+                                        <option value="alto">Más de $200,000</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <button onclick="aplicarFiltrosHistorial()" style="padding: 8px 15px; background: #1f6feb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                                        🔍 Filtrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista del Historial -->
+                        <div id="historial-pedidos" style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px;">
+                            <div style="text-align: center; color: #8b949e; padding: 40px;">
+                                <div style="font-size: 3rem; margin-bottom: 15px;">🔄</div>
+                                <div style="font-size: 1.1rem; margin-bottom: 10px;">Cargando historial de pedidos...</div>
+                                <div style="font-size: 0.9rem;">Consultando base de datos</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 3: ARCHIVOS Y DOCUMENTOS -->
+                    <div id="content-archivos" class="tab-content" style="display: none;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <h3 style="color: #f79000; font-size: 1.4rem; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px;">
+                                📁 Archivos y Documentos
+                            </h3>
+                            <p style="color: #8b949e; font-size: 0.95rem; margin: 0;">
+                                Gestión centralizada de comprobantes, guías y documentos asociados
+                            </p>
+                        </div>
+
+                        <!-- Sección de Carga de Archivos -->
+                        <div style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                            <h4 style="color: #58a6ff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                📤 Subir Nuevo Archivo
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: end;">
+                                <div>
+                                    <label style="display: block; color: #8b949e; font-size: 0.9rem; margin-bottom: 8px;">Seleccionar archivo:</label>
+                                    <input type="file" id="nuevo-archivo" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx"
+                                           style="width: 100%; padding: 10px; background: #0d1117; border: 1px solid #3d444d; border-radius: 4px; color: #e6edf3;">
+                                </div>
+                                <div>
+                                    <select id="tipo-archivo" style="padding: 10px; background: #0d1117; border: 1px solid #3d444d; border-radius: 4px; color: #e6edf3; margin-right: 10px;">
+                                        <option value="comprobante">📄 Comprobante</option>
+                                        <option value="guia">🚚 Guía de Envío</option>
+                                        <option value="factura">🧾 Factura</option>
+                                        <option value="imagen">🖼️ Imagen Producto</option>
+                                        <option value="otro">📎 Otro</option>
+                                    </select>
+                                    <button onclick="subirArchivo()" style="padding: 10px 15px; background: #238636; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                        📤 Subir
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="upload-status" style="margin-top: 15px; text-align: center;"></div>
+                        </div>
+
+                        <!-- Lista de Archivos Existentes -->
+                        <div style="background: #21262d; border: 1px solid #3d444d; border-radius: 8px; padding: 20px;">
+                            <h4 style="color: #58a6ff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                📋 Archivos Asociados al Pedido
+                            </h4>
+
+                            <div id="lista-archivos">
+                                <!-- Archivo de Comprobante (si existe) -->
+                                <?php if (!empty($p['comprobante_pago'])): ?>
+                                <div class="archivo-item" style="background: #0d1117; border: 1px solid #3d444d; border-radius: 6px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: between; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                        <div style="font-size: 1.5rem;">📄</div>
+                                        <div>
+                                            <div style="color: #e6edf3; font-weight: 600; margin-bottom: 4px;">Comprobante de Pago</div>
+                                            <div style="color: #8b949e; font-size: 0.8rem;">
+                                                Archivo: <?php echo h(basename($p['comprobante_pago'])); ?> •
+                                                Subido: <?php echo h($p['fecha'] ?? 'Fecha no disponible'); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <a href="<?php echo h($p['comprobante_pago']); ?>" target="_blank"
+                                           style="padding: 8px 12px; background: #1f6feb; color: white; text-decoration: none; border-radius: 4px; font-size: 0.8rem;">
+                                            👁️ Ver
+                                        </a>
+                                        <a href="<?php echo h($p['comprobante_pago']); ?>" download
+                                           style="padding: 8px 12px; background: #238636; color: white; text-decoration: none; border-radius: 4px; font-size: 0.8rem;">
+                                            💾 Descargar
+                                        </a>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Archivo de Guía (si existe) -->
+                                <?php if (!empty($p['archivo_guia'])): ?>
+                                <div class="archivo-item" style="background: #0d1117; border: 1px solid #3d444d; border-radius: 6px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: between; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                        <div style="font-size: 1.5rem;">🚚</div>
+                                        <div>
+                                            <div style="color: #e6edf3; font-weight: 600; margin-bottom: 4px;">Guía de Envío</div>
+                                            <div style="color: #8b949e; font-size: 0.8rem;">
+                                                Archivo: <?php echo h(basename($p['archivo_guia'])); ?> •
+                                                N° Guía: <?php echo h($p['numero_guia'] ?? 'No disponible'); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <a href="ver_guia.php?id=<?php echo h($p['id']); ?>" target="_blank"
+                                           style="padding: 8px 12px; background: #1f6feb; color: white; text-decoration: none; border-radius: 4px; font-size: 0.8rem;">
+                                            👁️ Ver
+                                        </a>
+                                        <a href="<?php echo h($p['archivo_guia']); ?>" download
+                                           style="padding: 8px 12px; background: #238636; color: white; text-decoration: none; border-radius: 4px; font-size: 0.8rem;">
+                                            💾 Descargar
+                                        </a>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Mensaje si no hay archivos -->
+                                <?php if (empty($p['comprobante_pago']) && empty($p['archivo_guia'])): ?>
+                                <div style="text-align: center; color: #8b949e; padding: 40px;">
+                                    <div style="font-size: 2.5rem; margin-bottom: 15px;">📂</div>
+                                    <div style="font-size: 1.1rem; margin-bottom: 8px;">No hay archivos asociados aún</div>
+                                    <div style="font-size: 0.9rem;">Los archivos subidos aparecerán aquí automáticamente</div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Estadísticas de Archivos -->
+                            <?php if (!empty($p['comprobante_pago']) || !empty($p['archivo_guia'])): ?>
+                            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #3d444d;">
+                                <h5 style="color: #8b949e; margin-bottom: 10px; font-size: 0.9rem;">📊 Estadísticas de Archivos:</h5>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 0.8rem;">
+                                    <div style="color: #e6edf3;">
+                                        Total de archivos: <strong><?php echo (!empty($p['comprobante_pago']) ? 1 : 0) + (!empty($p['archivo_guia']) ? 1 : 0); ?></strong>
+                                    </div>
+                                    <div style="color: #e6edf3;">
+                                        Completitud: <strong><?php echo (!empty($p['comprobante_pago']) && !empty($p['archivo_guia'])) ? '100%' : '50%'; ?></strong>
+                                    </div>
+                                    <div style="color: #e6edf3;">
+                                        Estado: <strong style="color: <?php echo (!empty($p['comprobante_pago']) && !empty($p['archivo_guia'])) ? '#3fb950' : '#f0883e'; ?>;">
+                                            <?php echo (!empty($p['comprobante_pago']) && !empty($p['archivo_guia'])) ? 'Completo' : 'Parcial'; ?>
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2918,9 +4133,9 @@ if ($id && $id > 0) {
         document.getElementById('edit-nombre').value = <?php echo json_encode($p['nombre'] ?? ''); ?>;
         document.getElementById('edit-correo').value = <?php echo json_encode($p['correo'] ?? ''); ?>;
         document.getElementById('edit-telefono').value = <?php echo json_encode($p['telefono'] ?? ''); ?>;
+        document.getElementById('edit-ciudad').value = <?php echo json_encode($p['ciudad'] ?? ''); ?>;
+        document.getElementById('edit-barrio').value = <?php echo json_encode($p['barrio'] ?? ''); ?>;
         document.getElementById('edit-direccion').value = <?php echo json_encode($p['direccion'] ?? ''); ?>;
-        document.getElementById('edit-persona-recibe').value = <?php echo json_encode($p['persona_recibe'] ?? ''); ?>;
-        document.getElementById('edit-horarios').value = <?php echo json_encode($p['horarios'] ?? ''); ?>;
 
         document.getElementById('edicion-status').innerHTML = '';
     }
@@ -2934,9 +4149,9 @@ if ($id && $id > 0) {
             nombre: document.getElementById('edit-nombre').value.trim(),
             correo: document.getElementById('edit-correo').value.trim(),
             telefono: document.getElementById('edit-telefono').value.trim(),
-            direccion: document.getElementById('edit-direccion').value.trim(),
-            persona_recibe: document.getElementById('edit-persona-recibe').value.trim(),
-            horarios: document.getElementById('edit-horarios').value.trim()
+            ciudad: document.getElementById('edit-ciudad').value.trim(),
+            barrio: document.getElementById('edit-barrio').value.trim(),
+            direccion: document.getElementById('edit-direccion').value.trim()
         };
 
         if (!datos.nombre || !datos.correo) {
@@ -3386,6 +4601,393 @@ if ($id && $id > 0) {
             submitBtn.innerHTML = '<span>📤</span> Subir Comprobante';
         });
     });
+
+    // ===== FUNCIONES PARA SISTEMA DE PESTAÑAS =====
+
+    function cambiarPestana(pestana) {
+        // Ocultar todas las pestañas
+        const pestanasContent = document.querySelectorAll('.tab-content');
+        pestanasContent.forEach(content => {
+            content.style.display = 'none';
+        });
+
+        // Desactivar todos los botones
+        const botonesTab = document.querySelectorAll('.tab-button');
+        botonesTab.forEach(boton => {
+            boton.style.color = '#8b949e';
+            boton.style.borderBottomColor = 'transparent';
+        });
+
+        // Mostrar la pestaña seleccionada
+        const contentSeleccionado = document.getElementById('content-' + pestana);
+        if (contentSeleccionado) {
+            contentSeleccionado.style.display = 'block';
+        }
+
+        // Activar el botón seleccionado
+        const botonSeleccionado = document.getElementById('tab-' + pestana);
+        if (botonSeleccionado) {
+            botonSeleccionado.style.color = '#58a6ff';
+            botonSeleccionado.style.borderBottomColor = '#1f6feb';
+        }
+
+        // Cargar contenido específico según la pestaña
+        if (pestana === 'historial') {
+            cargarHistorialPedidos();
+        } else if (pestana === 'archivos') {
+            actualizarListaArchivos();
+        }
+    }
+
+    function cargarHistorialPedidos() {
+        const historialDiv = document.getElementById('historial-pedidos');
+        const correoCliente = <?php echo json_encode($p['correo'] ?? $p['email'] ?? $p['cliente_email'] ?? ''); ?>;
+        const telefonoCliente = <?php echo json_encode($p['telefono'] ?? $p['telefono_cliente'] ?? $p['cliente_telefono'] ?? ''); ?>;
+
+        if (!correoCliente && !telefonoCliente) {
+            historialDiv.innerHTML = `
+                <div style="text-align: center; color: #8b949e; padding: 40px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 15px;">⚠️</div>
+                    <div style="font-size: 1.1rem; margin-bottom: 10px;">No se puede cargar el historial</div>
+                    <div style="font-size: 0.9rem;">Faltan datos de contacto del cliente</div>
+                </div>
+            `;
+            return;
+        }
+
+        // Simular carga de historial (aquí se conectaría a una API real)
+        setTimeout(() => {
+            // Datos de ejemplo - en producción vendría de la base de datos
+            const historialEjemplo = [
+                {
+                    id: 'PED-001',
+                    fecha: '2024-01-15',
+                    estado: 'entregado',
+                    total: 85000,
+                    productos: 3
+                },
+                {
+                    id: 'PED-002',
+                    fecha: '2024-01-08',
+                    estado: 'pagado',
+                    total: 120000,
+                    productos: 2
+                },
+                {
+                    id: 'PED-003',
+                    fecha: '2023-12-22',
+                    estado: 'entregado',
+                    total: 65000,
+                    productos: 1
+                }
+            ];
+
+            let historialHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #58a6ff; margin-bottom: 15px;">📋 Pedidos Encontrados (${historialEjemplo.length})</h4>
+                </div>
+            `;
+
+            historialEjemplo.forEach((pedido, index) => {
+                const estadoColor = {
+                    'entregado': '#238636',
+                    'pagado': '#1f6feb',
+                    'enviado': '#fb8500',
+                    'pendiente': '#8b949e'
+                }[pedido.estado] || '#8b949e';
+
+                const estadoEmoji = {
+                    'entregado': '✅',
+                    'pagado': '💳',
+                    'enviado': '🚚',
+                    'pendiente': '⏳'
+                }[pedido.estado] || '📋';
+
+                historialHTML += `
+                    <div style="background: #0d1117; border: 1px solid #3d444d; border-radius: 6px; padding: 15px; margin-bottom: 12px;">
+                        <div style="display: grid; grid-template-columns: auto 1fr auto auto; gap: 15px; align-items: center;">
+                            <div style="font-size: 1.2rem;">${estadoEmoji}</div>
+                            <div>
+                                <div style="color: #e6edf3; font-weight: 600; margin-bottom: 4px;">
+                                    Pedido ${pedido.id}
+                                </div>
+                                <div style="color: #8b949e; font-size: 0.8rem;">
+                                    ${new Date(pedido.fecha).toLocaleDateString('es-ES')} • ${pedido.productos} producto${pedido.productos > 1 ? 's' : ''}
+                                </div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: ${estadoColor}; font-weight: 600; font-size: 0.9rem; padding: 4px 8px; background: ${estadoColor}15; border-radius: 12px; text-transform: capitalize;">
+                                    ${pedido.estado}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #3fb950; font-weight: 700; font-size: 1.1rem;">
+                                    $${pedido.total.toLocaleString()}
+                                </div>
+                                <div style="margin-top: 5px;">
+                                    <a href="ver_detalle_pedido.php?id=${pedido.id}"
+                                       style="padding: 4px 8px; background: #1f6feb; color: white; text-decoration: none; border-radius: 4px; font-size: 0.7rem;">
+                                        👁️ Ver
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Resumen estadístico
+            const totalGastado = historialEjemplo.reduce((sum, p) => sum + p.total, 0);
+            const promedioTicket = totalGastado / historialEjemplo.length;
+
+            historialHTML += `
+                <div style="background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); border: 1px solid #1f6feb; border-radius: 8px; padding: 20px; margin-top: 20px;">
+                    <h4 style="color: #1f6feb; margin-bottom: 15px;">📊 Resumen del Historial</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        <div style="text-align: center;">
+                            <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">Total Pedidos</div>
+                            <div style="color: #58a6ff; font-weight: 700; font-size: 1.3rem;">${historialEjemplo.length}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">Total Gastado</div>
+                            <div style="color: #3fb950; font-weight: 700; font-size: 1.3rem;">$${totalGastado.toLocaleString()}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">Ticket Promedio</div>
+                            <div style="color: #f0883e; font-weight: 700; font-size: 1.3rem;">$${Math.round(promedioTicket).toLocaleString()}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">Entregados</div>
+                            <div style="color: #238636; font-weight: 700; font-size: 1.3rem;">${historialEjemplo.filter(p => p.estado === 'entregado').length}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            historialDiv.innerHTML = historialHTML;
+        }, 1000);
+    }
+
+    function aplicarFiltrosHistorial() {
+        // Aquí se implementaría la lógica de filtrado real
+        const periodo = document.getElementById('filtro-periodo').value;
+        const estado = document.getElementById('filtro-estado').value;
+        const monto = document.getElementById('filtro-monto').value;
+
+        const historialDiv = document.getElementById('historial-pedidos');
+        historialDiv.innerHTML = `
+            <div style="text-align: center; color: #58a6ff; padding: 40px;">
+                <div style="font-size: 2.5rem; margin-bottom: 15px;">🔍</div>
+                <div style="font-size: 1.1rem; margin-bottom: 10px;">Aplicando filtros...</div>
+                <div style="font-size: 0.9rem;">Período: ${periodo} | Estado: ${estado} | Monto: ${monto}</div>
+            </div>
+        `;
+
+        // Simular aplicación de filtros
+        setTimeout(() => {
+            cargarHistorialPedidos();
+        }, 1500);
+    }
+
+    function actualizarListaArchivos() {
+        // Aquí se actualizaría la lista de archivos si es necesario
+        console.log('Actualizando lista de archivos...');
+    }
+
+    function subirArchivo() {
+        const archivo = document.getElementById('nuevo-archivo').files[0];
+        const tipo = document.getElementById('tipo-archivo').value;
+        const statusDiv = document.getElementById('upload-status');
+
+        if (!archivo) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Por favor selecciona un archivo</span>';
+            return;
+        }
+
+        // Validar tipo de archivo
+        const tiposPermitidos = ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.doc', '.docx'];
+        const extension = '.' + archivo.name.split('.').pop().toLowerCase();
+
+        if (!tiposPermitidos.includes(extension)) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ Tipo de archivo no permitido</span>';
+            return;
+        }
+
+        // Validar tamaño (máximo 10MB)
+        if (archivo.size > 10 * 1024 * 1024) {
+            statusDiv.innerHTML = '<span style="color: #da3633;">❌ El archivo es demasiado grande (máximo 10MB)</span>';
+            return;
+        }
+
+        statusDiv.innerHTML = '<span style="color: #1f6feb;">📤 Subiendo archivo...</span>';
+
+        // Simular subida de archivo
+        setTimeout(() => {
+            statusDiv.innerHTML = '<span style="color: #238636;">✅ Archivo subido correctamente</span>';
+
+            // Limpiar formulario
+            document.getElementById('nuevo-archivo').value = '';
+            document.getElementById('tipo-archivo').value = 'comprobante';
+
+            // Actualizar lista de archivos
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+                // Aquí se actualizaría la lista de archivos
+            }, 2000);
+        }, 2000);
+    }
+
+    // Funciones para plantillas de mensajes y comunicación
+    function cargarPlantillaMensaje() {
+        const plantilla = document.getElementById('plantilla-mensaje').value;
+        const nombreCliente = <?php echo json_encode($p['nombre'] ?? 'Cliente'); ?>;
+        const pedidoId = <?php echo json_encode($p['id'] ?? ''); ?>;
+
+        const plantillas = {
+            'confirmacion-pago': `Hola ${nombreCliente}, hemos confirmado el pago de tu pedido #${pedidoId}. Procederemos con el envío en las próximas horas. ¡Gracias por tu compra!`,
+            'pedido-enviado': `¡Tu pedido #${pedidoId} ya está en camino! Te enviaremos el número de guía cuando esté disponible. ¡Esperamos que lo disfrutes!`,
+            'solicitar-info': `Hola ${nombreCliente}, necesitamos confirmar algunos detalles de tu pedido #${pedidoId}. ¿Podrías contactarnos cuando tengas un momento?`,
+            'confirmar-direccion': `Hola ${nombreCliente}, antes de enviar tu pedido #${pedidoId}, ¿podrías confirmar que la dirección de entrega es correcta?`,
+            'pedido-listo': `¡Excelente noticia! Tu pedido #${pedidoId} está listo para entrega. ¿Cuál sería el mejor momento para coordinar la entrega?`
+        };
+
+        if (plantillas[plantilla]) {
+            // Aquí podrías copiar al portapapeles o abrir WhatsApp/Email
+            navigator.clipboard.writeText(plantillas[plantilla]).then(() => {
+                const statusDiv = document.getElementById('comunicacion-status');
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Mensaje copiado al portapapeles</span>';
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 3000);
+            });
+        }
+    }
+
+    function abrirWhatsAppConPlantilla(telefono, nombre, pedidoId) {
+        const mensaje = `Hola ${nombre}, te contactamos sobre tu pedido #${pedidoId}. ¿Hay algo en lo que podamos ayudarte?`;
+        const numeroLimpio = telefono.replace(/[^\d]/g, '');
+        const url = `https://wa.me/57${numeroLimpio}?text=${encodeURIComponent(mensaje)}`;
+        window.open(url, '_blank');
+    }
+
+    function confirmarEntregaConGuia() {
+        const pedidoId = <?php echo json_encode($p['id'] ?? ''); ?>;
+        const numeroGuia = prompt('¿Cuál es el número de guía de envío?');
+
+        if (numeroGuia) {
+            const statusDiv = document.getElementById('comunicacion-status');
+            statusDiv.innerHTML = '<span style="color: #1f6feb;">📦 Confirmando entrega...</span>';
+
+            // Aquí se conectaría con el backend para actualizar el estado
+            setTimeout(() => {
+                statusDiv.innerHTML = '<span style="color: #238636;">✅ Entrega confirmada con guía #' + numeroGuia + '</span>';
+            }, 1500);
+        }
+    }
+
+    // Inicializar la primera pestaña al cargar
+    document.addEventListener('DOMContentLoaded', function() {
+        // La pestaña de estadísticas ya está activa por defecto
+        console.log('Sistema de pestañas inicializado');
+
+        // Aplicar tooltips a elementos con data-tooltip
+        const elementosConTooltip = document.querySelectorAll('[data-tooltip]');
+        elementosConTooltip.forEach(elemento => {
+            elemento.style.position = 'relative';
+            elemento.style.cursor = 'help';
+        });
+
+        // Manejar cambios en filtros del historial
+        const filtros = ['filtro-periodo', 'filtro-estado', 'filtro-monto'];
+        filtros.forEach(filtroId => {
+            const elemento = document.getElementById(filtroId);
+            if (elemento) {
+                elemento.addEventListener('change', function() {
+                    console.log(`Filtro ${filtroId} cambiado a: ${this.value}`);
+                });
+            }
+        });
+
+        // Validar estructura de pestañas
+        const pestanasNav = document.querySelector('.pestanas-nav');
+        const pestanasContent = document.querySelector('.pestanas-content');
+
+        if (pestanasNav && pestanasContent) {
+            console.log('✅ Sistema de pestañas cargado correctamente');
+        } else {
+            console.warn('⚠️ Problema detectado en la estructura de pestañas');
+        }
+
+        // Añadir animaciones de entrada
+        const elementsToAnimate = document.querySelectorAll('.metric-card-unified, .archivo-item');
+        elementsToAnimate.forEach((element, index) => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                element.style.transition = 'all 0.5s ease';
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+
+        // Optimizaciones específicas para móviles
+        if (window.innerWidth <= 768) {
+            optimizarParaMovil();
+        }
+
+        // Escuchar cambios de orientación
+        window.addEventListener('orientationchange', function() {
+            setTimeout(optimizarParaMovil, 100);
+        });
+
+        // Escuchar cambios de tamaño de ventana
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) {
+                optimizarParaMovil();
+            }
+        });
+    });
+
+    // Función para optimizar la interfaz para móviles
+    function optimizarParaMovil() {
+        // Mejorar scroll de pestañas
+        const pestanasNav = document.querySelector('.pestanas-nav');
+        if (pestanasNav) {
+            pestanasNav.style.overflowX = 'auto';
+            pestanasNav.style.webkitOverflowScrolling = 'touch';
+            pestanasNav.style.scrollBehavior = 'smooth';
+        }
+
+        // Ajustar altura de textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            if (window.innerWidth <= 480) {
+                textarea.style.minHeight = '60px';
+            }
+        });
+
+        // Optimizar tablas si existen
+        const tablas = document.querySelectorAll('.productos-table');
+        tablas.forEach(tabla => {
+            const container = tabla.parentElement;
+            if (container && !container.classList.contains('table-mobile-optimized')) {
+                container.style.overflowX = 'auto';
+                container.style.webkitOverflowScrolling = 'touch';
+                container.classList.add('table-mobile-optimized');
+            }
+        });
+
+        // Mejorar botones para touch
+        const botones = document.querySelectorAll('button, .btn, a[class*="btn"]');
+        botones.forEach(boton => {
+            if (window.innerWidth <= 480) {
+                boton.style.minHeight = '44px'; // Tamaño mínimo recomendado para touch
+                boton.style.padding = '10px 15px';
+            }
+        });
+
+        console.log('✅ Optimizaciones para móvil aplicadas');
+    }
     </script>
 </body>
 </html>

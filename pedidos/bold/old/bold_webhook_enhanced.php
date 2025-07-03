@@ -609,7 +609,7 @@ if (basename($_SERVER['SCRIPT_NAME']) === basename(__FILE__)) {
         echo '</ul>';
         echo '<hr>';
         echo '<p><a href="bold_webhook.php">🔙 Webhook Original</a> | ';
-        echo '<a href="index.php">🏠 Inicio</a></p>';
+        echo '<a href="pedido.php">🏠 Inicio</a></p>';
         echo '</div></body></html>';
         exit;
     }

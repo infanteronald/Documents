@@ -2,7 +2,7 @@
 /**
  * API Router - Sequoia Speed
  * Sistema de enrutamiento para APIs modernas
- * 
+ *
  * Este archivo maneja el enrutamiento automático de las APIs
  * y proporciona información sobre los endpoints disponibles
  */
@@ -37,7 +37,7 @@ $apiDocumentation = [
     'version' => '2.0.0',
     'description' => 'API moderna para el sistema de gestión de pedidos Sequoia Speed',
     'base_url' => $baseUrl,
-    'documentation_url' => $baseUrl . '/index.php',
+    'documentation_url' => $baseUrl . '/pedido.php',
     'compatibility' => [
         'legacy_support' => true,
         'modern_features' => true,
@@ -82,7 +82,7 @@ $apiDocumentation = [
                     'guia' => 'string - Número de guía de envío'
                 ],
                 'valid_states' => [
-                    'pendiente', 'confirmado', 'preparando', 
+                    'pendiente', 'confirmado', 'preparando',
                     'enviado', 'entregado', 'cancelado', 'devuelto'
                 ]
             ]

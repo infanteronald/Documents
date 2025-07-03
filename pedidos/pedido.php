@@ -400,10 +400,10 @@ if ($pedido_id) {
 
       <input type="text" name="nombre" placeholder="Nombre completo" required>
       <input type="text" name="direccion" placeholder="Dirección de envío" required>
+      <input type="text" name="ciudad" placeholder="Ciudad" required>
+      <input type="text" name="barrio" placeholder="Barrio" required>
       <input type="tel" name="telefono" placeholder="Teléfono" pattern="^[0-9]{7,15}$" required>
       <input type="email" name="correo" placeholder="Correo electrónico" required>
-      <input type="text" name="persona_recibe" placeholder="Persona que recibe" required>
-      <input type="text" name="horarios" placeholder="Horario de recepción (ej: Lun a Vie 9am-6pm)" required>
       <select name="metodo_pago" id="metodo_pago" required>
         <option value="">Método de pago</option>
         <option value="Nequi">Nequi</option>
@@ -415,8 +415,10 @@ if ($pedido_id) {
         <option value="PSE Bold">PSE Bold</option>
         <option value="Botón Bancolombia">Botón Bancolombia</option>
         <option value="Tarjeta de Crédito o Débito">Tarjeta de Crédito o Débito</option>
+        <option value="Datafono">Datafono</option>
         <option value="QR">QR</option>
-        <option value="Efectivo">Efectivo</option>
+        <option value="Efectivo_Bogota">Efectivo en Tienda Bogotá</option>
+        <option value="Efectivo_Medellin">Efectivo en Tienda Medellín</option>
         <option value="Recaudo al Entregar">Recaudo al Entregar</option>
       </select>
       <div id="info_pago" class="info-pago"></div>
@@ -459,8 +461,10 @@ if ($pedido_id) {
         <p style="color: var(--vscode-text-muted); margin: 8px 0;">Pague con cualquier tarjeta de crédito o débito de forma segura</p>
         <div id="bold-payment-container" style="margin-top: 12px;"></div>
       </div>`;
-      } else if (value === "QR") info = "<b>Código QR:</b><br><img src='qr.jpg' alt='Código QR de pago' style='max-width: 200px; height: auto; margin-top: 8px; border-radius: 8px;'>";
-      else if (value === "Efectivo") info = "<b>Efectivo:</b> En tienda o recaudo al recibir";
+      } else if (value === "Datafono") info = "<b>Datafono:</b> Pago con tarjeta en nuestro punto de venta físico - Se procesa al momento de la entrega o recogida";
+      else if (value === "QR") info = "<b>Código QR:</b><br><img src='qr.jpg' alt='Código QR de pago' style='max-width: 200px; height: auto; margin-top: 8px; border-radius: 8px;'>";
+      else if (value === "Efectivo_Bogota") info = "<b>Efectivo en Tienda Bogotá:</b> Pago presencial en nuestra tienda de Bogotá";
+      else if (value === "Efectivo_Medellin") info = "<b>Efectivo en Tienda Medellín:</b> Pago presencial en nuestra tienda de Medellín";
       else if (value === "Recaudo al Entregar") info = "<b>Recaudo al Entregar:</b> No requiere pago anticipado";
 
       console.log('🔄 Actualizando info_pago con:', info.substring(0, 50) + '...');

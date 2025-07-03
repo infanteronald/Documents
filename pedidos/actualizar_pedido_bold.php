@@ -31,8 +31,6 @@ $nombre = $data['nombre'] ?? '';
 $correo = $data['correo'] ?? '';
 $telefono = $data['telefono'] ?? '';
 $direccion = $data['direccion'] ?? '';
-$persona_recibe = $data['persona_recibe'] ?? '';
-$horarios = $data['horarios'] ?? '';
 $metodo_pago = $data['metodo_pago'] ?? '';
 
 error_log("Bold Order ID: " . $bold_order_id);
@@ -52,16 +50,16 @@ try {
     // PASO 1: Si viene pedido_id desde URL, usar ese directamente
     if ($pedido_id && is_numeric($pedido_id)) {
         error_log("Usando pedido_id desde URL: " . $pedido_id);
-        
+
         // Verificar que el pedido existe
         $stmt = $conn->prepare("SELECT id FROM pedidos_detal WHERE id = ? LIMIT 1");
         if (!$stmt) {
             throw new Exception('Error preparando verificación: ' . $conn->error);
         }
-        
+
         $stmt->bind_param("i", $pedido_id);
         $stmt->execute();
-        
+
         $stmt->bind_result($pedidoIdFinal);
         if ($stmt->fetch()) {
             $pedidoExistente = true;
@@ -73,7 +71,7 @@ try {
     // PASO 2: Si no hay pedido_id o no se encontró, buscar por datos del cliente
     if (!$pedidoExistente) {
         error_log("Buscando pedido por datos del cliente...");
-        
+
         $stmt = $conn->prepare("
             SELECT id
             FROM pedidos_detal
@@ -110,8 +108,6 @@ try {
                 correo = ?,
                 telefono = ?,
                 direccion = ?,
-                persona_recibe = ?,
-                horarios = ?,
                 monto = CASE WHEN monto = 0 THEN ? ELSE monto END
             WHERE id = ?
         ");
@@ -120,9 +116,9 @@ try {
             throw new Exception('Error preparando actualización: ' . $conn->error);
         }
 
-        $stmt->bind_param("ssssssssii",
+        $stmt->bind_param("sssssssi",
             $bold_order_id, $metodo_pago, $nombre, $correo, $telefono,
-            $direccion, $persona_recibe, $horarios, $monto, $pedidoIdFinal
+            $direccion, $monto, $pedidoIdFinal
         );
 
         if (!$stmt->execute()) {
@@ -163,24 +159,22 @@ try {
                 correo,
                 telefono,
                 direccion,
-                persona_recibe,
-                horarios,
                 monto,
                 metodo_pago,
                 productos,
                 estado_pago,
                 fecha,
                 estado
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), 'pendiente')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), 'pendiente')
         ");
 
         if (!$stmt) {
             throw new Exception('Error preparando inserción: ' . $conn->error);
         }
 
-        $stmt->bind_param("sssssssds",
+        $stmt->bind_param("sssssds",
             $bold_order_id, $nombre, $correo, $telefono, $direccion,
-            $persona_recibe, $horarios, $monto, $metodo_pago, $productos_texto
+            $monto, $metodo_pago, $productos_texto
         );
 
         if (!$stmt->execute()) {

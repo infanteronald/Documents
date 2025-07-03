@@ -82,9 +82,12 @@ try {
     $stmt = $conn->prepare("SELECT id FROM pedidos_detal WHERE bold_order_id = ? LIMIT 1");
     $stmt->bind_param("s", $order_id);
     $stmt->execute();
-    $result = $stmt->get_result();
 
-    if ($result->num_rows === 0) {
+    // Usar bind_result para compatibilidad
+    $stmt->bind_result($pedido_id);
+
+    if (!$stmt->fetch()) {
+        $stmt->close();
         // Crear nuevo registro si no existe
         $stmt = $conn->prepare("INSERT INTO pedidos_detal (bold_order_id, estado_pago, monto, metodo_pago, bold_transaction_id, fecha) VALUES (?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("ssiss", $order_id, $status, $amount, $payment_method, $transaction_id);

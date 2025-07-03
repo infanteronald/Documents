@@ -216,7 +216,7 @@ if (isset($all_params['amount'])) {
 
                     // Si no hay ventana padre, redirigir a página principal
                     setTimeout(() => {
-                        window.location.href = '../index.php';
+                        window.location.href = '../pedido.php';
                     }, 3000);
                 }
 
@@ -225,7 +225,7 @@ if (isset($all_params['amount'])) {
 
                 // Fallback: redirigir a página principal
                 setTimeout(() => {
-                    window.location.href = '../index.php';
+                    window.location.href = '../pedido.php';
                 }, 3000);
             }
         }

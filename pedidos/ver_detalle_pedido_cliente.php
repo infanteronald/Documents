@@ -24,11 +24,11 @@ function getField($array, $field, $default = 'No disponible') {
         'nombre_cliente' => ['nombre_cliente', 'nombre', 'cliente_nombre', 'client_name'],
         'email_cliente' => ['email_cliente', 'correo', 'email', 'cliente_email', 'client_email'],
         'telefono_cliente' => ['telefono_cliente', 'telefono', 'cliente_telefono', 'phone'],
+        'ciudad_cliente' => ['ciudad_cliente', 'ciudad', 'cliente_ciudad', 'city'],
+        'barrio_cliente' => ['barrio_cliente', 'barrio', 'cliente_barrio', 'neighborhood'],
         'fecha_pedido' => ['fecha_pedido', 'fecha', 'created_at', 'date_created'],
         'direccion_entrega' => ['direccion_entrega', 'direccion', 'address', 'delivery_address'],
         'metodo_pago' => ['metodo_pago', 'metodo_pago', 'pago', 'payment_method', 'tipo_pago'],
-        'persona_recibe' => ['persona_recibe', 'recibe', 'recipient', 'receiver'],
-        'horarios' => ['horarios', 'horario', 'schedule', 'delivery_time'],
         'nota_interna' => ['nota_interna', 'notas', 'observaciones', 'comments', 'notes']
     ];
 
@@ -665,6 +665,14 @@ if ($id && $id > 0) {
                             <div class="info-value"><?php echo h(getField($p, 'telefono_cliente')); ?></div>
                         </div>
                         <div class="info-item">
+                            <div class="info-label">Ciudad</div>
+                            <div class="info-value"><?php echo h(getField($p, 'ciudad_cliente')); ?></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Barrio</div>
+                            <div class="info-value"><?php echo h(getField($p, 'barrio_cliente')); ?></div>
+                        </div>
+                        <div class="info-item">
                             <div class="info-label">Fecha del Pedido</div>
                             <div class="info-value"><?php echo h(getField($p, 'fecha_pedido')); ?></div>
                         </div>
@@ -680,14 +688,6 @@ if ($id && $id > 0) {
                         <div class="info-item">
                             <div class="info-label">Dirección de Entrega</div>
                             <div class="info-value"><?php echo h(getField($p, 'direccion_entrega')); ?></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Persona que Recibe</div>
-                            <div class="info-value"><?php echo h(getField($p, 'persona_recibe')); ?></div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Horarios de Entrega</div>
-                            <div class="info-value"><?php echo h(getField($p, 'horarios')); ?></div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">Método de Pago</div>

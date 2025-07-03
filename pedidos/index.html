@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequoia Speed - Sistema de Gestión de Pedidos</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <style>
+        /* VSCode Dark Theme - Paleta de colores */
+        :root {
+            --vscode-bg: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-border: #3e3e42;
+            --vscode-text: #cccccc;
+            --vscode-text-muted: #999999;
+            --vscode-text-light: #ffffff;
+            --apple-blue: #007aff;
+            --apple-blue-hover: #0056d3;
+            --apple-teal: #30d158;
+            --apple-orange: #ff9f0a;
+            --apple-red: #ff453a;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition-base: 0.2s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--vscode-bg);
+            color: var(--vscode-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--vscode-sidebar);
+            border-bottom: 1px solid var(--vscode-border);
+            padding: var(--space-lg) 0;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+
+        .logo {
+            height: 60px;
+            width: auto;
+            margin-bottom: var(--space-md);
+            border-radius: var(--radius-md);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--vscode-text-light);
+            margin-bottom: var(--space-sm);
+        }
+
+        .header p {
+            color: var(--vscode-text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Container principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-2xl) var(--space-lg);
+        }
+
+        /* Grid de secciones */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--space-xl);
+            margin-top: var(--space-2xl);
+        }
+
+        /* Cards de sección */
+        .section-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            backdrop-filter: blur(20px);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--apple-blue), var(--apple-teal));
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .section-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--apple-blue);
+            box-shadow: 0 20px 40px rgba(0, 122, 255, 0.15);
+        }
+
+        .section-card:hover::before {
+            opacity: 1;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .section-icon {
+            font-size: 2.5rem;
+            margin-right: var(--space-md);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--vscode-text-light);
+        }
+
+        .section-description {
+            color: var(--vscode-text-muted);
+            margin-bottom: var(--space-lg);
+            font-size: 0.95rem;
+        }
+
+        /* Lista de opciones */
+        .options-list {
+            list-style: none;
+        }
+
+        .option-item {
+            margin-bottom: var(--space-md);
+        }
+
+        .option-link {
+            display: flex;
+            align-items: center;
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            color: var(--vscode-text);
+            text-decoration: none;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-link::before {
+            content: '';
+            position: absolute;
+            left: -100%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--apple-blue);
+            transition: left var(--transition-base);
+        }
+
+        .option-link:hover {
+            background: rgba(0, 122, 255, 0.1);
+            border-color: var(--apple-blue);
+            transform: translateX(5px);
+            color: var(--vscode-text-light);
+        }
+
+        .option-link:hover::before {
+            left: 0;
+        }
+
+        .option-icon {
+            font-size: 1.2rem;
+            margin-right: var(--space-md);
+            min-width: 24px;
+        }
+
+        .option-text {
+            flex: 1;
+        }
+
+        .option-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .option-desc {
+            font-size: 0.85rem;
+            color: var(--vscode-text-muted);
+        }
+
+        /* Estadísticas rápidas */
+        .stats-bar {
+            background: var(--vscode-sidebar);
+            border: 1px solid var(--vscode-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-xl);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--apple-blue);
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-label {
+            color: var(--vscode-text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--space-lg) var(--space-md);
+            }
+
+            .sections-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-lg);
+                margin-top: var(--space-lg);
+            }
+
+            .section-card {
+                padding: var(--space-lg);
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--space-md);
+                padding: var(--space-md);
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .section-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .section-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .section-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .section-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: var(--space-2xl) var(--space-lg);
+            color: var(--vscode-text-muted);
+            border-top: 1px solid var(--vscode-border);
+            margin-top: var(--space-2xl);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <img src="logo.png" alt="Sequoia Speed" class="logo">
+        <h1>Sistema de Gestión de Pedidos</h1>
+        <p>Panel de control completo para administrar pedidos, pagos y envíos</p>
+    </header>
+
+    <!-- Container principal -->
+    <div class="container">
+        <!-- Estadísticas rápidas -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number" id="stat-pedidos">--</div>
+                <div class="stat-label">📦 Pedidos Activos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="stat-pagos">--</div>
+                <div class="stat-label">💰 Pagos Pendientes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="stat-envios">--</div>
+                <div class="stat-label">🚚 Envíos Pendientes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="stat-ingresos">--</div>
+                <div class="stat-label">💵 Ingresos del Mes</div>
+            </div>
+        </div>
+
+        <!-- Grid de secciones -->
+        <div class="sections-grid">
+            <!-- Gestión de Pedidos -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">📦</div>
+                    <div class="section-title">Gestión de Pedidos</div>
+                </div>
+                <div class="section-description">
+                    Administra todos los aspectos de los pedidos: creación, seguimiento, estados y reportes.
+                </div>
+                <ul class="options-list">
+                    <li class="option-item">
+                        <a href="orden_pedido.php" class="option-link">
+                            <div class="option-icon">🆕</div>
+                            <div class="option-text">
+                                <div class="option-title">Crear Nuevo Pedido</div>
+                                <div class="option-desc">Formulario interactivo para generar pedidos</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="listar_pedidos.php" class="option-link">
+                            <div class="option-icon">📋</div>
+                            <div class="option-text">
+                                <div class="option-title">Listar y Gestionar Pedidos</div>
+                                <div class="option-desc">Panel principal con filtros avanzados</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="exportar_excel.php" class="option-link">
+                            <div class="option-icon">📊</div>
+                            <div class="option-text">
+                                <div class="option-title">Exportar a Excel</div>
+                                <div class="option-desc">Descarga reportes detallados</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="listar_pedidos.php?filtro=hoy" class="option-link">
+                            <div class="option-icon">🔍</div>
+                            <div class="option-text">
+                                <div class="option-title">Pedidos de Hoy</div>
+                                <div class="option-desc">Vista rápida de pedidos del día</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Gestión de Pagos -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">💳</div>
+                    <div class="section-title">Gestión de Pagos</div>
+                </div>
+                <div class="section-description">
+                    Administra pagos online, comprobantes y confirmaciones de pago manual.
+                </div>
+                <ul class="options-list">
+                    <li class="option-item">
+                        <a href="bold/bold_payment_v6.php" class="option-link">
+                            <div class="option-icon">💰</div>
+                            <div class="option-text">
+                                <div class="option-title">Procesador de Pagos Bold</div>
+                                <div class="option-desc">Sistema de pagos online principal</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="listar_pedidos.php?filtro=pago_pendiente" class="option-link">
+                            <div class="option-icon">⏳</div>
+                            <div class="option-text">
+                                <div class="option-title">Pagos Pendientes</div>
+                                <div class="option-desc">Revisar y gestionar pagos pendientes</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="subir_comprobante.php" class="option-link">
+                            <div class="option-icon">📄</div>
+                            <div class="option-text">
+                                <div class="option-title">Gestión de Comprobantes</div>
+                                <div class="option-desc">Subir y verificar comprobantes de pago</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="procesar_pago_manual.php" class="option-link">
+                            <div class="option-icon">✅</div>
+                            <div class="option-text">
+                                <div class="option-title">Confirmación Manual</div>
+                                <div class="option-desc">Confirmar pagos manualmente</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Gestión de Envíos -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">🚚</div>
+                    <div class="section-title">Gestión de Envíos</div>
+                </div>
+                <div class="section-description">
+                    Administra envíos, guías de despacho y seguimiento de entregas.
+                </div>
+                <ul class="options-list">
+                    <li class="option-item">
+                        <a href="listar_pedidos.php?filtro=pago_confirmado" class="option-link">
+                            <div class="option-icon">📦</div>
+                            <div class="option-text">
+                                <div class="option-title">Pedidos Listos para Envío</div>
+                                <div class="option-desc">Pedidos pagados pendientes de envío</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="subir_guia.php" class="option-link">
+                            <div class="option-icon">📋</div>
+                            <div class="option-text">
+                                <div class="option-title">Gestión de Guías</div>
+                                <div class="option-desc">Subir y administrar guías de envío</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="listar_pedidos.php?filtro=enviados" class="option-link">
+                            <div class="option-icon">✈️</div>
+                            <div class="option-text">
+                                <div class="option-title">Pedidos Enviados</div>
+                                <div class="option-desc">Seguimiento de pedidos en tránsito</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="ver_guia.php" class="option-link">
+                            <div class="option-icon">🔍</div>
+                            <div class="option-text">
+                                <div class="option-title">Consultar Guías</div>
+                                <div class="option-desc">Buscar y verificar guías de envío</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Administración -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">🛠️</div>
+                    <div class="section-title">Administración</div>
+                </div>
+                <div class="section-description">
+                    Herramientas de administración, productos, reportes y configuración del sistema.
+                </div>
+                <ul class="options-list">
+                    <li class="option-item">
+                        <a href="productos_por_categoria.php" class="option-link">
+                            <div class="option-icon">🏷️</div>
+                            <div class="option-text">
+                                <div class="option-title">Gestión de Productos</div>
+                                <div class="option-desc">Administrar catálogo de productos</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="listar_pedidos.php?filtro=archivados" class="option-link">
+                            <div class="option-icon">📁</div>
+                            <div class="option-text">
+                                <div class="option-title">Pedidos Archivados</div>
+                                <div class="option-desc">Revisar historial de pedidos</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="listar_pedidos.php?filtro=anulados" class="option-link">
+                            <div class="option-icon">❌</div>
+                            <div class="option-text">
+                                <div class="option-title">Pedidos Anulados</div>
+                                <div class="option-desc">Gestionar pedidos cancelados</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="option-item">
+                        <a href="public/api/" class="option-link">
+                            <div class="option-icon">🔗</div>
+                            <div class="option-text">
+                                <div class="option-title">API REST</div>
+                                <div class="option-desc">Documentación de API del sistema</div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Sequoia Speed. Sistema de Gestión de Pedidos v2.0</p>
+        <p>Desarrollado con tecnología moderna para máxima eficiencia</p>
+    </footer>
+
+    <script>
+        // Cargar estadísticas rápidas
+        document.addEventListener('DOMContentLoaded', function () {
+            cargarEstadisticas();
+        });
+
+        function cargarEstadisticas() {
+            // Simulación de carga de estadísticas
+            // En producción, esto haría llamadas AJAX a endpoints específicos
+
+            setTimeout(() => {
+                document.getElementById('stat-pedidos').textContent = '24';
+                document.getElementById('stat-pagos').textContent = '8';
+                document.getElementById('stat-envios').textContent = '12';
+                document.getElementById('stat-ingresos').textContent = '$2.4M';
+            }, 500);
+
+            // TODO: Implementar llamadas AJAX reales
+            // fetch('api/estadisticas.php')
+            //     .then(response => response.json())
+            //     .then(data => {
+            //         document.getElementById('stat-pedidos').textContent = data.pedidos_activos;
+            //         document.getElementById('stat-pagos').textContent = data.pagos_pendientes;
+            //         document.getElementById('stat-envios').textContent = data.envios_pendientes;
+            //         document.getElementById('stat-ingresos').textContent = data.ingresos_mes;
+            //     });
+        }
+
+        // Efectos de hover mejorados
+        document.querySelectorAll('.option-link').forEach(link => {
+            link.addEventListener('mouseenter', function () {
+                this.style.transform = 'translateX(5px) scale(1.02)';
+            });
+
+            link.addEventListener('mouseleave', function () {
+                this.style.transform = 'translateX(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+
+</html>

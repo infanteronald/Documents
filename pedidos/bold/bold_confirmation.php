@@ -175,7 +175,7 @@
         $orden_id = $_GET['orden'] ?? '';
         $bold_order_id = $_GET['bold_order_id'] ?? '';
         $status = 'pending'; // Por defecto
-        
+
         // Determinar el estado según los parámetros
         if (isset($_GET['bold_success'])) {
             $status = 'success';
@@ -184,19 +184,21 @@
         } elseif (isset($_GET['bold_pending'])) {
             $status = 'pending';
         }
-        
+
         // Si tenemos bold_order_id, buscar en la base de datos el estado real
         if ($bold_order_id) {
             require_once "conexion.php";
             $stmt = $conn->prepare("SELECT pedido, estado_pago FROM pedidos_detal WHERE bold_order_id = ?");
             $stmt->bind_param("s", $bold_order_id);
             $stmt->execute();
-            $result = $stmt->get_result();
-            
-            if ($result->num_rows > 0) {
-                $pedido_data = $result->fetch_assoc();
-                $orden_id = $pedido_data['pedido'];
-                
+
+            // Usar bind_result para compatibilidad
+            $stmt->bind_result($pedido_detalle, $estado_pago);
+
+            if ($stmt->fetch()) {
+                $stmt->close();
+                $orden_id = $pedido_detalle;
+
                 // Actualizar status basado en estado_pago de la BD
                 switch ($pedido_data['estado_pago']) {
                     case 'pagado':
@@ -214,7 +216,7 @@
                 error_log("Bold Order ID $bold_order_id no encontrado en BD, puede estar procesándose");
             }
         }
-        
+
         // Mostrar contenido según el estado
         switch ($status) {
             case 'success':
@@ -222,13 +224,13 @@
                 echo '<h1>¡Pago Exitoso!</h1>';
                 echo '<p>Su pago ha sido procesado correctamente a través de PSE Bold.</p>';
                 break;
-                
+
             case 'error':
                 echo '<div class="status-icon error">❌</div>';
                 echo '<h1>Error en el Pago</h1>';
                 echo '<p>Hubo un problema al procesar su pago. Puede intentar nuevamente.</p>';
                 break;
-                
+
             case 'pending':
             default:
                 echo '<div class="status-icon pending">⏳</div>';
@@ -237,19 +239,19 @@
                 break;
         }
         ?>
-        
+
         <div class="order-info">
             <?php if ($orden_id): ?>
                 <p><strong>Número de Orden:</strong> #<?php echo htmlspecialchars($orden_id); ?></p>
             <?php endif; ?>
-            
+
             <?php if ($bold_order_id): ?>
                 <p><strong>ID Transacción Bold:</strong> <?php echo htmlspecialchars($bold_order_id); ?></p>
             <?php endif; ?>
-            
+
             <p><strong>Método de Pago:</strong> PSE Bold</p>
             <p><strong>Fecha:</strong> <?php echo date('d/m/Y H:i'); ?></p>
-            
+
             <?php if ($status === 'success'): ?>
                 <p style="color: var(--apple-green);"><strong>Estado:</strong> Pagado ✅</p>
             <?php elseif ($status === 'error'): ?>
@@ -258,7 +260,7 @@
                 <p style="color: var(--apple-blue);"><strong>Estado:</strong> Pendiente ⏳</p>
             <?php endif; ?>
         </div>
-        
+
         <?php if ($status === 'success'): ?>
             <p>Recibirá un correo electrónico con la confirmación de su pedido. Nuestro equipo se pondrá en contacto con usted para coordinar la entrega.</p>
         <?php elseif ($status === 'error'): ?>
@@ -266,29 +268,29 @@
         <?php else: ?>
             <p>Los pagos PSE pueden tomar unos minutos en confirmarse. Le enviaremos un correo cuando el pago esté confirmado.</p>
         <?php endif; ?>
-        
+
         <div class="actions">
             <?php if ($orden_id): ?>
                 <a href="comprobante.php?orden=<?php echo urlencode($orden_id); ?>" class="btn btn-primary">
                     Ver Comprobante
                 </a>
             <?php endif; ?>
-            
-            <a href="index.php" class="btn btn-secondary">
+
+            <a href="pedido.php" class="btn btn-secondary">
                 Nueva Orden
             </a>
-            
+
             <?php if ($status === 'error'): ?>
-                <a href="index.php?retry=1&orden=<?php echo urlencode($orden_id); ?>" class="btn btn-primary">
+                <a href="pedido.php?retry=1&orden=<?php echo urlencode($orden_id); ?>" class="btn btn-primary">
                     Intentar Nuevamente
                 </a>
             <?php endif; ?>
         </div>
-        
+
         <a href="https://wa.me/573142162979" target="_blank" class="whatsapp-link">
             📱 ¿Necesita ayuda? Contáctenos por WhatsApp
         </a>
-        
+
         <?php if ($status === 'pending'): ?>
             <script>
                 // Auto-actualizar la página cada 30 segundos para verificar el estado
@@ -302,32 +304,34 @@
     <?php
     // Conexión a la base de datos (ajustar según sea necesario)
     $conn = new mysqli('localhost', 'usuario', 'contraseña', 'base_de_datos');
-    
+
     // Verificar conexión
     if ($conn->connect_error) {
         die("Conexión fallida: " . $conn->connect_error);
     }
-    
+
     // Obtener el order_id desde la URL
     $order_id = $_GET['orden'] ?? '';
-    
+
     // Cambiar consulta para usar pedidos_detal
-    $stmt = $conn->prepare("SELECT * FROM pedidos_detal WHERE bold_order_id = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT id, estado_pago, monto, nombre, correo, pedido FROM pedidos_detal WHERE bold_order_id = ? LIMIT 1");
     $stmt->bind_param("s", $order_id);
     $stmt->execute();
-    $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        $pedido = $result->fetch_assoc();
-        
+    // Usar bind_result para compatibilidad
+    $stmt->bind_result($pedido_id, $estado_pago, $monto, $nombre, $correo, $pedido_detalle);
+
+    if ($stmt->fetch()) {
+        $stmt->close();
+
         // Mostrar información del pedido desde pedidos_detal
         echo "<h2>Confirmación de Pago</h2>";
-        echo "<p><strong>Número de Pedido:</strong> #" . $pedido['id'] . "</p>";
-        echo "<p><strong>Estado del Pago:</strong> " . ucfirst($pedido['estado_pago']) . "</p>";
-        echo "<p><strong>Monto:</strong> $" . number_format($pedido['monto'], 0, ',', '.') . "</p>";
-        echo "<p><strong>Nombre:</strong> " . htmlspecialchars($pedido['nombre']) . "</p>";
+        echo "<p><strong>Número de Pedido:</strong> #" . $pedido_id . "</p>";
+        echo "<p><strong>Estado del Pago:</strong> " . ucfirst($estado_pago) . "</p>";
+        echo "<p><strong>Monto:</strong> $" . number_format($monto, 0, ',', '.') . "</p>";
+        echo "<p><strong>Nombre:</strong> " . htmlspecialchars($nombre) . "</p>";
         echo "<p><strong>Método de Pago:</strong> " . htmlspecialchars($pedido['metodo_pago']) . "</p>";
-        
+
         if ($pedido['estado_pago'] === 'pagado') {
             echo "<div style='color: green; font-weight: bold; margin: 20px 0;'>";
             echo "✅ Su pago ha sido procesado exitosamente";
@@ -337,7 +341,7 @@
             echo "⏳ Su pago está siendo procesado";
             echo "</div>";
         }
-        
+
     } else {
         echo "<h2>Pedido no encontrado</h2>";
         echo "<p>No se pudo encontrar el pedido con ID: " . htmlspecialchars($order_id) . "</p>";

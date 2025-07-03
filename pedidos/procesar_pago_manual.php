@@ -18,37 +18,50 @@ echo "<h3>Order ID: <code>$order_id</code></h3>\n";
 echo "<h3>Status: <code>$status</code></h3>\n";
 
 // 1. Buscar si ya existe el pedido
-$stmt = $conn->prepare("SELECT * FROM pedidos_detal WHERE bold_order_id = ?");
+$stmt = $conn->prepare("SELECT id, pedido, estado_pago, bold_order_id, nombre, correo FROM pedidos_detal WHERE bold_order_id = ?");
 $stmt->bind_param("s", $order_id);
 $stmt->execute();
-$result = $stmt->get_result();
 
-if ($result->num_rows > 0) {
+// Usar bind_result para compatibilidad
+$stmt->bind_result($pedido_id, $pedido_detalle, $estado_pago, $bold_order_id, $nombre, $correo);
+
+if ($stmt->fetch()) {
+    $stmt->close();
     echo "<div style='background: #d1ecf1; padding: 15px; border-radius: 5px;'>\n";
     echo "<h4>ℹ️ El pedido ya existe en la base de datos</h4>\n";
-    $pedido = $result->fetch_assoc();
-    echo "<p>Pedido: {$pedido['pedido']}, Estado actual: {$pedido['estado_pago']}</p>\n";
+    echo "<p>Pedido: {$pedido_detalle}, Estado actual: {$estado_pago}</p>\n";
     echo "</div>\n";
+
+    // Crear array para mantener compatibilidad
+    $pedido = [
+        'id' => $pedido_id,
+        'pedido' => $pedido_detalle,
+        'estado_pago' => $estado_pago,
+        'bold_order_id' => $bold_order_id,
+        'nombre' => $nombre,
+        'correo' => $correo
+    ];
 } else {
+    $stmt->close();
     echo "<div style='background: #fff3cd; padding: 15px; border-radius: 5px;'>\n";
     echo "<h4>⚠️ El pedido no existe en la base de datos</h4>\n";
     echo "<p>Esto sugiere que el proceso de checkout no se completó correctamente antes del pago.</p>\n";
     echo "</div>\n";
-    
+
     // Buscar el último pedido sin bold_order_id
     $result_pendiente = $conn->query("
-        SELECT * FROM pedidos_detal 
-        WHERE bold_order_id IS NULL 
-        AND metodo_pago LIKE '%Bold%' 
-        ORDER BY fecha DESC 
+        SELECT * FROM pedidos_detal
+        WHERE bold_order_id IS NULL
+        AND metodo_pago LIKE '%Bold%'
+        ORDER BY fecha DESC
         LIMIT 3
     ");
-    
+
     if ($result_pendiente->num_rows > 0) {
         echo "<h4>🔍 Pedidos pendientes que podrían corresponder a este pago:</h4>\n";
         echo "<table border='1' style='border-collapse: collapse; width: 100%;'>\n";
         echo "<tr style='background: #f0f0f0;'><th>ID</th><th>Pedido</th><th>Cliente</th><th>Monto</th><th>Fecha</th><th>Acción</th></tr>\n";
-        
+
         while ($pendiente = $result_pendiente->fetch_assoc()) {
             echo "<tr>\n";
             echo "<td>{$pendiente['id']}</td>\n";
@@ -66,52 +79,57 @@ if ($result->num_rows > 0) {
 // 2. Procesar asignación si se especifica
 if (isset($_GET['assign_to'])) {
     $pedido_id = $_GET['assign_to'];
-    
+
     echo "<h3>🔄 Asignando pago a pedido existente</h3>\n";
-    
+
     $estado_pago = ($status === 'approved') ? 'pagado' : 'pendiente';
-    
+
     $stmt_update = $conn->prepare("
-        UPDATE pedidos_detal 
-        SET bold_order_id = ?, 
-            estado_pago = ?, 
+        UPDATE pedidos_detal
+        SET bold_order_id = ?,
+            estado_pago = ?,
             fecha_pago = NOW(),
             bold_response = ?
         WHERE id = ?
     ");
-    
+
     $response_data = json_encode([
         'status' => $status,
         'order_id' => $order_id,
         'processed_manually' => true,
         'timestamp' => date('Y-m-d H:i:s')
     ]);
-    
+
     $stmt_update->bind_param("sssi", $order_id, $estado_pago, $response_data, $pedido_id);
-    
+
     if ($stmt_update->execute()) {
         echo "<div style='background: #d4edda; padding: 15px; border-radius: 5px;'>\n";
         echo "<h4>✅ Pago asignado exitosamente</h4>\n";
         echo "<p>El pedido ID $pedido_id ahora tiene asignado el Bold Order ID: $order_id</p>\n";
         echo "<p>Estado de pago actualizado a: $estado_pago</p>\n";
         echo "</div>\n";
-        
+
         // Mostrar detalles del pedido actualizado
-        $stmt_verify = $conn->prepare("SELECT * FROM pedidos_detal WHERE id = ?");
+        $stmt_verify = $conn->prepare("SELECT pedido, nombre, monto, bold_order_id, estado_pago, fecha_pago FROM pedidos_detal WHERE id = ?");
         $stmt_verify->bind_param("i", $pedido_id);
         $stmt_verify->execute();
-        $pedido_actualizado = $stmt_verify->get_result()->fetch_assoc();
-        
-        echo "<h4>📋 Detalles del pedido actualizado:</h4>\n";
-        echo "<table border='1' style='border-collapse: collapse;'>\n";
-        echo "<tr><td><strong>Pedido</strong></td><td>{$pedido_actualizado['pedido']}</td></tr>\n";
-        echo "<tr><td><strong>Cliente</strong></td><td>{$pedido_actualizado['nombre']}</td></tr>\n";
-        echo "<tr><td><strong>Monto</strong></td><td>$" . number_format($pedido_actualizado['monto']) . "</td></tr>\n";
-        echo "<tr><td><strong>Bold Order ID</strong></td><td>{$pedido_actualizado['bold_order_id']}</td></tr>\n";
-        echo "<tr><td><strong>Estado Pago</strong></td><td>{$pedido_actualizado['estado_pago']}</td></tr>\n";
-        echo "<tr><td><strong>Fecha Pago</strong></td><td>{$pedido_actualizado['fecha_pago']}</td></tr>\n";
+
+        // Usar bind_result para compatibilidad
+        $stmt_verify->bind_result($pedido_detalle, $nombre, $monto, $bold_order_id, $estado_pago_actual, $fecha_pago);
+
+        if ($stmt_verify->fetch()) {
+            $stmt_verify->close();
+
+            echo "<h4>📋 Detalles del pedido actualizado:</h4>\n";
+            echo "<table border='1' style='border-collapse: collapse;'>\n";
+            echo "<tr><td><strong>Pedido</strong></td><td>{$pedido_detalle}</td></tr>\n";
+            echo "<tr><td><strong>Cliente</strong></td><td>{$nombre}</td></tr>\n";
+            echo "<tr><td><strong>Monto</strong></td><td>$" . number_format($monto) . "</td></tr>\n";
+            echo "<tr><td><strong>Bold Order ID</strong></td><td>{$bold_order_id}</td></tr>\n";
+            echo "<tr><td><strong>Estado Pago</strong></td><td>{$estado_pago_actual}</td></tr>\n";
+            echo "<tr><td><strong>Fecha Pago</strong></td><td>{$fecha_pago}</td></tr>\n";
         echo "</table>\n";
-        
+
     } else {
         echo "<div style='background: #f8d7da; padding: 15px; border-radius: 5px;'>\n";
         echo "<h4>❌ Error al asignar el pago</h4>\n";
