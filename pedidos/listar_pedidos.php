@@ -487,7 +487,6 @@ function formatear_productos($productos) {
                                 <td class="col-cliente">
                                     <div class="info-cliente">
                                         <div class="nombre-cliente"><?php echo htmlspecialchars($p['nombre']); ?></div>
-                                        <div class="email-cliente"><?php echo htmlspecialchars($p['correo']); ?></div>
                                         <div class="telefono-ciudad">
                                             <a href="#" onclick="abrirWhatsApp('<?php echo preg_replace('/[^0-9]/', '', $p['telefono']); ?>'); return false;" class="whatsapp-link" title="Contactar por WhatsApp">
                                                 📱

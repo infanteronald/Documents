@@ -594,11 +594,6 @@ h1 {
     color: var(--vscode-text-light);
 }
 
-.email-cliente {
-    font-size: 0.8125rem;
-    color: var(--vscode-text-muted);
-}
-
 .telefono-ciudad {
     font-size: 0.8125rem;
     color: var(--vscode-text-muted);
@@ -1226,10 +1221,6 @@ h1 {
 
     .info-cliente {
         gap: var(--space-2xs);
-    }
-
-    .email-cliente {
-        font-size: 0.75rem;
     }
 
     .telefono-ciudad {
