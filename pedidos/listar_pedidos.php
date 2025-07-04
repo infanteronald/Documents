@@ -1067,32 +1067,51 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
 
         // Si ya tiene comprobante, mostrar el comprobante
         if (tieneComprobante === '1' && comprobante && comprobante.trim() !== '') {
-            const esImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(comprobante);
-            const esPDF = /\.pdf$/i.test(comprobante);
-
-            contenidoModal = '<div class="modal-detalle" style="max-width: 600px;">' +
-                '<button class="cerrar-modal" onclick="this.closest(\'.modal-detalle-bg\').remove()">×</button>' +
-                '<h3>📄 Comprobante de Pago - Pedido #' + pedidoId + '</h3>' +
-                '<div class="comprobante-viewer">';
-
-            if (esImagen) {
-                contenidoModal += '<img src="comprobantes/' + comprobante + '" alt="Comprobante" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid #30363d;">';
-            } else if (esPDF) {
-                contenidoModal += '<iframe src="comprobantes/' + comprobante + '" style="width: 100%; height: 400px; border: 1px solid #30363d; border-radius: 8px;"></iframe>';
+            // Caso especial: Efectivo confirmado
+            if (comprobante === 'EFECTIVO_CONFIRMADO') {
+                contenidoModal = '<div class="modal-detalle" style="max-width: 500px;">' +
+                    '<button class="cerrar-modal" onclick="this.closest(\'.modal-detalle-bg\').remove()">×</button>' +
+                    '<h3>💵 Pago en Efectivo Confirmado - Pedido #' + pedidoId + '</h3>' +
+                    '<div style="text-align: center; padding: 20px;">' +
+                    '<div style="background: var(--apple-green); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">' +
+                    '<strong>✅ Pago en efectivo confirmado</strong>' +
+                    '</div>' +
+                    '<p style="margin-bottom: 20px; color: #8b949e;">Este pedido fue marcado como pagado en efectivo.</p>' +
+                    '<div class="acciones-comprobante" style="display: flex; gap: 10px; justify-content: center;">' +
+                    '<button onclick="desconfirmarEfectivo(' + pedidoId + ')" class="btn-danger">❌ Desconfirmar Efectivo</button>' +
+                    '<button onclick="subirComprobanteAlternativo(' + pedidoId + ')" class="btn-secondary">📄 Cambiar a Comprobante</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
             } else {
-                contenidoModal += '<div style="padding: 20px; text-align: center; border: 1px solid #30363d; border-radius: 8px;">' +
-                    '<p>📄 Archivo: ' + comprobante + '</p>' +
-                    '<a href="comprobantes/' + comprobante + '" target="_blank" class="btn-neon">Abrir Archivo</a>' +
+                // Comprobante normal (archivo)
+                const esImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(comprobante);
+                const esPDF = /\.pdf$/i.test(comprobante);
+
+                contenidoModal = '<div class="modal-detalle" style="max-width: 600px;">' +
+                    '<button class="cerrar-modal" onclick="this.closest(\'.modal-detalle-bg\').remove()">×</button>' +
+                    '<h3>📄 Comprobante de Pago - Pedido #' + pedidoId + '</h3>' +
+                    '<div class="comprobante-viewer">';
+
+                if (esImagen) {
+                    contenidoModal += '<img src="comprobantes/' + comprobante + '" alt="Comprobante" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid #30363d;">';
+                } else if (esPDF) {
+                    contenidoModal += '<iframe src="comprobantes/' + comprobante + '" style="width: 100%; height: 400px; border: 1px solid #30363d; border-radius: 8px;"></iframe>';
+                } else {
+                    contenidoModal += '<div style="padding: 20px; text-align: center; border: 1px solid #30363d; border-radius: 8px;">' +
+                        '<p>📄 Archivo: ' + comprobante + '</p>' +
+                        '<a href="comprobantes/' + comprobante + '" target="_blank" class="btn-neon">Abrir Archivo</a>' +
+                        '</div>';
+                }
+
+                contenidoModal += '</div>' +
+                    '<div class="acciones-comprobante" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">' +
+                    '<button onclick="reemplazarComprobante(' + pedidoId + ')" class="btn-warning">🔄 Reemplazar</button>' +
+                    '<button onclick="eliminarComprobante(' + pedidoId + ')" class="btn-danger">🗑️ Eliminar</button>' +
+                    '<a href="comprobantes/' + comprobante + '" download class="btn-secondary">⬇️ Descargar</a>' +
+                    '</div>' +
                     '</div>';
             }
-
-            contenidoModal += '</div>' +
-                '<div class="acciones-comprobante" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">' +
-                '<button onclick="reemplazarComprobante(' + pedidoId + ')" class="btn-warning">🔄 Reemplazar</button>' +
-                '<button onclick="eliminarComprobante(' + pedidoId + ')" class="btn-danger">🗑️ Eliminar</button>' +
-                '<a href="comprobantes/' + comprobante + '" download class="btn-secondary">⬇️ Descargar</a>' +
-                '</div>' +
-                '</div>';
         }
         // Si el método de pago es efectivo, mostrar opción de marcar como efectivo
         else if (metodoPago && metodoPago.toLowerCase().includes('efectivo')) {
@@ -1551,6 +1570,7 @@ if (!document.querySelector('#feedback-styles')) {
     const style = document.createElement('style');
     style.id = 'feedback-styles';
     style.textContent = `
+
         @keyframes slideInRight {
             from {
                 transform: translateX(100%);
@@ -1581,6 +1601,7 @@ if (!document.querySelector('#feedback-styles')) {
 // ============================================
 function subirComprobanteForm(pedidoId, form) {
     const formData = new FormData(form);
+    const statusDiv = modal.querySelector(`#comprobante-status-${pedidoId}`);
     const submitBtn = form.querySelector('button[type="submit"]');
 
     // Deshabilitar botón y mostrar cargando
@@ -1675,6 +1696,37 @@ function eliminarComprobante(pedidoId) {
             setTimeout(() => location.reload(), 1000);
         } else {
             mostrarNotificacion('❌ Error: ' + (data.message || 'No se pudo eliminar'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión', 'error');
+    });
+}
+
+function desconfirmarEfectivo(pedidoId) {
+    if (!confirm('¿Estás seguro de que quieres desconfirmar este pago en efectivo?')) {
+        return;
+    }
+
+    fetch('actualizar_pago_efectivo.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            id_pedido: pedidoId, 
+            es_efectivo: 0 // Desmarcar como efectivo
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+            mostrarNotificacion('✅ Pago en efectivo desconfirmado exitosamente', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (data.message || 'No se pudo desconfirmar'), 'error');
         }
     })
     .catch(error => {

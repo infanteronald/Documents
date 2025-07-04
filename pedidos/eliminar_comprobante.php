@@ -18,7 +18,7 @@ $id_pedido = intval($input['id_pedido']);
 
 try {
     // Obtener información del comprobante actual
-    $stmt = $conn->prepare("SELECT comprobante FROM pedidos_detal WHERE id = ?");
+    $stmt = $conn->prepare("SELECT comprobante, metodo_pago FROM pedidos_detal WHERE id = ?");
     $stmt->bind_param("i", $id_pedido);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -30,9 +30,35 @@ try {
 
     $row = $result->fetch_assoc();
     $archivo_comprobante = $row['comprobante'];
+    $metodo_pago = $row['metodo_pago'];
     $stmt->close();
 
-    // Actualizar base de datos
+    // Verificar si es un pago en efectivo confirmado
+    if ($archivo_comprobante === 'EFECTIVO_CONFIRMADO') {
+        // Para efectivo confirmado, usar la lógica del endpoint de efectivo
+        $stmt = $conn->prepare("UPDATE pedidos_detal SET
+            pagado = '0',
+            tiene_comprobante = '0',
+            comprobante = '',
+            metodo_pago = REPLACE(metodo_pago, ' (efectivo)', '')
+            WHERE id = ?");
+        $stmt->bind_param("i", $id_pedido);
+
+        if ($stmt->execute()) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Pago en efectivo desconfirmado exitosamente'
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al desconfirmar el pago en efectivo']);
+        }
+
+        $stmt->close();
+        $conn->close();
+        exit;
+    }
+
+    // Para comprobantes normales (archivos), proceder con la eliminación estándar
     $stmt = $conn->prepare("UPDATE pedidos_detal SET
         comprobante = '',
         tiene_comprobante = '0',
@@ -41,8 +67,8 @@ try {
     $stmt->bind_param("i", $id_pedido);
 
     if ($stmt->execute()) {
-        // Intentar eliminar el archivo físico si existe
-        if (!empty($archivo_comprobante) && file_exists("comprobantes/" . $archivo_comprobante)) {
+        // Intentar eliminar el archivo físico si existe y no es efectivo confirmado
+        if (!empty($archivo_comprobante) && $archivo_comprobante !== 'EFECTIVO_CONFIRMADO' && file_exists("comprobantes/" . $archivo_comprobante)) {
             unlink("comprobantes/" . $archivo_comprobante);
         }
 
