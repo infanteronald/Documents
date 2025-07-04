@@ -1132,18 +1132,18 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
                 '</div>' +
                 '</div>';
         }        modal.innerHTML = contenidoModal;
-        
+
         // Debugging: verificar que el modal tiene contenido
         console.log('Contenido del modal generado:', contenidoModal.length > 0 ? 'OK' : 'VACÍO');
         console.log('Modal HTML:', modal.outerHTML.substring(0, 200) + '...');
-        
+
         // Asegurar que no haya otros modales abiertos
         const modalesExistentes = document.querySelectorAll('.modal-detalle-bg');
         modalesExistentes.forEach(m => m.remove());
-        
+
         // Añadir al DOM
         document.body.appendChild(modal);
-        
+
         // Forzar el display
         modal.style.display = 'flex';
         modal.style.position = 'fixed';
@@ -1153,11 +1153,11 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
         modal.style.height = '100%';
         modal.style.zIndex = '10000';
         modal.style.background = 'rgba(0, 0, 0, 0.7)';
-        
+
         // Verificar que se añadió al DOM
         console.log('Modal en DOM:', document.body.contains(modal));
         console.log('Estilos aplicados:', modal.style.display, modal.style.zIndex);
-        
+
         // Si hay formulario, configurar el submit
         const form = modal.querySelector('#formComprobante-' + pedidoId);
         if (form) {
@@ -1166,7 +1166,7 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
                 subirComprobanteForm(pedidoId, this);
             });
         }
-        
+
         console.log('Modal creado y mostrado exitosamente');
 
     } catch (error) {
@@ -1179,7 +1179,7 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
 // Método alternativo simplificado para crear modal
 function crearModalSimple(pedidoId, comprobante, tieneComprobante, metodoPago) {
     console.log('Creando modal simple como respaldo...');
-    
+
     // Crear overlay
     const overlay = document.createElement('div');
     overlay.style.cssText = `
@@ -1194,7 +1194,7 @@ function crearModalSimple(pedidoId, comprobante, tieneComprobante, metodoPago) {
         align-items: center;
         justify-content: center;
     `;
-    
+
     // Crear contenido del modal
     const modalContent = document.createElement('div');
     modalContent.style.cssText = `
@@ -1207,7 +1207,7 @@ function crearModalSimple(pedidoId, comprobante, tieneComprobante, metodoPago) {
         position: relative;
         color: #e6edf3;
     `;
-    
+
     // Botón cerrar
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '×';
@@ -1227,7 +1227,7 @@ function crearModalSimple(pedidoId, comprobante, tieneComprobante, metodoPago) {
     closeBtn.onclick = function() {
         overlay.remove();
     };
-    
+
     // Contenido según estado
     if (tieneComprobante === '1' && comprobante) {
         modalContent.innerHTML = `
@@ -1249,11 +1249,11 @@ function crearModalSimple(pedidoId, comprobante, tieneComprobante, metodoPago) {
             <button onclick="marcarComoEfectivo(${pedidoId}, true)" style="background: #ff9500; color: white; border: none; padding: 10px 20px; margin-top: 10px; border-radius: 5px; cursor: pointer; width: 100%;">💵 Marcar como Efectivo</button>
         `;
     }
-    
+
     modalContent.appendChild(closeBtn);
     overlay.appendChild(modalContent);
     document.body.appendChild(overlay);
-    
+
     // Configurar formulario si existe
     const form = document.getElementById(`formSimple-${pedidoId}`);
     if (form) {
@@ -1262,7 +1262,7 @@ function crearModalSimple(pedidoId, comprobante, tieneComprobante, metodoPago) {
             subirComprobanteForm(pedidoId, this);
         });
     }
-    
+
     console.log('Modal simple creado exitosamente');
 }
 
