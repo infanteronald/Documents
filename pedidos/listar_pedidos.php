@@ -1057,24 +1057,24 @@ function actualizarEstadoPagoUI(pedidoId, nuevoEstado) {
 // ===== FUNCIONES DE GESTIÓN DE COMPROBANTES =====
 function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPago) {
     console.log('Abriendo modal comprobante:', { pedidoId, comprobante, tieneComprobante, metodoPago });
-    
+
     try {
         const modal = document.createElement('div');
         modal.className = 'modal-detalle-bg';
         modal.setAttribute('data-pedido-id', pedidoId);
-        
+
         let contenidoModal = '';
-        
+
         // Si ya tiene comprobante, mostrar el comprobante
         if (tieneComprobante === '1' && comprobante && comprobante.trim() !== '') {
             const esImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(comprobante);
             const esPDF = /\.pdf$/i.test(comprobante);
-            
+
             contenidoModal = '<div class="modal-detalle" style="max-width: 600px;">' +
                 '<button class="cerrar-modal" onclick="this.closest(\'.modal-detalle-bg\').remove()">×</button>' +
                 '<h3>📄 Comprobante de Pago - Pedido #' + pedidoId + '</h3>' +
                 '<div class="comprobante-viewer">';
-            
+
             if (esImagen) {
                 contenidoModal += '<img src="comprobantes/' + comprobante + '" alt="Comprobante" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid #30363d;">';
             } else if (esPDF) {
@@ -1085,7 +1085,7 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
                     '<a href="comprobantes/' + comprobante + '" target="_blank" class="btn-neon">Abrir Archivo</a>' +
                     '</div>';
             }
-            
+
             contenidoModal += '</div>' +
                 '<div class="acciones-comprobante" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">' +
                 '<button onclick="reemplazarComprobante(' + pedidoId + ')" class="btn-warning">🔄 Reemplazar</button>' +
@@ -1093,7 +1093,7 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
                 '<a href="comprobantes/' + comprobante + '" download class="btn-secondary">⬇️ Descargar</a>' +
                 '</div>' +
                 '</div>';
-        } 
+        }
         // Si el método de pago es efectivo, mostrar opción de marcar como efectivo
         else if (metodoPago && metodoPago.toLowerCase().includes('efectivo')) {
             contenidoModal = '<div class="modal-detalle" style="max-width: 450px;">' +
@@ -1131,11 +1131,32 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
                 '<button onclick="marcarComoEfectivo(' + pedidoId + ', true)" class="btn-secondary">💵 Marcar como Efectivo</button>' +
                 '</div>' +
                 '</div>';
-        }
+        }        modal.innerHTML = contenidoModal;
         
-        modal.innerHTML = contenidoModal;
+        // Debugging: verificar que el modal tiene contenido
+        console.log('Contenido del modal generado:', contenidoModal.length > 0 ? 'OK' : 'VACÍO');
+        console.log('Modal HTML:', modal.outerHTML.substring(0, 200) + '...');
+        
+        // Asegurar que no haya otros modales abiertos
+        const modalesExistentes = document.querySelectorAll('.modal-detalle-bg');
+        modalesExistentes.forEach(m => m.remove());
+        
+        // Añadir al DOM
         document.body.appendChild(modal);
+        
+        // Forzar el display
         modal.style.display = 'flex';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.zIndex = '10000';
+        modal.style.background = 'rgba(0, 0, 0, 0.7)';
+        
+        // Verificar que se añadió al DOM
+        console.log('Modal en DOM:', document.body.contains(modal));
+        console.log('Estilos aplicados:', modal.style.display, modal.style.zIndex);
         
         // Si hay formulario, configurar el submit
         const form = modal.querySelector('#formComprobante-' + pedidoId);
@@ -1147,11 +1168,102 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
         }
         
         console.log('Modal creado y mostrado exitosamente');
-        
+
     } catch (error) {
         console.error('Error al crear modal:', error);
-        alert('Error al abrir el modal: ' + error.message);
+        // Método alternativo si falla el principal
+        crearModalSimple(pedidoId, comprobante, tieneComprobante, metodoPago);
     }
+}
+
+// Método alternativo simplificado para crear modal
+function crearModalSimple(pedidoId, comprobante, tieneComprobante, metodoPago) {
+    console.log('Creando modal simple como respaldo...');
+    
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    // Crear contenido del modal
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 20px;
+        max-width: 500px;
+        width: 90%;
+        position: relative;
+        color: #e6edf3;
+    `;
+    
+    // Botón cerrar
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        background: #ff3b30;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        color: white;
+        cursor: pointer;
+        font-size: 18px;
+    `;
+    closeBtn.onclick = function() {
+        overlay.remove();
+    };
+    
+    // Contenido según estado
+    if (tieneComprobante === '1' && comprobante) {
+        modalContent.innerHTML = `
+            <h3>📄 Comprobante - Pedido #${pedidoId}</h3>
+            <img src="comprobantes/${comprobante}" alt="Comprobante" style="max-width: 100%; margin: 20px 0;">
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="eliminarComprobante(${pedidoId})" style="background: #ff3b30; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer;">🗑️ Eliminar</button>
+                <a href="comprobantes/${comprobante}" download style="background: #007aff; color: white; padding: 10px 20px; margin: 5px; border-radius: 5px; text-decoration: none; display: inline-block;">⬇️ Descargar</a>
+            </div>
+        `;
+    } else {
+        modalContent.innerHTML = `
+            <h3>📄 Subir Comprobante - Pedido #${pedidoId}</h3>
+            <form id="formSimple-${pedidoId}" enctype="multipart/form-data">
+                <input type="hidden" name="id_pedido" value="${pedidoId}">
+                <input type="file" name="comprobante" accept="image/*,application/pdf" required style="width: 100%; margin: 20px 0; padding: 10px;">
+                <button type="submit" style="background: #34c759; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%;">📤 Subir</button>
+            </form>
+            <button onclick="marcarComoEfectivo(${pedidoId}, true)" style="background: #ff9500; color: white; border: none; padding: 10px 20px; margin-top: 10px; border-radius: 5px; cursor: pointer; width: 100%;">💵 Marcar como Efectivo</button>
+        `;
+    }
+    
+    modalContent.appendChild(closeBtn);
+    overlay.appendChild(modalContent);
+    document.body.appendChild(overlay);
+    
+    // Configurar formulario si existe
+    const form = document.getElementById(`formSimple-${pedidoId}`);
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            subirComprobanteForm(pedidoId, this);
+        });
+    }
+    
+    console.log('Modal simple creado exitosamente');
 }
 
 function crearModalComprobante(pedidoId) {

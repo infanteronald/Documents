@@ -1347,3 +1347,73 @@ h1 {
 .col-comprobante:hover {
     background-color: rgba(0, 122, 255, 0.1);
 }
+
+/* Estilos para modales */
+.modal-detalle-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-detalle {
+    background: var(--vscode-bg);
+    border: 1px solid var(--vscode-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2xl);
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease;
+}
+
+.cerrar-modal {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--apple-red);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 1;
+    transition: all var(--transition-base);
+}
+
+.cerrar-modal:hover {
+    background: #CC2C24;
+    transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-50px) scale(0.9); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}

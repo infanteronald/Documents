@@ -20,35 +20,35 @@ $es_efectivo = intval($input['es_efectivo']);
 try {
     // Si es efectivo, marcar como pagado y sin comprobante
     if ($es_efectivo == 1) {
-        $stmt = $conn->prepare("UPDATE pedidos_detal SET 
-            pagado = '1', 
-            tiene_comprobante = '0', 
+        $stmt = $conn->prepare("UPDATE pedidos_detal SET
+            pagado = '1',
+            tiene_comprobante = '0',
             comprobante = '',
-            metodo_pago = CASE 
+            metodo_pago = CASE
                 WHEN metodo_pago NOT LIKE '%efectivo%' THEN CONCAT(metodo_pago, ' (efectivo)')
                 ELSE metodo_pago
             END
             WHERE id = ?");
     } else {
         // Desmarcar como efectivo, resetear estado de pago
-        $stmt = $conn->prepare("UPDATE pedidos_detal SET 
-            pagado = '0', 
+        $stmt = $conn->prepare("UPDATE pedidos_detal SET
+            pagado = '0',
             tiene_comprobante = '0',
             metodo_pago = REPLACE(metodo_pago, ' (efectivo)', '')
             WHERE id = ?");
     }
-    
+
     $stmt->bind_param("i", $id_pedido);
-    
+
     if ($stmt->execute()) {
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Pago en efectivo ' . ($es_efectivo ? 'confirmado' : 'desmarcado') . ' exitosamente'
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error al actualizar la base de datos']);
     }
-    
+
     $stmt->close();
 
 } catch (Exception $e) {

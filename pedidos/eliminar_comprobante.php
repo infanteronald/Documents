@@ -22,38 +22,38 @@ try {
     $stmt->bind_param("i", $id_pedido);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows === 0) {
         echo json_encode(['success' => false, 'message' => 'Pedido no encontrado']);
         exit;
     }
-    
+
     $row = $result->fetch_assoc();
     $archivo_comprobante = $row['comprobante'];
     $stmt->close();
-    
+
     // Actualizar base de datos
-    $stmt = $conn->prepare("UPDATE pedidos_detal SET 
-        comprobante = '', 
+    $stmt = $conn->prepare("UPDATE pedidos_detal SET
+        comprobante = '',
         tiene_comprobante = '0',
         pagado = '0'
         WHERE id = ?");
     $stmt->bind_param("i", $id_pedido);
-    
+
     if ($stmt->execute()) {
         // Intentar eliminar el archivo físico si existe
         if (!empty($archivo_comprobante) && file_exists("comprobantes/" . $archivo_comprobante)) {
             unlink("comprobantes/" . $archivo_comprobante);
         }
-        
+
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Comprobante eliminado exitosamente'
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error al actualizar la base de datos']);
     }
-    
+
     $stmt->close();
 
 } catch (Exception $e) {
