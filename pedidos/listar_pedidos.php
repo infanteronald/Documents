@@ -1058,109 +1058,99 @@ function actualizarEstadoPagoUI(pedidoId, nuevoEstado) {
 function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPago) {
     console.log('Abriendo modal comprobante:', { pedidoId, comprobante, tieneComprobante, metodoPago });
     
-    const modal = document.createElement('div');
-    modal.className = 'modal-detalle-bg';
-    modal.setAttribute('data-pedido-id', pedidoId);
-    
-    let contenidoModal = '';
-    
-    // Si ya tiene comprobante, mostrar el comprobante
-    if (tieneComprobante === '1' && comprobante && comprobante.trim() !== '') {
-        const esImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(comprobante);
-        const esPDF = /\.pdf$/i.test(comprobante);
+    try {
+        const modal = document.createElement('div');
+        modal.className = 'modal-detalle-bg';
+        modal.setAttribute('data-pedido-id', pedidoId);
         
-        contenidoModal = `
-            <div class="modal-detalle" style="max-width: 600px;">
-                <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
-                <h3>📄 Comprobante de Pago - Pedido #${pedidoId}</h3>
-                
-                <div class="comprobante-viewer">
-                    ${esImagen ? 
-                        `<img src="comprobantes/${comprobante}" alt="Comprobante" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid var(--vscode-border);">` :
-                        esPDF ?
-                        `<iframe src="comprobantes/${comprobante}" style="width: 100%; height: 400px; border: 1px solid var(--vscode-border); border-radius: 8px;"></iframe>` :
-                        `<div style="padding: 20px; text-align: center; border: 1px solid var(--vscode-border); border-radius: 8px;">
-                            <p>📄 Archivo: ${comprobante}</p>
-                            <a href="comprobantes/${comprobante}" target="_blank" class="btn-neon">Abrir Archivo</a>
-                        </div>`
-                    }
-                </div>
-                
-                <div class="acciones-comprobante" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="reemplazarComprobante(${pedidoId})" class="btn-warning">🔄 Reemplazar</button>
-                    <button onclick="eliminarComprobante(${pedidoId})" class="btn-danger">🗑️ Eliminar</button>
-                    <a href="comprobantes/${comprobante}" download class="btn-secondary">⬇️ Descargar</a>
-                </div>
-            </div>
-        `;
-    } 
-    // Si el método de pago es efectivo, mostrar opción de marcar como efectivo
-    else if (metodoPago && metodoPago.toLowerCase().includes('efectivo')) {
-        contenidoModal = `
-            <div class="modal-detalle" style="max-width: 450px;">
-                <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
-                <h3>💵 Pago en Efectivo - Pedido #${pedidoId}</h3>
-                
-                <div style="text-align: center; padding: 20px;">
-                    <p style="margin-bottom: 20px;">Este pedido se pagó en <strong>efectivo</strong>.</p>
-                    <p style="margin-bottom: 30px; color: var(--vscode-text-muted);">Los pagos en efectivo no requieren comprobante.</p>
-                    
-                    <label style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 30px; font-size: 1.1rem;">
-                        <input type="checkbox" id="checkEfectivo-${pedidoId}" onchange="marcarComoEfectivo(${pedidoId}, this.checked)" 
-                               style="transform: scale(1.5);">
-                        <span>✅ Confirmar pago en efectivo recibido</span>
-                    </label>
-                    
-                    <p style="margin-bottom: 20px; color: var(--apple-orange);">¿Hubo cambio de método de pago?</p>
-                    <button onclick="subirComprobanteAlternativo(${pedidoId})" class="btn-secondary">📄 Subir Comprobante</button>
-                </div>
-            </div>
-        `;
-    }
-    // Si no tiene comprobante, mostrar opción para subir
-    else {
-        contenidoModal = `
-            <div class="modal-detalle" style="max-width: 450px;">
-                <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
-                <h3>📄 Subir Comprobante de Pago</h3>
-                <p style="text-align: center;">Pedido #${pedidoId}</p>
-                
-                <form id="formComprobante-${pedidoId}" enctype="multipart/form-data" style="padding: 20px;">
-                    <input type="hidden" name="id_pedido" value="${pedidoId}">
-                    
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Seleccionar archivo:</label>
-                        <input type="file" name="comprobante" accept="image/*,application/pdf" required
-                               style="width: 100%; padding: 10px; border: 1px solid var(--vscode-border); border-radius: 6px; background: var(--vscode-sidebar);">
-                        <small style="color: var(--vscode-text-muted); display: block; margin-top: 5px;">
-                            Formatos aceptados: JPG, PNG, PDF (máx. 5MB)
-                        </small>
-                    </div>
-                    
-                    <button type="submit" class="btn-neon" style="width: 100%; margin-bottom: 15px;">
-                        📤 Subir Comprobante
-                    </button>
-                </form>
-                
-                <div style="text-align: center; border-top: 1px solid var(--vscode-border); padding-top: 15px;">
-                    <p style="margin-bottom: 15px; color: var(--vscode-text-muted);">¿Es pago en efectivo?</p>
-                    <button onclick="marcarComoEfectivo(${pedidoId}, true)" class="btn-secondary">💵 Marcar como Efectivo</button>
-                </div>
-            </div>
-        `;
-    }
-    
-    modal.innerHTML = contenidoModal;
-    document.body.appendChild(modal);
-    modal.style.display = 'flex';
-    
-    // Si hay formulario, configurar el submit
-    const form = modal.querySelector(`#formComprobante-${pedidoId}`);
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            subirComprobanteForm(pedidoId, this);
-        });
+        let contenidoModal = '';
+        
+        // Si ya tiene comprobante, mostrar el comprobante
+        if (tieneComprobante === '1' && comprobante && comprobante.trim() !== '') {
+            const esImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(comprobante);
+            const esPDF = /\.pdf$/i.test(comprobante);
+            
+            contenidoModal = '<div class="modal-detalle" style="max-width: 600px;">' +
+                '<button class="cerrar-modal" onclick="this.closest(\'.modal-detalle-bg\').remove()">×</button>' +
+                '<h3>📄 Comprobante de Pago - Pedido #' + pedidoId + '</h3>' +
+                '<div class="comprobante-viewer">';
+            
+            if (esImagen) {
+                contenidoModal += '<img src="comprobantes/' + comprobante + '" alt="Comprobante" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid #30363d;">';
+            } else if (esPDF) {
+                contenidoModal += '<iframe src="comprobantes/' + comprobante + '" style="width: 100%; height: 400px; border: 1px solid #30363d; border-radius: 8px;"></iframe>';
+            } else {
+                contenidoModal += '<div style="padding: 20px; text-align: center; border: 1px solid #30363d; border-radius: 8px;">' +
+                    '<p>📄 Archivo: ' + comprobante + '</p>' +
+                    '<a href="comprobantes/' + comprobante + '" target="_blank" class="btn-neon">Abrir Archivo</a>' +
+                    '</div>';
+            }
+            
+            contenidoModal += '</div>' +
+                '<div class="acciones-comprobante" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">' +
+                '<button onclick="reemplazarComprobante(' + pedidoId + ')" class="btn-warning">🔄 Reemplazar</button>' +
+                '<button onclick="eliminarComprobante(' + pedidoId + ')" class="btn-danger">🗑️ Eliminar</button>' +
+                '<a href="comprobantes/' + comprobante + '" download class="btn-secondary">⬇️ Descargar</a>' +
+                '</div>' +
+                '</div>';
+        } 
+        // Si el método de pago es efectivo, mostrar opción de marcar como efectivo
+        else if (metodoPago && metodoPago.toLowerCase().includes('efectivo')) {
+            contenidoModal = '<div class="modal-detalle" style="max-width: 450px;">' +
+                '<button class="cerrar-modal" onclick="this.closest(\'.modal-detalle-bg\').remove()">×</button>' +
+                '<h3>💵 Pago en Efectivo - Pedido #' + pedidoId + '</h3>' +
+                '<div style="text-align: center; padding: 20px;">' +
+                '<p style="margin-bottom: 20px;">Este pedido se pagó en <strong>efectivo</strong>.</p>' +
+                '<p style="margin-bottom: 30px; color: #8b949e;">Los pagos en efectivo no requieren comprobante.</p>' +
+                '<label style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 30px; font-size: 1.1rem;">' +
+                '<input type="checkbox" id="checkEfectivo-' + pedidoId + '" onchange="marcarComoEfectivo(' + pedidoId + ', this.checked)" style="transform: scale(1.5);">' +
+                '<span>✅ Confirmar pago en efectivo recibido</span>' +
+                '</label>' +
+                '<p style="margin-bottom: 20px; color: #FF9500;">¿Hubo cambio de método de pago?</p>' +
+                '<button onclick="subirComprobanteAlternativo(' + pedidoId + ')" class="btn-secondary">📄 Subir Comprobante</button>' +
+                '</div>' +
+                '</div>';
+        }
+        // Si no tiene comprobante, mostrar opción para subir
+        else {
+            contenidoModal = '<div class="modal-detalle" style="max-width: 450px;">' +
+                '<button class="cerrar-modal" onclick="this.closest(\'.modal-detalle-bg\').remove()">×</button>' +
+                '<h3>📄 Subir Comprobante de Pago</h3>' +
+                '<p style="text-align: center;">Pedido #' + pedidoId + '</p>' +
+                '<form id="formComprobante-' + pedidoId + '" enctype="multipart/form-data" style="padding: 20px;">' +
+                '<input type="hidden" name="id_pedido" value="' + pedidoId + '">' +
+                '<div style="margin-bottom: 20px;">' +
+                '<label style="display: block; margin-bottom: 8px; font-weight: 600;">Seleccionar archivo:</label>' +
+                '<input type="file" name="comprobante" accept="image/*,application/pdf" required style="width: 100%; padding: 10px; border: 1px solid #30363d; border-radius: 6px; background: #161b22;">' +
+                '<small style="color: #8b949e; display: block; margin-top: 5px;">Formatos aceptados: JPG, PNG, PDF (máx. 5MB)</small>' +
+                '</div>' +
+                '<button type="submit" class="btn-neon" style="width: 100%; margin-bottom: 15px;">📤 Subir Comprobante</button>' +
+                '</form>' +
+                '<div style="text-align: center; border-top: 1px solid #30363d; padding-top: 15px;">' +
+                '<p style="margin-bottom: 15px; color: #8b949e;">¿Es pago en efectivo?</p>' +
+                '<button onclick="marcarComoEfectivo(' + pedidoId + ', true)" class="btn-secondary">💵 Marcar como Efectivo</button>' +
+                '</div>' +
+                '</div>';
+        }
+        
+        modal.innerHTML = contenidoModal;
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
+        
+        // Si hay formulario, configurar el submit
+        const form = modal.querySelector('#formComprobante-' + pedidoId);
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                subirComprobanteForm(pedidoId, this);
+            });
+        }
+        
+        console.log('Modal creado y mostrado exitosamente');
+        
+    } catch (error) {
+        console.error('Error al crear modal:', error);
+        alert('Error al abrir el modal: ' + error.message);
     }
 }
 
@@ -1480,12 +1470,12 @@ if (!document.querySelector('#feedback-styles')) {
 function subirComprobanteForm(pedidoId, form) {
     const formData = new FormData(form);
     const submitBtn = form.querySelector('button[type="submit"]');
-    
+
     // Deshabilitar botón y mostrar cargando
     const textoOriginal = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '⏳ Subiendo...';
-    
+
     fetch('subir_comprobante.php', {
         method: 'POST',
         body: formData
@@ -1495,7 +1485,7 @@ function subirComprobanteForm(pedidoId, form) {
         if (data.success) {
             // Cerrar modal
             form.closest('.modal-detalle-bg').remove();
-            
+
             // Actualizar la página o la fila específica
             mostrarNotificacion('✅ Comprobante subido exitosamente', 'success');
             setTimeout(() => location.reload(), 1000);
@@ -1518,7 +1508,7 @@ function marcarComoEfectivo(pedidoId, esEfectivo) {
         id_pedido: pedidoId,
         es_efectivo: esEfectivo ? 1 : 0
     };
-    
+
     fetch('actualizar_pago_efectivo.php', {
         method: 'POST',
         headers: {
@@ -1531,7 +1521,7 @@ function marcarComoEfectivo(pedidoId, esEfectivo) {
         if (data.success) {
             // Cerrar modal
             document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
-            
+
             mostrarNotificacion('✅ Pago en efectivo ' + (esEfectivo ? 'confirmado' : 'desmarcado'), 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
@@ -1547,7 +1537,7 @@ function marcarComoEfectivo(pedidoId, esEfectivo) {
 function reemplazarComprobante(pedidoId) {
     // Cerrar modal actual y abrir modal de subida
     document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
-    
+
     setTimeout(() => {
         abrirModalComprobante(pedidoId, '', '0', 'transferencia');
     }, 100);
@@ -1557,7 +1547,7 @@ function eliminarComprobante(pedidoId) {
     if (!confirm('¿Estás seguro de que quieres eliminar este comprobante?')) {
         return;
     }
-    
+
     fetch('eliminar_comprobante.php', {
         method: 'POST',
         headers: {
@@ -1584,7 +1574,7 @@ function eliminarComprobante(pedidoId) {
 function subirComprobanteAlternativo(pedidoId) {
     // Cerrar modal actual y abrir modal de subida
     document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
-    
+
     setTimeout(() => {
         abrirModalComprobante(pedidoId, '', '0', 'transferencia');
     }, 100);
@@ -1610,7 +1600,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         transition: all 0.3s ease;
         max-width: 400px;
     `;
-    
+
     // Colores según tipo
     switch(tipo) {
         case 'success':
@@ -1625,15 +1615,15 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         default:
             notificacion.style.background = 'var(--apple-blue)';
     }
-    
+
     document.body.appendChild(notificacion);
-    
+
     // Animar entrada
     setTimeout(() => {
         notificacion.style.opacity = '1';
         notificacion.style.transform = 'translateX(0)';
     }, 100);
-    
+
     // Animar salida y eliminar
     setTimeout(() => {
         notificacion.style.opacity = '0';
