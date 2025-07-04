@@ -59,31 +59,65 @@ try {
         error_log("Warning: No se pudo establecer charset utf8mb4");
     }
 
+    // Log para debugging
+    error_log("get_productos_pedido.php: Buscando productos para pedido ID: " . $id_pedido);
+
     // Verificar si la tabla existe
     $check_table = $conn->query("SHOW TABLES LIKE 'pedido_detalle'");
     if (!$check_table || $check_table->num_rows === 0) {
         throw new Exception('Tabla pedido_detalle no encontrada');
     }
 
-    // Consulta simple y directa
-    $query = "SELECT nombre, precio, cantidad, talla FROM pedido_detalle WHERE pedido_id = " . $id_pedido . " ORDER BY id";
-    $result = $conn->query($query);
-
-    if (!$result) {
-        throw new Exception('Error en consulta: ' . $conn->error);
+    // Usar prepared statement para evitar problemas
+    $stmt = $conn->prepare("SELECT nombre, precio, cantidad, talla FROM pedido_detalle WHERE pedido_id = ? ORDER BY id");
+    if (!$stmt) {
+        throw new Exception('Error preparando consulta: ' . $conn->error);
     }
 
+    $stmt->bind_param("i", $id_pedido);
+
+    if (!$stmt->execute()) {
+        throw new Exception('Error ejecutando consulta: ' . $stmt->error);
+    }
+
+    // Usar bind_result de forma explícita y robusta
     $productos = array();
-    while ($row = $result->fetch_assoc()) {
-        $productos[] = array(
-            'nombre' => isset($row['nombre']) ? $row['nombre'] : 'Sin nombre',
-            'precio' => isset($row['precio']) ? floatval($row['precio']) : 0,
-            'cantidad' => isset($row['cantidad']) ? intval($row['cantidad']) : 0,
-            'talla' => isset($row['talla']) && !empty($row['talla']) ? $row['talla'] : ''
-        );
+
+    if (!$stmt->bind_result($nombre, $precio, $cantidad, $talla)) {
+        throw new Exception('Error en bind_result: ' . $stmt->error);
     }
+
+    // Fetch con variables limpias en cada iteración
+    while ($stmt->fetch()) {
+        // Crear una copia de los valores para evitar problemas de referencia
+        $producto = array(
+            'nombre' => is_null($nombre) ? 'Sin nombre' : trim((string)$nombre),
+            'precio' => is_null($precio) ? 0.0 : (float)$precio,
+            'cantidad' => is_null($cantidad) ? 0 : (int)$cantidad,
+            'talla' => is_null($talla) ? '' : trim((string)$talla)
+        );
+
+        // Log de cada producto para debugging
+        error_log("Producto encontrado: " . json_encode($producto));
+
+        $productos[] = $producto;
+
+        // Limpiar variables para siguiente iteración
+        $nombre = null;
+        $precio = null;
+        $cantidad = null;
+        $talla = null;
+    }
+
+    $stmt->close();
+
+    error_log("get_productos_pedido.php: Productos encontrados: " . count($productos));
 
     $conn->close();
+
+    // Log del resultado
+    error_log("get_productos_pedido.php: Encontrados " . count($productos) . " productos");
+    error_log("get_productos_pedido.php: Productos: " . json_encode($productos));
 
     // Respuesta exitosa
     enviarRespuesta(true, array(
@@ -93,8 +127,8 @@ try {
     ));
 
 } catch (Exception $e) {
-    error_log("Error en get_productos_pedido.php: " . $e->getMessage());
+    error_log("Error en get_productos_pedido.php para pedido ID $id_pedido: " . $e->getMessage());
     http_response_code(500);
-    enviarRespuesta(false, array(), $e->getMessage());
+    enviarRespuesta(false, array(), "Error al cargar productos: " . $e->getMessage());
 }
 ?>
