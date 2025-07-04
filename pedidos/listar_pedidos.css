@@ -1258,3 +1258,92 @@ h1 {
         width: 60px;
     }
 }
+
+/* Estilos para modal de comprobantes */
+.comprobante-viewer {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.acciones-comprobante {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-warning {
+    background: var(--apple-orange);
+    border: 1px solid var(--apple-orange);
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.btn-warning:hover {
+    background: #E6840A;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-danger {
+    background: var(--apple-red);
+    border: 1px solid var(--apple-red);
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.btn-danger:hover {
+    background: #CC2C24;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary {
+    background: var(--vscode-sidebar);
+    border: 1px solid var(--vscode-border);
+    border-radius: var(--radius-md);
+    color: var(--vscode-text);
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.btn-secondary:hover {
+    background: var(--vscode-sidebar-hover);
+    border-color: var(--apple-blue);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Cursor pointer para columna clickeable */
+.col-comprobante {
+    transition: background-color var(--transition-base);
+}
+
+.col-comprobante:hover {
+    background-color: rgba(0, 122, 255, 0.1);
+}

@@ -76,13 +76,13 @@ switch($filtro) {
 if($buscar && trim($buscar) !== ''){
     $buscarOriginal = trim($buscar);
     $buscarSql = $conn->real_escape_string($buscarOriginal);
-    
+
     // Si es un número puro, priorizar búsqueda por ID
     if(is_numeric($buscarSql) && strlen($buscarSql) <= 8) {
         $where .= " AND (
-            p.id = '$buscarSql' OR 
-            p.telefono LIKE '%$buscarSql%' OR 
-            p.nombre LIKE '%$buscarSql%' OR 
+            p.id = '$buscarSql' OR
+            p.telefono LIKE '%$buscarSql%' OR
+            p.nombre LIKE '%$buscarSql%' OR
             p.correo LIKE '%$buscarSql%'
         )";
     } else {
@@ -90,40 +90,40 @@ if($buscar && trim($buscar) !== ''){
         $buscarTerminos = array_filter(explode(' ', $buscarSql), function($termino) {
             return strlen(trim($termino)) >= 2;
         });
-        
+
         if(!empty($buscarTerminos)) {
             $condicionesBusqueda = [];
-            
+
             foreach($buscarTerminos as $termino) {
                 $termino = trim($termino);
                 $termino = $conn->real_escape_string($termino);
-                
+
                 // Condiciones de búsqueda amplias para encontrar cualquier coincidencia
                 $condicionesTermino = [
                     // Datos principales del cliente
                     "p.nombre LIKE '%$termino%'",
-                    "p.correo LIKE '%$termino%'", 
+                    "p.correo LIKE '%$termino%'",
                     "p.telefono LIKE '%$termino%'",
-                    
+
                     // Ubicación
                     "p.ciudad LIKE '%$termino%'",
                     "p.barrio LIKE '%$termino%'",
                     "p.direccion LIKE '%$termino%'",
-                    
+
                     // Información de pago
                     "p.metodo_pago LIKE '%$termino%'",
                     "p.datos_pago LIKE '%$termino%'",
-                    
+
                     // Estados y notas
                     "p.estado LIKE '%$termino%'",
                     "p.nota_interna LIKE '%$termino%'"
                 ];
-                
+
                 // Búsqueda por ID si es numérico
                 if(is_numeric($termino)) {
                     $condicionesTermino[] = "p.id = '$termino'";
                 }
-                
+
                 // Búsqueda por fecha si tiene formato de fecha
                 if(preg_match('/\d{4}-\d{2}-\d{2}/', $termino)) {
                     $condicionesTermino[] = "DATE(p.fecha) = '$termino'";
@@ -132,12 +132,12 @@ if($buscar && trim($buscar) !== ''){
                 if(preg_match('/\d{2}\/\d{2}\/\d{4}/', $termino)) {
                     $condicionesTermino[] = "DATE_FORMAT(p.fecha, '%d/%m/%Y') LIKE '%$termino%'";
                 }
-                
+
                 // Búsqueda por año si es un año válido
                 if(preg_match('/^20\d{2}$/', $termino)) {
                     $condicionesTermino[] = "YEAR(p.fecha) = '$termino'";
                 }
-                
+
                 // Búsqueda por mes si coincide con nombres de meses
                 $meses = [
                     'enero' => '01', 'febrero' => '02', 'marzo' => '03', 'abril' => '04',
@@ -149,11 +149,11 @@ if($buscar && trim($buscar) !== ''){
                     $numeroMes = $meses[$terminoLower];
                     $condicionesTermino[] = "MONTH(p.fecha) = '$numeroMes'";
                 }
-                
+
                 // Crear condición OR para este término
                 $condicionesBusqueda[] = "(" . implode(" OR ", $condicionesTermino) . ")";
             }
-            
+
             // Todos los términos deben encontrarse (AND entre términos)
             if(!empty($condicionesBusqueda)) {
                 $where .= " AND (" . implode(" AND ", $condicionesBusqueda) . ")";
@@ -523,7 +523,7 @@ function formatear_productos($productos) {
                                 </td>
 
                                 <!-- Status: Comprobante -->
-                                <td class="col-comprobante">
+                                <td class="col-comprobante" onclick="abrirModalComprobante(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['comprobante']); ?>', '<?php echo $p['tiene_comprobante']; ?>', '<?php echo htmlspecialchars($p['metodo_pago']); ?>')" style="cursor: pointer;" title="Click para ver/subir comprobante">
                                     <span class="badge-status <?php echo $p['tiene_comprobante'] == '1' ? 'status-si' : 'status-no'; ?>">
                                         <?php echo $p['tiene_comprobante'] == '1' ? '✅ Sí' : '⏳ No'; ?>
                                     </span>
@@ -688,13 +688,13 @@ let ultimaBusqueda = '';
 
 function busquedaEnTiempoReal(termino) {
     const inputBusqueda = document.getElementById('busquedaRapida');
-    
+
     // Evitar búsquedas duplicadas
     if (termino === ultimaBusqueda) return;
-    
+
     // Limpiar timeout anterior
     clearTimeout(busquedaTimeout);
-    
+
     // Indicador visual mientras escribe
     if (termino.trim().length > 0) {
         inputBusqueda.style.borderColor = 'var(--apple-blue)';
@@ -705,7 +705,7 @@ function busquedaEnTiempoReal(termino) {
         inputBusqueda.style.boxShadow = '';
         inputBusqueda.style.backgroundColor = '';
     }
-    
+
     // Para términos muy cortos, limpiar la búsqueda
     if (termino.trim().length === 0) {
         const params = new URLSearchParams(window.location.search);
@@ -715,32 +715,32 @@ function busquedaEnTiempoReal(termino) {
         window.location.href = window.location.pathname + '?' + params.toString();
         return;
     }
-    
+
     // No buscar si es muy corto
     if (termino.trim().length < 2) {
         return;
     }
-    
+
     // Delay dinámico: búsquedas más rápidas para términos largos
     const delayTime = termino.trim().length >= 4 ? 400 : 800;
-    
+
     busquedaTimeout = setTimeout(() => {
         ultimaBusqueda = termino;
         console.log('🔍 Ejecutando búsqueda inteligente:', termino);
-        
+
         // Indicador de búsqueda activa
         inputBusqueda.style.borderColor = 'var(--apple-green)';
         inputBusqueda.style.boxShadow = '0 0 0 2px rgba(52, 199, 89, 0.2)';
         inputBusqueda.style.backgroundColor = '#f8fff8';
-        
+
         // Construir parámetros de búsqueda
         const params = new URLSearchParams(window.location.search);
         const filtroActual = params.get('filtro') || 'semana';
-        
+
         const newParams = new URLSearchParams();
         newParams.append('filtro', filtroActual);
         newParams.append('buscar', termino.trim());
-        
+
         // Mantener otros filtros activos
         ['metodo_pago', 'ciudad', 'fecha_desde', 'fecha_hasta'].forEach(param => {
             const valor = params.get(param);
@@ -748,12 +748,12 @@ function busquedaEnTiempoReal(termino) {
                 newParams.append(param, valor);
             }
         });
-        
+
         // Mostrar feedback antes de redirigir
         setTimeout(() => {
             window.location.href = window.location.pathname + '?' + newParams.toString();
         }, 100);
-        
+
     }, delayTime);
 }
 
@@ -771,12 +771,12 @@ let ejemplosTimeout;
 function mostrarEjemplosBusqueda() {
     const input = document.getElementById('busquedaRapida');
     if (input.value.trim() !== '') return; // Solo si está vacío
-    
+
     clearTimeout(ejemplosTimeout);
-    
+
     const ejemplos = [
         'Juan Pérez',
-        'juan@email.com', 
+        'juan@email.com',
         '3001234567',
         'Bogotá',
         'transferencia',
@@ -785,9 +785,9 @@ function mostrarEjemplosBusqueda() {
         'diciembre',
         '2024'
     ];
-    
+
     let indiceEjemplo = 0;
-    
+
     ejemplosTimeout = setTimeout(() => {
         const intervalo = setInterval(() => {
             if (document.activeElement !== input) {
@@ -795,10 +795,10 @@ function mostrarEjemplosBusqueda() {
                 input.placeholder = "🔍 Buscar por ID, nombre, email, teléfono, ciudad, monto, fecha, año, mes...";
                 return;
             }
-            
+
             input.placeholder = `🔍 Ejemplo: ${ejemplos[indiceEjemplo]}`;
             indiceEjemplo = (indiceEjemplo + 1) % ejemplos.length;
-            
+
             if (input.value.trim() !== '') {
                 clearInterval(intervalo);
                 input.placeholder = "🔍 Buscar por ID, nombre, email, teléfono, ciudad, monto, fecha, año, mes...";
@@ -1054,12 +1054,114 @@ function actualizarEstadoPagoUI(pedidoId, nuevoEstado) {
     btnPago.disabled = false;
 }
 
-// ===== FUNCIONES DE GESTIÓN DE ARCHIVOS =====
-function subirComprobante(pedidoId) {
-    // Crear modal dinámico para subir comprobante
-    const modal = crearModalComprobante(pedidoId);
+// ===== FUNCIONES DE GESTIÓN DE COMPROBANTES =====
+function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPago) {
+    console.log('Abriendo modal comprobante:', { pedidoId, comprobante, tieneComprobante, metodoPago });
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-detalle-bg';
+    modal.setAttribute('data-pedido-id', pedidoId);
+    
+    let contenidoModal = '';
+    
+    // Si ya tiene comprobante, mostrar el comprobante
+    if (tieneComprobante === '1' && comprobante && comprobante.trim() !== '') {
+        const esImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(comprobante);
+        const esPDF = /\.pdf$/i.test(comprobante);
+        
+        contenidoModal = `
+            <div class="modal-detalle" style="max-width: 600px;">
+                <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                <h3>📄 Comprobante de Pago - Pedido #${pedidoId}</h3>
+                
+                <div class="comprobante-viewer">
+                    ${esImagen ? 
+                        `<img src="comprobantes/${comprobante}" alt="Comprobante" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid var(--vscode-border);">` :
+                        esPDF ?
+                        `<iframe src="comprobantes/${comprobante}" style="width: 100%; height: 400px; border: 1px solid var(--vscode-border); border-radius: 8px;"></iframe>` :
+                        `<div style="padding: 20px; text-align: center; border: 1px solid var(--vscode-border); border-radius: 8px;">
+                            <p>📄 Archivo: ${comprobante}</p>
+                            <a href="comprobantes/${comprobante}" target="_blank" class="btn-neon">Abrir Archivo</a>
+                        </div>`
+                    }
+                </div>
+                
+                <div class="acciones-comprobante" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="reemplazarComprobante(${pedidoId})" class="btn-warning">🔄 Reemplazar</button>
+                    <button onclick="eliminarComprobante(${pedidoId})" class="btn-danger">🗑️ Eliminar</button>
+                    <a href="comprobantes/${comprobante}" download class="btn-secondary">⬇️ Descargar</a>
+                </div>
+            </div>
+        `;
+    } 
+    // Si el método de pago es efectivo, mostrar opción de marcar como efectivo
+    else if (metodoPago && metodoPago.toLowerCase().includes('efectivo')) {
+        contenidoModal = `
+            <div class="modal-detalle" style="max-width: 450px;">
+                <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                <h3>💵 Pago en Efectivo - Pedido #${pedidoId}</h3>
+                
+                <div style="text-align: center; padding: 20px;">
+                    <p style="margin-bottom: 20px;">Este pedido se pagó en <strong>efectivo</strong>.</p>
+                    <p style="margin-bottom: 30px; color: var(--vscode-text-muted);">Los pagos en efectivo no requieren comprobante.</p>
+                    
+                    <label style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 30px; font-size: 1.1rem;">
+                        <input type="checkbox" id="checkEfectivo-${pedidoId}" onchange="marcarComoEfectivo(${pedidoId}, this.checked)" 
+                               style="transform: scale(1.5);">
+                        <span>✅ Confirmar pago en efectivo recibido</span>
+                    </label>
+                    
+                    <p style="margin-bottom: 20px; color: var(--apple-orange);">¿Hubo cambio de método de pago?</p>
+                    <button onclick="subirComprobanteAlternativo(${pedidoId})" class="btn-secondary">📄 Subir Comprobante</button>
+                </div>
+            </div>
+        `;
+    }
+    // Si no tiene comprobante, mostrar opción para subir
+    else {
+        contenidoModal = `
+            <div class="modal-detalle" style="max-width: 450px;">
+                <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                <h3>📄 Subir Comprobante de Pago</h3>
+                <p style="text-align: center;">Pedido #${pedidoId}</p>
+                
+                <form id="formComprobante-${pedidoId}" enctype="multipart/form-data" style="padding: 20px;">
+                    <input type="hidden" name="id_pedido" value="${pedidoId}">
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Seleccionar archivo:</label>
+                        <input type="file" name="comprobante" accept="image/*,application/pdf" required
+                               style="width: 100%; padding: 10px; border: 1px solid var(--vscode-border); border-radius: 6px; background: var(--vscode-sidebar);">
+                        <small style="color: var(--vscode-text-muted); display: block; margin-top: 5px;">
+                            Formatos aceptados: JPG, PNG, PDF (máx. 5MB)
+                        </small>
+                    </div>
+                    
+                    <button type="submit" class="btn-neon" style="width: 100%; margin-bottom: 15px;">
+                        📤 Subir Comprobante
+                    </button>
+                </form>
+                
+                <div style="text-align: center; border-top: 1px solid var(--vscode-border); padding-top: 15px;">
+                    <p style="margin-bottom: 15px; color: var(--vscode-text-muted);">¿Es pago en efectivo?</p>
+                    <button onclick="marcarComoEfectivo(${pedidoId}, true)" class="btn-secondary">💵 Marcar como Efectivo</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    modal.innerHTML = contenidoModal;
     document.body.appendChild(modal);
     modal.style.display = 'flex';
+    
+    // Si hay formulario, configurar el submit
+    const form = modal.querySelector(`#formComprobante-${pedidoId}`);
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            subirComprobanteForm(pedidoId, this);
+        });
+    }
 }
 
 function crearModalComprobante(pedidoId) {
@@ -1373,330 +1475,171 @@ if (!document.querySelector('#feedback-styles')) {
 }
 
 // ============================================
-// FUNCIÓN PARA WHATSAPP
+// FUNCIONES AUXILIARES PARA COMPROBANTES
 // ============================================
-
-// Función para abrir WhatsApp en ventana popup
-function abrirWhatsApp(telefono) {
-    // Limpiar el número de teléfono (solo números)
-    const numeroLimpio = telefono.replace(/[^0-9]/g, '');
-
-    // URL de WhatsApp
-    const urlWhatsApp = `https://wa.me/${numeroLimpio}`;
-
-    // Configuración de la ventana popup
-    const anchoVentana = 500;
-    const altoVentana = 600;
-    const left = (screen.width / 2) - (anchoVentana / 2);
-    const top = (screen.height / 2) - (altoVentana / 2);
-
-    // Abrir ventana popup
-    const ventanaWhatsApp = window.open(
-        urlWhatsApp,
-        'whatsapp',
-        `width=${anchoVentana},height=${altoVentana},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
-    );
-
-    // Enfocar la ventana si ya estaba abierta
-    if (ventanaWhatsApp) {
-        ventanaWhatsApp.focus();
-    }
-
-    console.log(`📱 WhatsApp abierto para: ${numeroLimpio}`);
-}
-
-// ============================================
-// FUNCIONES PARA MOSTRAR PRODUCTOS DEL PEDIDO
-// ============================================
-
-// Función para toggle de productos del pedido
-function toggleProductos(pedidoId) {
-    console.log(`🚀 toggleProductos llamado con ID: ${pedidoId}`);
-    const filaProductos = document.getElementById(`productos-${pedidoId}`);
-    console.log(`🔍 Fila productos existente:`, filaProductos);
-
-    if (filaProductos) {
-        console.log(`♻️ Fila existe, verificando contenido...`);
-
-        // Verificar si la fila tiene contenido de loading o error
-        const tieneLoading = filaProductos.querySelector('.carrito-loading');
-        const tieneError = filaProductos.querySelector('.carrito-error');
-
-        console.log(`🔍 Tiene loading:`, !!tieneLoading);
-        console.log(`🔍 Tiene error:`, !!tieneError);
-
-        if (tieneLoading || tieneError) {
-            console.log(`🔄 Fila tiene loading/error, recargando productos...`);
-            // Si tiene loading o error, recargar
-            filaProductos.remove();
-            cargarProductosPedido(pedidoId);
-            return;
-        }
-
-        // Usar clases CSS para controlar visibilidad
-        const isVisible = !filaProductos.classList.contains('oculta');
-        console.log(`🔍 DEBUG - isVisible: ${isVisible}`);
-
-        if (isVisible) {
-            filaProductos.classList.add('oculta');
-            console.log(`🙈 Ocultando fila productos (añadiendo clase 'oculta')`);
+function subirComprobanteForm(pedidoId, form) {
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Deshabilitar botón y mostrar cargando
+    const textoOriginal = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '⏳ Subiendo...';
+    
+    fetch('subir_comprobante.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal
+            form.closest('.modal-detalle-bg').remove();
+            
+            // Actualizar la página o la fila específica
+            mostrarNotificacion('✅ Comprobante subido exitosamente', 'success');
+            setTimeout(() => location.reload(), 1000);
         } else {
-            filaProductos.classList.remove('oculta');
-            console.log(`👁️ Mostrando fila productos (removiendo clase 'oculta')`);
+            mostrarNotificacion('❌ Error: ' + (data.message || 'No se pudo subir el comprobante'), 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = textoOriginal;
         }
-    } else {
-        console.log(`🆕 Fila no existe, cargando productos...`);
-        // Si no existe, cargar productos y crear la fila
-        cargarProductosPedido(pedidoId);
-    }
-}
-
-// Función para cargar productos del pedido
-function cargarProductosPedido(pedidoId) {
-    console.log(`📦 cargarProductosPedido iniciado para ID: ${pedidoId}`);
-    const filaActual = document.querySelector(`tr[data-id="${pedidoId}"]`);
-    console.log(`🔍 Fila actual encontrada:`, filaActual);
-
-    if (!filaActual) {
-        console.error(`❌ No se encontró la fila del pedido: ${pedidoId}`);
-        return;
-    }
-
-    // Crear fila de productos
-    console.log(`🏗️ Creando fila de productos para pedido ${pedidoId}`);
-    const filaProductos = document.createElement('tr');
-    filaProductos.id = `productos-${pedidoId}`;
-    filaProductos.className = 'fila-productos';
-    console.log(`✅ Fila creada con ID: ${filaProductos.id}`);
-
-    // Crear celda que abarca todas las columnas
-    const columnas = filaActual.children.length;
-    console.log(`📊 Número de columnas: ${columnas}`);
-    filaProductos.innerHTML = `
-        <td colspan="${columnas}" class="productos-container">
-            <div class="carrito-container">
-                <div class="carrito-header">
-                    <div class="carrito-titulo">
-                        <span class="carrito-icono">🛒</span>
-                        Cargando carrito - Pedido #${pedidoId}
-                    </div>
-                </div>
-                <div class="carrito-loading">
-                    <div class="carrito-loading-spinner">⏳</div>
-                    <div>Cargando productos del carrito...</div>
-                    <div style="font-size: 0.8rem; opacity: 0.7;">
-                        Obteniendo contenido del pedido...
-                    </div>
-                </div>
-            </div>
-        </td>
-    `;
-
-    // Insertar la fila después de la fila actual
-    console.log(`📥 Insertando fila después de la fila actual`);
-    filaActual.insertAdjacentElement('afterend', filaProductos);
-
-    // Mostrar la fila inmediatamente (el usuario hizo clic para verla)
-    // NO usar clase 'oculta' para que se muestre
-    console.log(`✅ Fila insertada correctamente y mostrada (sin clase 'oculta')`);
-
-    // Timeout de 10 segundos
-    const timeoutId = setTimeout(() => {
-        mostrarErrorProductos(pedidoId, 'Tiempo de espera agotado. Verifica la conexión.');
-    }, 10000);
-
-    // Cargar productos via AJAX - CARRITO COMPLETO DEL CLIENTE
-    console.log('🔍 Cargando carrito completo para pedido:', pedidoId);
-    console.log('🌐 URL del endpoint:', `get_productos_pedido.php?id=${pedidoId}`);
-
-    fetch(`get_productos_pedido.php?id=${pedidoId}`)
-        .then(response => {
-            console.log('📡 Respuesta recibida:', response);
-            console.log('📊 Status:', response.status, 'OK:', response.ok);
-            console.log('📊 Headers:', response.headers);
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
-            }
-            return response.text(); // Primero como texto para debugging
-        })
-        .then(text => {
-            clearTimeout(timeoutId);
-            console.log('📝 Texto crudo recibido (primeros 200 chars):', text.substring(0, 200));
-            console.log('📝 Longitud del texto:', text.length);
-
-            if (!text || text.trim() === '') {
-                throw new Error('Respuesta vacía del servidor');
-            }
-
-            try {
-                const data = JSON.parse(text);
-                console.log('📦 Datos JSON parseados exitosamente:', data);
-                if (data.success) {
-                    if (data.productos && data.productos.length > 0) {
-                        console.log('✅ Productos encontrados:', data.productos.length);
-                        console.log('🛍️ Primer producto:', data.productos[0]);
-                        mostrarProductos(pedidoId, data.productos);
-                    } else {
-                        console.log('📭 No se encontraron productos para este pedido');
-                        mostrarErrorProductos(pedidoId, 'Este pedido no tiene productos detallados');
-                    }
-                } else {
-                    console.log('❌ Error en respuesta:', data.error);
-                    mostrarErrorProductos(pedidoId, data.error || 'No se encontraron productos');
-                }
-            } catch (parseError) {
-                console.error('🚨 Error parseando JSON:', parseError);
-                console.log('📄 Texto completo que causó el error:', text);
-                mostrarErrorProductos(pedidoId, 'Error en la respuesta del servidor: respuesta no es JSON válido');
-            }
-        })
-        .catch(error => {
-            clearTimeout(timeoutId);
-            console.error('🚨 Error completo al cargar productos:', error);
-            console.error('🚨 Stack trace:', error.stack);
-            mostrarErrorProductos(pedidoId, 'Error al cargar productos: ' + error.message);
-        });
-}
-
-// Función para mostrar productos en la fila expandida
-function mostrarProductos(pedidoId, productos) {
-    console.log(`🛍️ mostrarProductos llamado para pedido ${pedidoId} con ${productos.length} productos`);
-    const filaProductos = document.getElementById(`productos-${pedidoId}`);
-    console.log(`🔍 Fila productos encontrada:`, filaProductos);
-
-    if (!filaProductos) {
-        console.error(`❌ No se encontró la fila productos-${pedidoId}`);
-        return;
-    }
-
-    if (!productos || productos.length === 0) {
-        // Mostrar carrito vacío
-        const columnas = filaProductos.querySelector('td').getAttribute('colspan');
-        filaProductos.innerHTML = `
-            <td colspan="${columnas}" class="productos-container">
-                <div class="carrito-container">
-                    <div class="carrito-header">
-                        <div class="carrito-titulo">
-                            <span class="carrito-icono">🛒</span>
-                            Carrito de Compra - Pedido #${pedidoId}
-                        </div>
-                        <button class="btn-cerrar-productos" onclick="toggleProductos(${pedidoId})" title="Cerrar">×</button>
-                    </div>
-                    <div class="carrito-vacio">
-                        <div class="carrito-vacio-icono">🛍️</div>
-                        <div>Este pedido no tiene productos detallados</div>
-                    </div>
-                </div>
-            </td>
-        `;
-        return;
-    }
-
-    // Calcular totales
-    let totalGeneral = 0;
-    let totalItems = 0;
-
-    // Generar HTML del carrito
-    let carritoHTML = '';
-
-    productos.forEach((producto, index) => {
-        const precio = parseFloat(producto.precio) || 0;
-        const cantidad = parseInt(producto.cantidad) || 0;
-        const subtotal = precio * cantidad;
-        totalGeneral += subtotal;
-        totalItems += cantidad;
-
-        carritoHTML += `
-            <div class="carrito-producto">
-                <div class="producto-info-carrito">
-                    <div class="producto-nombre-carrito">${producto.nombre || 'Producto sin nombre'}</div>
-                    <div class="producto-variante">
-                        ${producto.talla ? `<span class="producto-talla-carrito">${producto.talla}</span>` : '<span class="producto-talla-carrito">Sin talla</span>'}
-                    </div>
-                </div>
-                <div class="producto-cantidad-carrito">
-                    ${cantidad}x
-                </div>
-                <div class="producto-precio-carrito">
-                    $${precio.toLocaleString()}
-                </div>
-                <div class="producto-subtotal-carrito">
-                    $${subtotal.toLocaleString()}
-                </div>
-            </div>
-        `;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión al subir comprobante', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = textoOriginal;
     });
-
-    // HTML completo del carrito
-    const carritoCompleto = `
-        <div class="carrito-container">
-            <div class="carrito-header">
-                <div class="carrito-titulo">
-                    <span class="carrito-icono">🛒</span>
-                    Carrito de Compra - Pedido #${pedidoId}
-                </div>
-                <div class="carrito-resumen">
-                    <span>${productos.length} productos</span>
-                    <span>${totalItems} artículos</span>
-                </div>
-                <button class="btn-cerrar-productos" onclick="toggleProductos(${pedidoId})" title="Cerrar">×</button>
-            </div>
-
-            <div class="carrito-productos">
-                ${carritoHTML}
-            </div>
-
-            <div class="carrito-total">
-                <div class="carrito-total-row">
-                    <span class="carrito-total-label">Subtotal (${totalItems} artículos):</span>
-                    <span class="carrito-total-valor">$${totalGeneral.toLocaleString()}</span>
-                </div>
-                <div class="carrito-total-row">
-                    <span class="carrito-total-label">Productos diferentes:</span>
-                    <span class="carrito-total-valor">${productos.length}</span>
-                </div>
-                <div class="carrito-total-row">
-                    <span class="carrito-total-label">TOTAL DEL PEDIDO:</span>
-                    <span class="carrito-total-valor carrito-total-final">$${totalGeneral.toLocaleString()}</span>
-                </div>
-            </div>
-        </div>
-    `;
-
-    const columnas = filaProductos.querySelector('td').getAttribute('colspan');
-    filaProductos.innerHTML = `
-        <td colspan="${columnas}" class="productos-container">
-            ${carritoCompleto}
-        </td>
-    `;
-
-    console.log(`✅ Carrito mostrado: ${productos.length} productos, ${totalItems} items, total: $${totalGeneral.toLocaleString()}`);
 }
 
-// Función para mostrar error al cargar productos
-function mostrarErrorProductos(pedidoId, mensaje) {
-    console.log(`❌ mostrarErrorProductos: ${mensaje}`);
-    const filaProductos = document.getElementById(`productos-${pedidoId}`);
-    if (!filaProductos) return;
+function marcarComoEfectivo(pedidoId, esEfectivo) {
+    const datos = {
+        id_pedido: pedidoId,
+        es_efectivo: esEfectivo ? 1 : 0
+    };
+    
+    fetch('actualizar_pago_efectivo.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datos)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal
+            document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+            
+            mostrarNotificacion('✅ Pago en efectivo ' + (esEfectivo ? 'confirmado' : 'desmarcado'), 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (data.message || 'No se pudo actualizar'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión', 'error');
+    });
+}
 
-    const columnas = filaProductos.querySelector('td').getAttribute('colspan');
-    filaProductos.innerHTML = `
-        <td colspan="${columnas}" class="productos-container">
-            <div class="carrito-container">
-                <div class="carrito-header">
-                    <div class="carrito-titulo">
-                        <span class="carrito-icono">🛒</span>
-                        Error al cargar carrito - Pedido #${pedidoId}
-                    </div>
-                    <button class="btn-cerrar-productos" onclick="toggleProductos(${pedidoId})" title="Cerrar">×</button>
-                </div>
-                <div class="carrito-error">
-                    <div style="margin-bottom: 10px;">❌ Error</div>
-                    <div>${mensaje}</div>
-                </div>
-            </div>
-        </td>
+function reemplazarComprobante(pedidoId) {
+    // Cerrar modal actual y abrir modal de subida
+    document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+    
+    setTimeout(() => {
+        abrirModalComprobante(pedidoId, '', '0', 'transferencia');
+    }, 100);
+}
+
+function eliminarComprobante(pedidoId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este comprobante?')) {
+        return;
+    }
+    
+    fetch('eliminar_comprobante.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id_pedido: pedidoId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+            mostrarNotificacion('✅ Comprobante eliminado exitosamente', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (data.message || 'No se pudo eliminar'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión', 'error');
+    });
+}
+
+function subirComprobanteAlternativo(pedidoId) {
+    // Cerrar modal actual y abrir modal de subida
+    document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+    
+    setTimeout(() => {
+        abrirModalComprobante(pedidoId, '', '0', 'transferencia');
+    }, 100);
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    const notificacion = document.createElement('div');
+    notificacion.className = `notificacion notificacion-${tipo}`;
+    notificacion.innerHTML = mensaje;
+    notificacion.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        max-width: 400px;
     `;
+    
+    // Colores según tipo
+    switch(tipo) {
+        case 'success':
+            notificacion.style.background = 'var(--apple-green)';
+            break;
+        case 'error':
+            notificacion.style.background = 'var(--apple-red)';
+            break;
+        case 'warning':
+            notificacion.style.background = 'var(--apple-orange)';
+            break;
+        default:
+            notificacion.style.background = 'var(--apple-blue)';
+    }
+    
+    document.body.appendChild(notificacion);
+    
+    // Animar entrada
+    setTimeout(() => {
+        notificacion.style.opacity = '1';
+        notificacion.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Animar salida y eliminar
+    setTimeout(() => {
+        notificacion.style.opacity = '0';
+        notificacion.style.transform = 'translateX(100%)';
+        setTimeout(() => notificacion.remove(), 300);
+    }, 4000);
 }
 </script>
 
