@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 include 'conexion.php';
 
 // Filtros expandidos
-$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'todos';
+$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'semana';
 $buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
 $metodo_pago = isset($_GET['metodo_pago']) ? $_GET['metodo_pago'] : '';
 $ciudad = isset($_GET['ciudad']) ? $_GET['ciudad'] : '';
@@ -28,6 +28,15 @@ switch($filtro) {
         break;
     case 'mes':
         $where = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE()) AND archivado = '0' AND anulado = '0'";
+        break;
+    case 'ultimos_30':
+        $where = "fecha >= CURDATE() - INTERVAL 30 DAY AND archivado = '0' AND anulado = '0'";
+        break;
+    case 'ultimos_60':
+        $where = "fecha >= CURDATE() - INTERVAL 60 DAY AND archivado = '0' AND anulado = '0'";
+        break;
+    case 'ultimos_90':
+        $where = "fecha >= CURDATE() - INTERVAL 90 DAY AND archivado = '0' AND anulado = '0'";
         break;
     case 'archivados':
         $where = "archivado = '1'";
@@ -63,10 +72,94 @@ switch($filtro) {
         $where = "archivado = '0' AND anulado = '0'"; // Por defecto, no mostrar archivados ni anulados
 }
 
-// Filtros adicionales
-if($buscar){
-    $buscarSql = $conn->real_escape_string($buscar);
-    $where .= " AND (nombre LIKE '%$buscarSql%' OR telefono LIKE '%$buscarSql%' OR id = '$buscarSql' OR correo LIKE '%$buscarSql%' OR direccion LIKE '%$buscarSql%')";
+// ===== BUSCADOR INTELIGENTE MEJORADO =====
+if($buscar && trim($buscar) !== ''){
+    $buscarOriginal = trim($buscar);
+    $buscarSql = $conn->real_escape_string($buscarOriginal);
+    
+    // Si es un número puro, priorizar búsqueda por ID
+    if(is_numeric($buscarSql) && strlen($buscarSql) <= 8) {
+        $where .= " AND (
+            p.id = '$buscarSql' OR 
+            p.telefono LIKE '%$buscarSql%' OR 
+            p.nombre LIKE '%$buscarSql%' OR 
+            p.correo LIKE '%$buscarSql%'
+        )";
+    } else {
+        // Dividir términos de búsqueda
+        $buscarTerminos = array_filter(explode(' ', $buscarSql), function($termino) {
+            return strlen(trim($termino)) >= 2;
+        });
+        
+        if(!empty($buscarTerminos)) {
+            $condicionesBusqueda = [];
+            
+            foreach($buscarTerminos as $termino) {
+                $termino = trim($termino);
+                $termino = $conn->real_escape_string($termino);
+                
+                // Condiciones de búsqueda amplias para encontrar cualquier coincidencia
+                $condicionesTermino = [
+                    // Datos principales del cliente
+                    "p.nombre LIKE '%$termino%'",
+                    "p.correo LIKE '%$termino%'", 
+                    "p.telefono LIKE '%$termino%'",
+                    
+                    // Ubicación
+                    "p.ciudad LIKE '%$termino%'",
+                    "p.barrio LIKE '%$termino%'",
+                    "p.direccion LIKE '%$termino%'",
+                    
+                    // Información de pago
+                    "p.metodo_pago LIKE '%$termino%'",
+                    "p.datos_pago LIKE '%$termino%'",
+                    
+                    // Estados y notas
+                    "p.estado LIKE '%$termino%'",
+                    "p.nota_interna LIKE '%$termino%'"
+                ];
+                
+                // Búsqueda por ID si es numérico
+                if(is_numeric($termino)) {
+                    $condicionesTermino[] = "p.id = '$termino'";
+                }
+                
+                // Búsqueda por fecha si tiene formato de fecha
+                if(preg_match('/\d{4}-\d{2}-\d{2}/', $termino)) {
+                    $condicionesTermino[] = "DATE(p.fecha) = '$termino'";
+                    $condicionesTermino[] = "DATE_FORMAT(p.fecha, '%Y-%m-%d') LIKE '%$termino%'";
+                }
+                if(preg_match('/\d{2}\/\d{2}\/\d{4}/', $termino)) {
+                    $condicionesTermino[] = "DATE_FORMAT(p.fecha, '%d/%m/%Y') LIKE '%$termino%'";
+                }
+                
+                // Búsqueda por año si es un año válido
+                if(preg_match('/^20\d{2}$/', $termino)) {
+                    $condicionesTermino[] = "YEAR(p.fecha) = '$termino'";
+                }
+                
+                // Búsqueda por mes si coincide con nombres de meses
+                $meses = [
+                    'enero' => '01', 'febrero' => '02', 'marzo' => '03', 'abril' => '04',
+                    'mayo' => '05', 'junio' => '06', 'julio' => '07', 'agosto' => '08',
+                    'septiembre' => '09', 'octubre' => '10', 'noviembre' => '11', 'diciembre' => '12'
+                ];
+                $terminoLower = strtolower($termino);
+                if(isset($meses[$terminoLower])) {
+                    $numeroMes = $meses[$terminoLower];
+                    $condicionesTermino[] = "MONTH(p.fecha) = '$numeroMes'";
+                }
+                
+                // Crear condición OR para este término
+                $condicionesBusqueda[] = "(" . implode(" OR ", $condicionesTermino) . ")";
+            }
+            
+            // Todos los términos deben encontrarse (AND entre términos)
+            if(!empty($condicionesBusqueda)) {
+                $where .= " AND (" . implode(" AND ", $condicionesBusqueda) . ")";
+            }
+        }
+    }
 }
 if($metodo_pago){
     $metodoPagoSql = $conn->real_escape_string($metodo_pago);
@@ -82,6 +175,15 @@ if($fecha_desde){
 if($fecha_hasta){
     $where .= " AND DATE(fecha) <= '" . $conn->real_escape_string($fecha_hasta) . "'";
 }
+
+// ===== BÚSQUEDA POR MONTO (SI APLICA) =====
+$montoFiltro = '';
+if($buscar && is_numeric($buscar) && strlen($buscar) >= 4) {
+    $montoNumerico = intval($buscar);
+    // Crear un filtro HAVING para búsqueda por monto
+    $margenMonto = max(1000, $montoNumerico * 0.1); // 10% de margen o mínimo 1000
+    $montoFiltro = " HAVING monto BETWEEN " . ($montoNumerico - $margenMonto) . " AND " . ($montoNumerico + $margenMonto);
+}
 $result = $conn->query("
     SELECT SQL_CALC_FOUND_ROWS
         p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.estado, p.fecha, p.direccion,
@@ -92,6 +194,7 @@ $result = $conn->query("
     LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
     WHERE $where
     GROUP BY p.id
+    $montoFiltro
     ORDER BY p.fecha DESC
     LIMIT $limite OFFSET $offset
 ");
@@ -99,6 +202,19 @@ $result = $conn->query("
 if (!$result) {
     die("Error en la consulta: " . $conn->error);
 }
+
+// DEBUG: Mostrar información de la consulta si hay búsqueda activa (comentar en producción)
+/*
+if($buscar) {
+    echo "<!-- DEBUG BÚSQUEDA INTELIGENTE -->";
+    echo "<!-- Término: " . htmlspecialchars($buscar) . " -->";
+    echo "<!-- WHERE: " . htmlspecialchars($where) . " -->";
+    if($montoFiltro) {
+        echo "<!-- HAVING: " . htmlspecialchars($montoFiltro) . " -->";
+    }
+    echo "<!-- Total encontrados: " . $total_pedidos . " -->";
+}
+*/
 
 $pedidos = [];
 while ($row = $result->fetch_assoc()) {
@@ -111,10 +227,15 @@ $total_paginas = ceil($total_pedidos / $limite);
 
 // Calcular monto total real sumando desde pedido_detalle
 $monto_total_result = $conn->query("
-    SELECT COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto_total
-    FROM pedidos_detal p
-    LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
-    WHERE $where
+    SELECT COALESCE(SUM(monto_temp), 0) as monto_total
+    FROM (
+        SELECT COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto_temp
+        FROM pedidos_detal p
+        LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
+        WHERE $where
+        GROUP BY p.id
+        $montoFiltro
+    ) as subquery
 ");
 $monto_total_row = $monto_total_result->fetch_assoc();
 $monto_total_real = $monto_total_row['monto_total'];
@@ -210,6 +331,9 @@ function formatear_productos($productos) {
                     <option value="hoy" <?php echo ($filtro=='hoy' ? 'selected' : ''); ?>>📅 Hoy</option>
                     <option value="semana" <?php echo ($filtro=='semana' ? 'selected' : ''); ?>>📊 Semana</option>
                     <option value="mes" <?php echo ($filtro=='mes' ? 'selected' : ''); ?>>📈 Mes</option>
+                    <option value="ultimos_30" <?php echo ($filtro=='ultimos_30' ? 'selected' : ''); ?>>📆 Últimos 30 días</option>
+                    <option value="ultimos_60" <?php echo ($filtro=='ultimos_60' ? 'selected' : ''); ?>>📅 Últimos 60 días</option>
+                    <option value="ultimos_90" <?php echo ($filtro=='ultimos_90' ? 'selected' : ''); ?>>📊 Últimos 90 días</option>
                     <option value="pago_pendiente" <?php echo ($filtro=='pago_pendiente' ? 'selected' : ''); ?>>⏳ Pendientes</option>
                     <option value="pago_confirmado" <?php echo ($filtro=='pago_confirmado' ? 'selected' : ''); ?>>✅ Pagados</option>
                     <option value="enviados" <?php echo ($filtro=='enviados' ? 'selected' : ''); ?>>🚚 Enviados</option>
@@ -218,10 +342,17 @@ function formatear_productos($productos) {
 
                 <input type="text"
                        id="busquedaRapida"
+                       name="buscar"
                        value="<?php echo htmlspecialchars($buscar); ?>"
-                       placeholder="🔍 Buscar..."
+                       placeholder="🔍 Buscar por ID, nombre, email, teléfono, ciudad, monto, fecha, año, mes..."
                        class="input-compacto"
-                       onkeyup="busquedaEnTiempoReal(this.value)">
+                       onkeyup="busquedaEnTiempoReal(this.value)"
+                       onfocus="mostrarEjemplosBusqueda()"
+                       autocomplete="off">
+
+                <?php if($buscar): ?>
+                    <button type="button" class="btn-limpiar-busqueda" onclick="limpiarBusqueda()" title="Limpiar búsqueda">✕</button>
+                <?php endif; ?>
 
                 <button class="btn-filtros-avanzados" onclick="toggleFiltrosAvanzados()" title="Más filtros">⚙️</button>
             </div>
@@ -232,6 +363,14 @@ function formatear_productos($productos) {
                 <span class="stat-inline">💰 $<?php echo number_format($monto_total_real, 0, ',', '.'); ?></span>
                 <span class="stat-inline">⏳ <?php echo count(array_filter($pedidos, function($p) { return $p['pagado'] == '0'; })); ?></span>
                 <span class="stat-inline">✅ <?php echo count(array_filter($pedidos, function($p) { return $p['pagado'] == '1'; })); ?></span>
+                <?php if($buscar): ?>
+                    <span class="stat-inline" style="background: var(--apple-green); color: white;">
+                        🔍 Filtrando: "<?php echo htmlspecialchars($buscar); ?>"
+                        <?php if(is_numeric($buscar) && strlen($buscar) >= 4): ?>
+                            (Búsqueda por monto)
+                        <?php endif; ?>
+                    </span>
+                <?php endif; ?>
             </div>
 
             <!-- Acciones rápidas -->
@@ -349,6 +488,12 @@ function formatear_productos($productos) {
                                     <div class="info-cliente">
                                         <div class="nombre-cliente"><?php echo htmlspecialchars($p['nombre']); ?></div>
                                         <div class="email-cliente"><?php echo htmlspecialchars($p['correo']); ?></div>
+                                        <div class="telefono-ciudad">
+                                            <a href="#" onclick="abrirWhatsApp('<?php echo preg_replace('/[^0-9]/', '', $p['telefono']); ?>'); return false;" class="whatsapp-link" title="Contactar por WhatsApp">
+                                                📱
+                                            </a>
+                                            <?php echo htmlspecialchars($p['telefono']) . ' - ' . htmlspecialchars($p['ciudad']); ?>
+                                        </div>
                                     </div>
                                 </td>
 
@@ -516,6 +661,151 @@ function aplicarFiltrosPersonalizados() {
     if (filtroPeriodo.value === 'personalizado') {
         aplicarFiltros();
     }
+}
+
+// ===== FUNCIÓN PARA FILTROS RÁPIDOS =====
+function aplicarFiltroRapido(filtroSeleccionado) {
+    console.log('🔍 Aplicando filtro rápido:', filtroSeleccionado);
+
+    // Construir URL con el filtro seleccionado manteniendo otros parámetros
+    const buscarActual = document.getElementById('busquedaRapida').value;
+    const params = new URLSearchParams();
+
+    // Agregar filtro seleccionado
+    params.append('filtro', filtroSeleccionado);
+
+    // Mantener búsqueda actual si existe
+    if (buscarActual.trim()) {
+        params.append('buscar', buscarActual.trim());
+    }
+
+    // Redirigir con los nuevos parámetros
+    window.location.href = window.location.pathname + '?' + params.toString();
+}
+
+// ===== FUNCIÓN PARA BÚSQUEDA EN TIEMPO REAL MEJORADA =====
+let busquedaTimeout;
+let ultimaBusqueda = '';
+
+function busquedaEnTiempoReal(termino) {
+    const inputBusqueda = document.getElementById('busquedaRapida');
+    
+    // Evitar búsquedas duplicadas
+    if (termino === ultimaBusqueda) return;
+    
+    // Limpiar timeout anterior
+    clearTimeout(busquedaTimeout);
+    
+    // Indicador visual mientras escribe
+    if (termino.trim().length > 0) {
+        inputBusqueda.style.borderColor = 'var(--apple-blue)';
+        inputBusqueda.style.boxShadow = '0 0 0 2px rgba(0, 122, 255, 0.2)';
+        inputBusqueda.style.backgroundColor = '#f8f9ff';
+    } else {
+        inputBusqueda.style.borderColor = '';
+        inputBusqueda.style.boxShadow = '';
+        inputBusqueda.style.backgroundColor = '';
+    }
+    
+    // Para términos muy cortos, limpiar la búsqueda
+    if (termino.trim().length === 0) {
+        const params = new URLSearchParams(window.location.search);
+        params.delete('buscar');
+        const filtroActual = params.get('filtro') || 'semana';
+        params.set('filtro', filtroActual);
+        window.location.href = window.location.pathname + '?' + params.toString();
+        return;
+    }
+    
+    // No buscar si es muy corto
+    if (termino.trim().length < 2) {
+        return;
+    }
+    
+    // Delay dinámico: búsquedas más rápidas para términos largos
+    const delayTime = termino.trim().length >= 4 ? 400 : 800;
+    
+    busquedaTimeout = setTimeout(() => {
+        ultimaBusqueda = termino;
+        console.log('🔍 Ejecutando búsqueda inteligente:', termino);
+        
+        // Indicador de búsqueda activa
+        inputBusqueda.style.borderColor = 'var(--apple-green)';
+        inputBusqueda.style.boxShadow = '0 0 0 2px rgba(52, 199, 89, 0.2)';
+        inputBusqueda.style.backgroundColor = '#f8fff8';
+        
+        // Construir parámetros de búsqueda
+        const params = new URLSearchParams(window.location.search);
+        const filtroActual = params.get('filtro') || 'semana';
+        
+        const newParams = new URLSearchParams();
+        newParams.append('filtro', filtroActual);
+        newParams.append('buscar', termino.trim());
+        
+        // Mantener otros filtros activos
+        ['metodo_pago', 'ciudad', 'fecha_desde', 'fecha_hasta'].forEach(param => {
+            const valor = params.get(param);
+            if (valor && valor.trim() !== '') {
+                newParams.append(param, valor);
+            }
+        });
+        
+        // Mostrar feedback antes de redirigir
+        setTimeout(() => {
+            window.location.href = window.location.pathname + '?' + newParams.toString();
+        }, 100);
+        
+    }, delayTime);
+}
+
+// ===== FUNCIÓN PARA LIMPIAR BÚSQUEDA =====
+function limpiarBusqueda() {
+    const params = new URLSearchParams(window.location.search);
+    params.delete('buscar');
+    const filtroActual = params.get('filtro') || 'semana';
+    params.set('filtro', filtroActual);
+    window.location.href = window.location.pathname + '?' + params.toString();
+}
+
+// ===== FUNCIÓN PARA MOSTRAR EJEMPLOS DE BÚSQUEDA =====
+let ejemplosTimeout;
+function mostrarEjemplosBusqueda() {
+    const input = document.getElementById('busquedaRapida');
+    if (input.value.trim() !== '') return; // Solo si está vacío
+    
+    clearTimeout(ejemplosTimeout);
+    
+    const ejemplos = [
+        'Juan Pérez',
+        'juan@email.com', 
+        '3001234567',
+        'Bogotá',
+        'transferencia',
+        '50000',
+        '2024-12-01',
+        'diciembre',
+        '2024'
+    ];
+    
+    let indiceEjemplo = 0;
+    
+    ejemplosTimeout = setTimeout(() => {
+        const intervalo = setInterval(() => {
+            if (document.activeElement !== input) {
+                clearInterval(intervalo);
+                input.placeholder = "🔍 Buscar por ID, nombre, email, teléfono, ciudad, monto, fecha, año, mes...";
+                return;
+            }
+            
+            input.placeholder = `🔍 Ejemplo: ${ejemplos[indiceEjemplo]}`;
+            indiceEjemplo = (indiceEjemplo + 1) % ejemplos.length;
+            
+            if (input.value.trim() !== '') {
+                clearInterval(intervalo);
+                input.placeholder = "🔍 Buscar por ID, nombre, email, teléfono, ciudad, monto, fecha, año, mes...";
+            }
+        }, 1500);
+    }, 500);
 }
 
 // ===== FUNCIÓN PARA MOSTRAR/OCULTAR FECHAS PERSONALIZADAS =====
@@ -1081,6 +1371,39 @@ if (!document.querySelector('#feedback-styles')) {
         }
     `;
     document.head.appendChild(style);
+}
+
+// ============================================
+// FUNCIÓN PARA WHATSAPP
+// ============================================
+
+// Función para abrir WhatsApp en ventana popup
+function abrirWhatsApp(telefono) {
+    // Limpiar el número de teléfono (solo números)
+    const numeroLimpio = telefono.replace(/[^0-9]/g, '');
+
+    // URL de WhatsApp
+    const urlWhatsApp = `https://wa.me/${numeroLimpio}`;
+
+    // Configuración de la ventana popup
+    const anchoVentana = 500;
+    const altoVentana = 600;
+    const left = (screen.width / 2) - (anchoVentana / 2);
+    const top = (screen.height / 2) - (altoVentana / 2);
+
+    // Abrir ventana popup
+    const ventanaWhatsApp = window.open(
+        urlWhatsApp,
+        'whatsapp',
+        `width=${anchoVentana},height=${altoVentana},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
+    );
+
+    // Enfocar la ventana si ya estaba abierta
+    if (ventanaWhatsApp) {
+        ventanaWhatsApp.focus();
+    }
+
+    console.log(`📱 WhatsApp abierto para: ${numeroLimpio}`);
 }
 
 // ============================================
