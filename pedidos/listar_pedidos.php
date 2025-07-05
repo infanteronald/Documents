@@ -530,7 +530,7 @@ function formatear_productos($productos) {
                                 </td>
 
                                 <!-- Status: Guía -->
-                                <td class="col-guia">
+                                <td class="col-guia" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>')" style="cursor: pointer;" title="Click para ver/subir guía">
                                     <span class="badge-status <?php echo $p['tiene_guia'] == '1' ? 'status-si' : 'status-no'; ?>">
                                         <?php echo $p['tiene_guia'] == '1' ? '✅ Sí' : '⏳ No'; ?>
                                     </span>
@@ -1560,7 +1560,7 @@ function mostrarFeedback(mensaje, tipo = 'info') {
 
     // Remover después de 3 segundos
     setTimeout(() => {
-        feedback.style.animation = 'slideOutRight 0.3s ease';
+        feedback.style.animation = 'slideOutRight  0.3s ease';
         setTimeout(() => feedback.remove(), 300);
     }, 3000);
 }
@@ -1668,12 +1668,7 @@ function marcarComoEfectivo(pedidoId, esEfectivo) {
 }
 
 function reemplazarComprobante(pedidoId) {
-    // Cerrar modal actual y abrir modal de subida
-    document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
-
-    setTimeout(() => {
-        abrirModalComprobante(pedidoId, '', '0', 'transferencia');
-    }, 100);
+    abrirModalComprobante(pedidoId);
 }
 
 function eliminarComprobante(pedidoId) {
@@ -1714,8 +1709,8 @@ function desconfirmarEfectivo(pedidoId) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-            id_pedido: pedidoId, 
+        body: JSON.stringify({
+            id_pedido: pedidoId,
             es_efectivo: 0 // Desmarcar como efectivo
         })
     })
@@ -1744,56 +1739,327 @@ function subirComprobanteAlternativo(pedidoId) {
     }, 100);
 }
 
-// Función para mostrar notificaciones
-function mostrarNotificacion(mensaje, tipo = 'info') {
-    const notificacion = document.createElement('div');
-    notificacion.className = `notificacion notificacion-${tipo}`;
-    notificacion.innerHTML = mensaje;
-    notificacion.style.cssText = `
+// ===== FUNCIÓN PARA ABRIR MODAL DE GUÍAS =====
+function abrirModalGuia(pedidoId, guia, tieneGuia, enviado) {
+    console.log('Abriendo modal guía:', { pedidoId, guia, tieneGuia, enviado });
+
+    try {
+        const modal = document.createElement('div');
+        modal.className = 'modal-detalle-bg';
+        modal.setAttribute('data-pedido-id', pedidoId);
+
+        let contenidoModal = '';
+
+        if (tieneGuia == '1' && guia && guia.trim() !== '') {
+            // Mostrar guía existente con opciones
+            const esImagen = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(guia);
+            const esPdf = /\.pdf$/i.test(guia);
+
+            contenidoModal = `
+                <div class="modal-detalle" style="max-width: 500px;">
+                    <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                    <h3 style="margin-bottom: 20px; color: var(--vscode-text);">📦 Guía de Envío - Pedido #${pedidoId}</h3>
+
+                    <div style="margin-bottom: 20px;">
+                        <div style="background: var(--vscode-sidebar); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                                <span style="color: var(--apple-green);">✅</span>
+                                <strong>Guía adjunta:</strong> ${guia}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: ${enviado == '1' ? 'var(--apple-green)' : 'var(--apple-orange)'};">
+                                    ${enviado == '1' ? '🚚' : '📋'}
+                                </span>
+                                <span>Estado: ${enviado == '1' ? 'Enviado' : 'Preparando envío'}</span>
+                            </div>
+                        </div>
+
+                        ${esImagen ? `
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <img src="guias/${guia}" alt="Guía" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid var(--vscode-border);">
+                            </div>
+                        ` : esPdf ? `
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <div style="padding: 20px; background: var(--vscode-sidebar); border-radius: 8px; border: 1px solid var(--vscode-border);">
+                                    <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+                                    <div>Archivo PDF adjunto</div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <div style="padding: 20px; background: var(--vscode-sidebar); border-radius: 8px; border: 1px solid var(--vscode-border);">
+                                    <div style="font-size: 48px; margin-bottom: 10px;">📁</div>
+                                    <div>Archivo adjunto</div>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: space-between;">
+                        <button onclick="verGuia(${pedidoId})" class="btn-accion btn-ver" style="flex: 1;">
+                            👁️ Ver/Descargar
+                        </button>
+                        <button onclick="reemplazarGuia(${pedidoId})" class="btn-accion btn-editar" style="flex: 1;">
+                            🔄 Reemplazar
+                        </button>
+                        <button onclick="eliminarGuia(${pedidoId})" class="btn-accion btn-eliminar" style="flex: 1;">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Formulario para subir nueva guía
+            contenidoModal = `
+                <div class="modal-detalle" style="max-width: 450px;">
+                    <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                    <h3 style="margin-bottom: 20px; color: var(--vscode-text);">📦 Subir Guía de Envío - Pedido #${pedidoId}</h3>
+
+                    <form id="formSubirGuia" enctype="multipart/form-data" style="text-align: left;">
+                        <input type="hidden" name="pedido_id" value="${pedidoId}">
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">
+                                📎 Seleccionar archivo de guía:
+                            </label>
+                            <input type="file" name="guia" accept="image/*,application/pdf" required
+                                   style="width: 100%; padding: 10px; border: 1px solid var(--vscode-border); border-radius: 6px; background: var(--vscode-bg);">
+                            <small style="color: var(--vscode-text-muted); display: block; margin-top: 5px;">
+                                Formatos: JPG, PNG, PDF (máx. 10MB)
+                            </small>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="marcar_enviado" value="true" id="marcarEnviado">
+                                <span>🚚 Marcar pedido como enviado al subir guía</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn-accion btn-subir" style="width: 100%; padding: 12px;">
+                            📤 Subir Guía y Notificar Cliente
+                        </button>
+                    </form>
+
+                    <div id="statusGuia" style="margin-top: 15px; padding: 10px; border-radius: 6px; display: none;"></div>
+                </div>
+            `;
+        }
+
+        modal.innerHTML = contenidoModal;
+        
+        // Asegurar que no hay otros modales abiertos
+        const modalesExistentes = document.querySelectorAll('.modal-detalle-bg');
+        modalesExistentes.forEach(m => m.remove());
+        
+        // Agregar al DOM
+        document.body.appendChild(modal);
+        
+        // Forzar la visibilidad del modal
+        modal.style.display = 'flex';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.zIndex = '10000';
+        modal.style.background = 'rgba(0, 0, 0, 0.7)';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+
+        // Configurar el formulario si existe
+        const form = document.getElementById('formSubirGuia');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                subirGuia(pedidoId);
+            });
+        }
+
+        // Cerrar modal al hacer click en el fondo
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+        
+        console.log('Modal de guía creado y mostrado exitosamente');
+
+    } catch (error) {
+        console.error('Error creando modal guía:', error);
+        // Método alternativo si falla el principal
+        crearModalGuiaSimple(pedidoId, guia, tieneGuia, enviado);
+    }
+}
+
+// Método alternativo simplificado para crear modal de guía
+function crearModalGuiaSimple(pedidoId, guia, tieneGuia, enviado) {
+    console.log('Creando modal de guía simple como respaldo...');
+
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
         position: fixed;
-        top: 20px;
-        right: 20px;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
         z-index: 10000;
-        padding: 15px 20px;
-        border-radius: 8px;
-        color: white;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 0.3s ease;
-        max-width: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     `;
 
-    // Colores según tipo
-    switch(tipo) {
-        case 'success':
-            notificacion.style.background = 'var(--apple-green)';
-            break;
-        case 'error':
-            notificacion.style.background = 'var(--apple-red)';
-            break;
-        case 'warning':
-            notificacion.style.background = 'var(--apple-orange)';
-            break;
-        default:
-            notificacion.style.background = 'var(--apple-blue)';
+    // Crear contenido del modal
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: #0d1117;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 450px;
+        width: 90%;
+        position: relative;
+        color: #e6edf3;
+        border: 1px solid #30363d;
+    `;
+
+    if (tieneGuia == '1' && guia && guia.trim() !== '') {
+        modalContent.innerHTML = `
+            <button onclick="this.closest('div').remove()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; color: #e6edf3; cursor: pointer;">×</button>
+            <h3 style="margin-bottom: 20px;">📦 Guía de Envío - Pedido #${pedidoId}</h3>
+            <p style="margin-bottom: 15px;">✅ Guía: ${guia}</p>
+            <p style="margin-bottom: 20px;">Estado: ${enviado == '1' ? '🚚 Enviado' : '📋 Preparando envío'}</p>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="window.open('ver_guia.php?id=${pedidoId}', '_blank')" style="flex: 1; padding: 10px; background: #007AFF; color: white; border: none; border-radius: 6px; cursor: pointer;">👁️ Ver</button>
+                <button onclick="this.closest('div').remove(); setTimeout(() => abrirModalGuia(${pedidoId}, '', '0', '${enviado}'), 100);" style="flex: 1; padding: 10px; background: #FF9500; color: white; border: none; border-radius: 6px; cursor: pointer;">🔄 Reemplazar</button>
+                <button onclick="eliminarGuia(${pedidoId})" style="flex: 1; padding: 10px; background: #FF3B30; color: white; border: none; border-radius: 6px; cursor: pointer;">🗑️ Eliminar</button>
+            </div>
+        `;
+    } else {
+        modalContent.innerHTML = `
+            <button onclick="this.closest('div').remove()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; color: #e6edf3; cursor: pointer;">×</button>
+            <h3 style="margin-bottom: 20px;">📦 Subir Guía - Pedido #${pedidoId}</h3>
+            <form id="formSubirGuiaSimple" enctype="multipart/form-data">
+                <input type="hidden" name="pedido_id" value="${pedidoId}">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">📎 Archivo de guía:</label>
+                    <input type="file" name="guia" accept="image/*,application/pdf" required style="width: 100%; padding: 8px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" name="marcar_enviado" value="true">
+                        <span>🚚 Marcar como enviado</span>
+                    </label>
+                </div>
+                <button type="submit" style="width: 100%; padding: 12px; background: #34C759; color: white; border: none; border-radius: 6px; cursor: pointer;">📤 Subir Guía</button>
+            </form>
+            <div id="statusGuiaSimple" style="margin-top: 15px; padding: 10px; border-radius: 6px; display: none;"></div>
+        `;
+        
+        // Configurar el formulario
+        const form = modalContent.querySelector('#formSubirGuiaSimple');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                subirGuiaSimple(pedidoId, this, overlay);
+            });
+        }
     }
 
-    document.body.appendChild(notificacion);
+    overlay.appendChild(modalContent);
+    document.body.appendChild(overlay);
 
-    // Animar entrada
+    // Cerrar al hacer click fuera
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+}
+
+// ===== FUNCIONES AUXILIARES PARA GUÍAS =====
+function verGuia(pedidoId) {
+    window.open(`ver_guia.php?id=${pedidoId}`, '_blank');
+}
+
+function reemplazarGuia(pedidoId) {
+    // Cerrar modal actual y abrir modal de subida
+    document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+
     setTimeout(() => {
-        notificacion.style.opacity = '1';
-        notificacion.style.transform = 'translateX(0)';
+        abrirModalGuia(pedidoId, '', '0', '0');
     }, 100);
+}
 
-    // Animar salida y eliminar
-    setTimeout(() => {
-        notificacion.style.opacity = '0';
-        notificacion.style.transform = 'translateX(100%)';
-        setTimeout(() => notificacion.remove(), 300);
-    }, 4000);
+function eliminarGuia(pedidoId) {
+    if (!confirm('¿Estás seguro de que deseas eliminar la guía de envío?\n\nEsta acción no se puede deshacer.')) {
+        return;
+    }
+
+    fetch('eliminar_guia.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            id_pedido: pedidoId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+            mostrarNotificacion('✅ Guía eliminada exitosamente', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (data.message || 'No se pudo eliminar la guía'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión', 'error');
+    });
+}
+
+function subirGuia(pedidoId) {
+    const form = document.getElementById('formSubirGuia');
+    const formData = new FormData(form);
+    const statusDiv = document.getElementById('statusGuia');
+
+    // Mostrar estado de carga
+    statusDiv.style.display = 'block';
+    statusDiv.style.background = 'var(--apple-blue-light)';
+    statusDiv.style.color = 'var(--apple-blue)';
+    statusDiv.innerHTML = '⏳ Subiendo guía...';
+
+    fetch('subir_guia.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.style.background = 'var(--apple-green-light)';
+            statusDiv.style.color = 'var(--apple-green)';
+            statusDiv.innerHTML = '✅ ' + data.message;
+
+            setTimeout(() => {
+                document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+                location.reload();
+            }, 2000);
+        } else {
+            statusDiv.style.background = 'var(--apple-red-light)';
+            statusDiv.style.color = 'var(--apple-red)';
+            statusDiv.innerHTML = '❌ Error: ' + (data.error || data.message || 'Error desconocido');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        statusDiv.style.background = 'var(--apple-red-light)';
+        statusDiv.style.color = 'var(--apple-red)';
+        statusDiv.innerHTML = '❌ Error de conexión';
+    });
 }
 </script>
 
