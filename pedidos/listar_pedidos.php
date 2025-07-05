@@ -1971,43 +1971,117 @@ function cargarProductosPedido(pedidoId) {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.productos) {
-                let html = '<div class="productos-detalle">';
-                html += '<div class="productos-header">';
-                html += '<h4>📦 Productos del Pedido #' + pedidoId + '</h4>';
-                html += '<button class="btn-cerrar-productos" onclick="toggleProductos(' + pedidoId + ')">✖️ Cerrar</button>';
-                html += '</div>';
+                // Calcular totales
+                const total = data.productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0);
+                const cantidadTotal = data.productos.reduce((sum, p) => sum + parseInt(p.cantidad), 0);
                 
-                html += '<div class="productos-lista">';
-                data.productos.forEach(producto => {
+                let html = `
+                    <div class="carrito-moderno">
+                        <div class="carrito-header-moderno">
+                            <div class="carrito-info">
+                                <div class="carrito-titulo-principal">
+                                    <span class="carrito-icono">🛒</span>
+                                    <span>Detalles del Pedido #${pedidoId}</span>
+                                </div>
+                                <div class="carrito-estadisticas">
+                                    <div class="stat-item">
+                                        <span class="stat-numero">${data.productos.length}</span>
+                                        <span class="stat-label">productos</span>
+                                    </div>
+                                    <div class="stat-divider">•</div>
+                                    <div class="stat-item">
+                                        <span class="stat-numero">${cantidadTotal}</span>
+                                        <span class="stat-label">unidades</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn-cerrar-moderno" onclick="toggleProductos(${pedidoId})" title="Cerrar detalles">
+                                <span class="cerrar-icono">✕</span>
+                            </button>
+                        </div>
+                        
+                        <div class="productos-grid">
+                `;
+                
+                data.productos.forEach((producto, index) => {
                     const subtotal = producto.cantidad * producto.precio;
+                    const animationDelay = index * 0.1;
+                    
                     html += `
-                        <div class="producto-item">
-                            <div class="producto-info">
-                                <div class="producto-nombre">${producto.nombre}</div>
-                                <div class="producto-detalles">
-                                    <span class="cantidad">Cantidad: ${producto.cantidad}</span>
-                                    <span class="precio">Precio: $${Number(producto.precio).toLocaleString()}</span>
-                                    <span class="subtotal">Subtotal: $${subtotal.toLocaleString()}</span>
+                        <div class="producto-card" style="animation-delay: ${animationDelay}s">
+                            <div class="producto-card-header">
+                                <div class="producto-numero">#${index + 1}</div>
+                                <div class="producto-badge">
+                                    <span class="badge-cantidad">${producto.cantidad}x</span>
+                                </div>
+                            </div>
+                            
+                            <div class="producto-card-body">
+                                <h4 class="producto-nombre-moderno">${producto.nombre}</h4>
+                                
+                                <div class="producto-precios">
+                                    <div class="precio-unitario">
+                                        <span class="precio-label">Precio unitario</span>
+                                        <span class="precio-valor">$${Number(producto.precio).toLocaleString()}</span>
+                                    </div>
+                                    <div class="precio-total">
+                                        <span class="precio-label">Subtotal</span>
+                                        <span class="precio-valor precio-destacado">$${subtotal.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="producto-card-footer">
+                                <div class="producto-indicador">
+                                    <div class="indicador-barra" style="width: ${(subtotal / total) * 100}%"></div>
+                                </div>
+                                <div class="producto-porcentaje">
+                                    ${((subtotal / total) * 100).toFixed(1)}% del total
                                 </div>
                             </div>
                         </div>
                     `;
                 });
-                html += '</div>';
                 
-                // Mostrar total
-                const total = data.productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0);
-                html += '<div class="productos-total">';
-                html += '<strong>Total: $' + total.toLocaleString() + '</strong>';
-                html += '</div>';
+                html += `
+                        </div>
+                        
+                        <div class="carrito-resumen-moderno">
+                            <div class="resumen-gradient">
+                                <div class="resumen-contenido">
+                                    <div class="resumen-items">
+                                        <div class="resumen-item">
+                                            <span class="resumen-icono">📦</span>
+                                            <span class="resumen-texto">Total productos: ${data.productos.length}</span>
+                                        </div>
+                                        <div class="resumen-item">
+                                            <span class="resumen-icono">🔢</span>
+                                            <span class="resumen-texto">Total unidades: ${cantidadTotal}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="resumen-total">
+                                        <div class="total-label">Total del Pedido</div>
+                                        <div class="total-valor">$${total.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
                 
-                html += '</div>';
                 productosContainer.innerHTML = html;
             } else {
                 productosContainer.innerHTML = `
-                    <div class="productos-error">
-                        <span>❌ Error al cargar productos: ${data.message || 'Error desconocido'}</span>
-                        <button class="btn-cerrar-productos" onclick="toggleProductos(${pedidoId})">✖️ Cerrar</button>
+                    <div class="productos-error-moderno">
+                        <div class="error-icono">😞</div>
+                        <div class="error-mensaje">
+                            <h4>No se pudieron cargar los productos</h4>
+                            <p>${data.message || 'Error desconocido'}</p>
+                        </div>
+                        <button class="btn-cerrar-error" onclick="toggleProductos(${pedidoId})">
+                            Cerrar
+                        </button>
                     </div>
                 `;
             }
@@ -2015,9 +2089,15 @@ function cargarProductosPedido(pedidoId) {
         .catch(error => {
             console.error('Error cargando productos:', error);
             productosContainer.innerHTML = `
-                <div class="productos-error">
-                    <span>❌ Error de conexión al cargar productos</span>
-                    <button class="btn-cerrar-productos" onclick="toggleProductos(${pedidoId})">✖️ Cerrar</button>
+                <div class="productos-error-moderno">
+                    <div class="error-icono">🚫</div>
+                    <div class="error-mensaje">
+                        <h4>Error de conexión</h4>
+                        <p>No se pudo conectar con el servidor</p>
+                    </div>
+                    <button class="btn-cerrar-error" onclick="toggleProductos(${pedidoId})">
+                        Cerrar
+                    </button>
                 </div>
             `;
         });
