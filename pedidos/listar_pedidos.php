@@ -1847,25 +1847,7 @@ function abrirModalGuia(pedidoId, guia, tieneGuia, enviado) {
         }
 
         modal.innerHTML = contenidoModal;
-        
-        // Asegurar que no hay otros modales abiertos
-        const modalesExistentes = document.querySelectorAll('.modal-detalle-bg');
-        modalesExistentes.forEach(m => m.remove());
-        
-        // Agregar al DOM
         document.body.appendChild(modal);
-        
-        // Forzar la visibilidad del modal
-        modal.style.display = 'flex';
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100%';
-        modal.style.height = '100%';
-        modal.style.zIndex = '10000';
-        modal.style.background = 'rgba(0, 0, 0, 0.7)';
-        modal.style.alignItems = 'center';
-        modal.style.justifyContent = 'center';
 
         // Configurar el formulario si existe
         const form = document.getElementById('formSubirGuia');
@@ -1882,100 +1864,11 @@ function abrirModalGuia(pedidoId, guia, tieneGuia, enviado) {
                 modal.remove();
             }
         });
-        
-        console.log('Modal de guía creado y mostrado exitosamente');
 
     } catch (error) {
         console.error('Error creando modal guía:', error);
-        // Método alternativo si falla el principal
-        crearModalGuiaSimple(pedidoId, guia, tieneGuia, enviado);
+        alert('Error al abrir el modal de guía');
     }
-}
-
-// Método alternativo simplificado para crear modal de guía
-function crearModalGuiaSimple(pedidoId, guia, tieneGuia, enviado) {
-    console.log('Creando modal de guía simple como respaldo...');
-
-    // Crear overlay
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    `;
-
-    // Crear contenido del modal
-    const modalContent = document.createElement('div');
-    modalContent.style.cssText = `
-        background: #0d1117;
-        border-radius: 12px;
-        padding: 30px;
-        max-width: 450px;
-        width: 90%;
-        position: relative;
-        color: #e6edf3;
-        border: 1px solid #30363d;
-    `;
-
-    if (tieneGuia == '1' && guia && guia.trim() !== '') {
-        modalContent.innerHTML = `
-            <button onclick="this.closest('div').remove()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; color: #e6edf3; cursor: pointer;">×</button>
-            <h3 style="margin-bottom: 20px;">📦 Guía de Envío - Pedido #${pedidoId}</h3>
-            <p style="margin-bottom: 15px;">✅ Guía: ${guia}</p>
-            <p style="margin-bottom: 20px;">Estado: ${enviado == '1' ? '🚚 Enviado' : '📋 Preparando envío'}</p>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="window.open('ver_guia.php?id=${pedidoId}', '_blank')" style="flex: 1; padding: 10px; background: #007AFF; color: white; border: none; border-radius: 6px; cursor: pointer;">👁️ Ver</button>
-                <button onclick="this.closest('div').remove(); setTimeout(() => abrirModalGuia(${pedidoId}, '', '0', '${enviado}'), 100);" style="flex: 1; padding: 10px; background: #FF9500; color: white; border: none; border-radius: 6px; cursor: pointer;">🔄 Reemplazar</button>
-                <button onclick="eliminarGuia(${pedidoId})" style="flex: 1; padding: 10px; background: #FF3B30; color: white; border: none; border-radius: 6px; cursor: pointer;">🗑️ Eliminar</button>
-            </div>
-        `;
-    } else {
-        modalContent.innerHTML = `
-            <button onclick="this.closest('div').remove()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; color: #e6edf3; cursor: pointer;">×</button>
-            <h3 style="margin-bottom: 20px;">📦 Subir Guía - Pedido #${pedidoId}</h3>
-            <form id="formSubirGuiaSimple" enctype="multipart/form-data">
-                <input type="hidden" name="pedido_id" value="${pedidoId}">
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">📎 Archivo de guía:</label>
-                    <input type="file" name="guia" accept="image/*,application/pdf" required style="width: 100%; padding: 8px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" name="marcar_enviado" value="true">
-                        <span>🚚 Marcar como enviado</span>
-                    </label>
-                </div>
-                <button type="submit" style="width: 100%; padding: 12px; background: #34C759; color: white; border: none; border-radius: 6px; cursor: pointer;">📤 Subir Guía</button>
-            </form>
-            <div id="statusGuiaSimple" style="margin-top: 15px; padding: 10px; border-radius: 6px; display: none;"></div>
-        `;
-        
-        // Configurar el formulario
-        const form = modalContent.querySelector('#formSubirGuiaSimple');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                subirGuiaSimple(pedidoId, this, overlay);
-            });
-        }
-    }
-
-    overlay.appendChild(modalContent);
-    document.body.appendChild(overlay);
-
-    // Cerrar al hacer click fuera
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            overlay.remove();
-        }
-    });
 }
 
 // ===== FUNCIONES AUXILIARES PARA GUÍAS =====
@@ -2020,6 +1913,114 @@ function eliminarGuia(pedidoId) {
         console.error('Error:', error);
         mostrarNotificacion('❌ Error de conexión', 'error');
     });
+}
+
+// ===== FUNCIÓN PARA MOSTRAR/OCULTAR PRODUCTOS =====
+function toggleProductos(pedidoId) {
+    console.log('Toggle productos para pedido:', pedidoId);
+    
+    const filaProductos = document.querySelector(`#productos-${pedidoId}`);
+    const boton = document.querySelector(`button[onclick="toggleProductos(${pedidoId})"]`);
+    
+    if (!filaProductos) {
+        // La fila no existe, crearla y cargar productos
+        const filaPedido = boton.closest('tr');
+        const nuevaFila = document.createElement('tr');
+        nuevaFila.id = `productos-${pedidoId}`;
+        nuevaFila.className = 'fila-productos';
+        nuevaFila.innerHTML = `
+            <td colspan="12" class="productos-container">
+                <div class="productos-loading">
+                    <div class="spinner"></div>
+                    <span>Cargando productos...</span>
+                </div>
+            </td>
+        `;
+        
+        // Insertar después de la fila del pedido
+        filaPedido.parentNode.insertBefore(nuevaFila, filaPedido.nextSibling);
+        
+        // Cambiar texto del botón
+        boton.innerHTML = '👁️ Ocultar';
+        boton.title = 'Ocultar productos del pedido';
+        
+        // Cargar productos via AJAX
+        cargarProductosPedido(pedidoId);
+    } else {
+        // La fila existe, toggle visibilidad
+        const esVisible = getComputedStyle(filaProductos).display !== 'none';
+        
+        if (esVisible) {
+            // Ocultar
+            filaProductos.style.display = 'none';
+            boton.innerHTML = '👁️ Ver';
+            boton.title = 'Ver productos del pedido';
+        } else {
+            // Mostrar
+            filaProductos.style.display = 'table-row';
+            boton.innerHTML = '👁️ Ocultar';
+            boton.title = 'Ocultar productos del pedido';
+        }
+    }
+}
+
+function cargarProductosPedido(pedidoId) {
+    const productosContainer = document.querySelector(`#productos-${pedidoId} .productos-container`);
+    
+    fetch(`get_productos_pedido.php?id=${pedidoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.productos) {
+                let html = '<div class="productos-detalle">';
+                html += '<div class="productos-header">';
+                html += '<h4>📦 Productos del Pedido #' + pedidoId + '</h4>';
+                html += '<button class="btn-cerrar-productos" onclick="toggleProductos(' + pedidoId + ')">✖️ Cerrar</button>';
+                html += '</div>';
+                
+                html += '<div class="productos-lista">';
+                data.productos.forEach(producto => {
+                    const subtotal = producto.cantidad * producto.precio;
+                    html += `
+                        <div class="producto-item">
+                            <div class="producto-info">
+                                <div class="producto-nombre">${producto.nombre}</div>
+                                <div class="producto-detalles">
+                                    <span class="cantidad">Cantidad: ${producto.cantidad}</span>
+                                    <span class="precio">Precio: $${Number(producto.precio).toLocaleString()}</span>
+                                    <span class="subtotal">Subtotal: $${subtotal.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                // Mostrar total
+                const total = data.productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0);
+                html += '<div class="productos-total">';
+                html += '<strong>Total: $' + total.toLocaleString() + '</strong>';
+                html += '</div>';
+                
+                html += '</div>';
+                productosContainer.innerHTML = html;
+            } else {
+                productosContainer.innerHTML = `
+                    <div class="productos-error">
+                        <span>❌ Error al cargar productos: ${data.message || 'Error desconocido'}</span>
+                        <button class="btn-cerrar-productos" onclick="toggleProductos(${pedidoId})">✖️ Cerrar</button>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando productos:', error);
+            productosContainer.innerHTML = `
+                <div class="productos-error">
+                    <span>❌ Error de conexión al cargar productos</span>
+                    <button class="btn-cerrar-productos" onclick="toggleProductos(${pedidoId})">✖️ Cerrar</button>
+                </div>
+            `;
+        });
 }
 
 function subirGuia(pedidoId) {

@@ -721,182 +721,43 @@ h1 {
     position: relative;
 }
 
-.productos-header {
+/* Estados de carga y error para productos */
+.productos-loading {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-md);
-}
-
-.productos-header h4 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--vscode-text);
-}
-
-.btn-cerrar-productos {
-    background: none;
-    border: none;
-    color: var(--vscode-text);
-    cursor: pointer;
-    font-size: 18px;
-    padding: 4px;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-base);
-}
-
-.btn-cerrar-productos:hover {
-    background: var(--apple-red);
-    color: white;
-}
-
-.productos-lista {
-    margin-top: var(--space-sm);
-    padding-left: var(--space-md);
-    border-left: 2px solid var(--apple-blue);
-}
-
-.producto-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-xs) 0;
-    border-bottom: 1px solid var(--vscode-border-subtle);
-}
-
-.producto-item:last-child {
-    border-bottom: none;
-}
-
-.producto-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3xs);
-}
-
-.producto-nombre {
-    font-weight: 600;
-    color: var(--vscode-text-light);
-}
-
-.producto-talla {
-    font-size: 0.8125rem;
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+    text-align: center;
     color: var(--vscode-text-muted);
 }
 
-.producto-detalles {
+.productos-loading .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--vscode-border);
+    border-top: 2px solid var(--apple-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.productos-error {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: var(--space-xs);
-}
-
-.producto-cantidad {
-    font-weight: 600;
-    color: var(--vscode-text-light);
-}
-
-.producto-precio {
-    font-weight: 600;
-    color: var(--apple-green);
-}
-
-.producto-subtotal {
-    font-weight: 600;
-    color: var(--vscode-text-light);
-    opacity: 0.9;
-}
-
-/* Dropdown de acciones */
-.dropdown-acciones {
-    position: relative;
-    display: inline-block;
-}
-
-.btn-acciones {
-    background: var(--vscode-sidebar);
-    border: 1px solid var(--vscode-border);
-    border-radius: var(--radius-md);
-    color: var(--vscode-text);
-    font-size: 1rem;
-    padding: var(--space-xs);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    min-width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-acciones:hover {
-    background: var(--vscode-sidebar-hover);
-    border-color: var(--apple-blue);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.btn-acciones.activo {
-    background: var(--apple-blue);
-    color: white;
-    border-color: var(--apple-blue);
-}
-
-.menu-acciones {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: var(--vscode-sidebar);
-    border: 1px solid var(--vscode-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: saturate(180%) blur(20px);
-    min-width: 200px;
-    z-index: var(--z-dropdown);
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: all var(--transition-base);
-    pointer-events: none;
-}
-
-.menu-acciones.mostrar {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-}
-
-.dropdown-acciones.activo {
-    z-index: var(--z-popover);
-}
-
-.dropdown-acciones.activo .menu-acciones.activo {
-    z-index: var(--z-popover);
-}
-
-.accion-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-sm) var(--space-md);
-    color: var(--vscode-text);
-    text-decoration: none;
-    font-size: 0.875rem;
-    transition: all var(--transition-base);
-    border-bottom: 1px solid var(--vscode-border-subtle);
-}
-
-.accion-item:last-child {
-    border-bottom: none;
-}
-
-.accion-item:hover {
-    background: var(--vscode-sidebar-hover);
-    color: var(--vscode-text-light);
-}
-
-.accion-item.anular:hover {
+    padding: var(--space-md);
     background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    border-radius: var(--radius-md);
     color: var(--apple-red);
+}
+
+.productos-detalle {
+    width: 100%;
 }
 
 /* Mensaje de tabla vacía */
