@@ -3,333 +3,41 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 include 'conexion.php';
+require_once 'filters.php';
+require_once 'ui-helpers.php';
 
-// Filtros expandidos
-$filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'semana';
-$buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
-$metodo_pago = isset($_GET['metodo_pago']) ? $_GET['metodo_pago'] : '';
-$ciudad = isset($_GET['ciudad']) ? $_GET['ciudad'] : '';
-$fecha_desde = isset($_GET['fecha_desde']) ? $_GET['fecha_desde'] : '';
-$fecha_hasta = isset($_GET['fecha_hasta']) ? $_GET['fecha_hasta'] : '';
-$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$limite = 20;
-$offset = ($page - 1) * $limite;
-
-// Filtro avanzado usando los nuevos campos de estado booleanos
-switch($filtro) {
-    case 'hoy':
-        $where = "DATE(fecha) = CURDATE() AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'semana':
-        $where = "YEARWEEK(fecha,1) = YEARWEEK(CURDATE(),1) AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'quincena':
-        $where = "fecha >= CURDATE() - INTERVAL 15 DAY AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'mes':
-        $where = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE()) AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'ultimos_30':
-        $where = "fecha >= CURDATE() - INTERVAL 30 DAY AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'ultimos_60':
-        $where = "fecha >= CURDATE() - INTERVAL 60 DAY AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'ultimos_90':
-        $where = "fecha >= CURDATE() - INTERVAL 90 DAY AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'archivados':
-        $where = "archivado = '1'";
-        break;
-    case 'anulados':
-        $where = "anulado = '1'";
-        break;
-    case 'enviados':
-        $where = "enviado = '1' AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'pago_pendiente':
-        $where = "pagado = '0' AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'pago_confirmado':
-        $where = "pagado = '1' AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'con_comprobante':
-        $where = "tiene_comprobante = '1' AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'sin_comprobante':
-        $where = "tiene_comprobante = '0' AND pagado = '0' AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'con_guia':
-        $where = "tiene_guia = '1' AND archivado = '0' AND anulado = '0'";
-        break;
-    case 'personalizado':
-        $where = "archivado = '0' AND anulado = '0'"; // Para personalizado, excluir archivados y anulados
-        break;
-    case 'todos':
-        $where = "archivado = '0' AND anulado = '0'"; // Por defecto, excluir archivados y anulados
-        break;
-    default:
-        $where = "archivado = '0' AND anulado = '0'"; // Por defecto, no mostrar archivados ni anulados
-}
-
-// ===== BUSCADOR INTELIGENTE MEJORADO =====
-if($buscar && trim($buscar) !== ''){
-    $buscarOriginal = trim($buscar);
-    $buscarSql = $conn->real_escape_string($buscarOriginal);
-
-    // Si es un número puro, priorizar búsqueda por ID
-    if(is_numeric($buscarSql) && strlen($buscarSql) <= 8) {
-        $where .= " AND (
-            p.id = '$buscarSql' OR
-            p.telefono LIKE '%$buscarSql%' OR
-            p.nombre LIKE '%$buscarSql%' OR
-            p.correo LIKE '%$buscarSql%'
-        )";
-    } else {
-        // Dividir términos de búsqueda
-        $buscarTerminos = array_filter(explode(' ', $buscarSql), function($termino) {
-            return strlen(trim($termino)) >= 2;
-        });
-
-        if(!empty($buscarTerminos)) {
-            $condicionesBusqueda = [];
-
-            foreach($buscarTerminos as $termino) {
-                $termino = trim($termino);
-                $termino = $conn->real_escape_string($termino);
-
-                // Condiciones de búsqueda amplias para encontrar cualquier coincidencia
-                $condicionesTermino = [
-                    // Datos principales del cliente
-                    "p.nombre LIKE '%$termino%'",
-                    "p.correo LIKE '%$termino%'",
-                    "p.telefono LIKE '%$termino%'",
-
-                    // Ubicación
-                    "p.ciudad LIKE '%$termino%'",
-                    "p.barrio LIKE '%$termino%'",
-                    "p.direccion LIKE '%$termino%'",
-
-                    // Información de pago
-                    "p.metodo_pago LIKE '%$termino%'",
-                    "p.datos_pago LIKE '%$termino%'",
-
-                    // Estados y notas
-                    "p.estado LIKE '%$termino%'",
-                    "p.nota_interna LIKE '%$termino%'"
-                ];
-
-                // Búsqueda por ID si es numérico
-                if(is_numeric($termino)) {
-                    $condicionesTermino[] = "p.id = '$termino'";
-                }
-
-                // Búsqueda por fecha si tiene formato de fecha
-                if(preg_match('/\d{4}-\d{2}-\d{2}/', $termino)) {
-                    $condicionesTermino[] = "DATE(p.fecha) = '$termino'";
-                    $condicionesTermino[] = "DATE_FORMAT(p.fecha, '%Y-%m-%d') LIKE '%$termino%'";
-                }
-                if(preg_match('/\d{2}\/\d{2}\/\d{4}/', $termino)) {
-                    $condicionesTermino[] = "DATE_FORMAT(p.fecha, '%d/%m/%Y') LIKE '%$termino%'";
-                }
-
-                // Búsqueda por año si es un año válido
-                if(preg_match('/^20\d{2}$/', $termino)) {
-                    $condicionesTermino[] = "YEAR(p.fecha) = '$termino'";
-                }
-
-                // Búsqueda por mes si coincide con nombres de meses
-                $meses = [
-                    'enero' => '01', 'febrero' => '02', 'marzo' => '03', 'abril' => '04',
-                    'mayo' => '05', 'junio' => '06', 'julio' => '07', 'agosto' => '08',
-                    'septiembre' => '09', 'octubre' => '10', 'noviembre' => '11', 'diciembre' => '12'
-                ];
-                $terminoLower = strtolower($termino);
-                if(isset($meses[$terminoLower])) {
-                    $numeroMes = $meses[$terminoLower];
-                    $condicionesTermino[] = "MONTH(p.fecha) = '$numeroMes'";
-                }
-
-                // Crear condición OR para este término
-                $condicionesBusqueda[] = "(" . implode(" OR ", $condicionesTermino) . ")";
-            }
-
-            // Todos los términos deben encontrarse (AND entre términos)
-            if(!empty($condicionesBusqueda)) {
-                $where .= " AND (" . implode(" AND ", $condicionesBusqueda) . ")";
-            }
-        }
-    }
-}
-if($metodo_pago){
-    $metodoPagoSql = $conn->real_escape_string($metodo_pago);
-    $where .= " AND metodo_pago = '$metodoPagoSql'";
-}
-if($ciudad){
-    $ciudadSql = $conn->real_escape_string($ciudad);
-    $where .= " AND ciudad LIKE '%$ciudadSql%'";
-}
-if($fecha_desde){
-    $where .= " AND DATE(fecha) >= '" . $conn->real_escape_string($fecha_desde) . "'";
-}
-if($fecha_hasta){
-    $where .= " AND DATE(fecha) <= '" . $conn->real_escape_string($fecha_hasta) . "'";
-}
-
-// ===== BÚSQUEDA POR MONTO (SI APLICA) =====
-$montoFiltro = '';
-if($buscar && is_numeric($buscar) && strlen($buscar) >= 4) {
-    $montoNumerico = intval($buscar);
-    // Crear un filtro HAVING para búsqueda por monto
-    $margenMonto = max(1000, $montoNumerico * 0.1); // 10% de margen o mínimo 1000
-    $montoFiltro = " HAVING monto BETWEEN " . ($montoNumerico - $margenMonto) . " AND " . ($montoNumerico + $margenMonto);
-}
-// Consulta optimizada: obtener datos de pedidos y cálculos en una sola consulta
-$main_query = "
-    SELECT 
-        p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.estado, p.fecha, p.direccion,
-        p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
-        p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado,
-        COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto
-    FROM pedidos_detal p
-    LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
-    WHERE $where
-    GROUP BY p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.estado, p.fecha, p.direccion,
-             p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
-             p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado
-    $montoFiltro
-    ORDER BY p.fecha DESC
-";
-
-// Obtener total de registros sin LIMIT para paginación
-$count_query = "
-    SELECT COUNT(*) as total, COALESCE(SUM(monto_temp), 0) as monto_total
-    FROM (
-        SELECT COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto_temp
-        FROM pedidos_detal p
-        LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
-        WHERE $where
-        GROUP BY p.id
-        $montoFiltro
-    ) as subquery
-";
-
-$count_result = $conn->query($count_query);
-if (!$count_result) {
-    die("Error en la consulta de conteo: " . $conn->error);
-}
-
-$count_row = $count_result->fetch_assoc();
-$total_pedidos = $count_row['total'];
-$monto_total_real = $count_row['monto_total'];
-$total_paginas = ceil($total_pedidos / $limite);
-
-// Obtener datos de la página actual
-$result = $conn->query($main_query . " LIMIT $limite OFFSET $offset");
-if (!$result) {
-    die("Error en la consulta: " . $conn->error);
-}
-
-$pedidos = [];
-while ($row = $result->fetch_assoc()) {
-    $pedidos[] = $row;
-}
-
-
-// Obtener listas para filtros con caché simple
-$cache_file = 'cache/filter_options.json';
-$cache_duration = 3600; // 1 hora
-$metodos_pago = [];
-$ciudades = [];
-
-// Verificar si existe caché válido
-if (file_exists($cache_file) && (time() - filemtime($cache_file)) < $cache_duration) {
-    $cached_data = json_decode(file_get_contents($cache_file), true);
-    if ($cached_data && isset($cached_data['metodos_pago']) && isset($cached_data['ciudades'])) {
-        $metodos_pago = $cached_data['metodos_pago'];
-        $ciudades = $cached_data['ciudades'];
-    }
-} else {
-    // Obtener datos de la base de datos
-    $metodos_result = $conn->query("SELECT DISTINCT metodo_pago FROM pedidos_detal WHERE metodo_pago IS NOT NULL AND metodo_pago != '' ORDER BY metodo_pago");
-    if ($metodos_result) {
-        while ($row = $metodos_result->fetch_assoc()) {
-            $metodos_pago[] = $row['metodo_pago'];
-        }
-    }
-
-    $ciudades_result = $conn->query("SELECT DISTINCT ciudad FROM pedidos_detal WHERE ciudad IS NOT NULL AND ciudad != '' ORDER BY ciudad");
-    if ($ciudades_result) {
-        while ($row = $ciudades_result->fetch_assoc()) {
-            $ciudades[] = $row['ciudad'];
-        }
-    }
-
-    // Guardar en caché
-    $cache_data = [
-        'metodos_pago' => $metodos_pago,
-        'ciudades' => $ciudades,
-        'timestamp' => time()
-    ];
+// Inicializar filtros usando la nueva clase
+try {
+    $filter = new PedidosFilter($conn);
+    $filter_data = $filter->processFilters();
     
-    // Crear directorio cache si no existe
-    if (!is_dir('cache')) {
-        mkdir('cache', 0755, true);
-    }
+    // Extraer datos
+    $pedidos = $filter_data['pedidos'];
+    $total_pedidos = $filter_data['total_pedidos'];
+    $monto_total_real = $filter_data['monto_total_real'];
+    $total_paginas = $filter_data['total_paginas'];
+    $metodos_pago = $filter_data['metodos_pago'];
+    $ciudades = $filter_data['ciudades'];
     
-    file_put_contents($cache_file, json_encode($cache_data));
+    // Parámetros para la vista
+    $params = $filter_data['params'];
+    $filtro = $params['filtro'];
+    $buscar = $params['buscar'];
+    $metodo_pago = $params['metodo_pago'];
+    $ciudad = $params['ciudad'];
+    $fecha_desde = $params['fecha_desde'];
+    $fecha_hasta = $params['fecha_hasta'];
+    $page = $params['page'];
+    $limite = $params['limite'];
+    $offset = ($page - 1) * $limite;
+    
+} catch (Exception $e) {
+    die("Error en los filtros: " . $e->getMessage());
 }
 
-function estado_pill($pedido) {
-    $estados = [];
+// Las funciones de filtrado ahora están en filters.php
 
-    // Verificar estado de pago primero
-    if ($pedido['pagado'] == '1') {
-        $estados[] = '<span class="estado-pill pago-confirmado">💰 Pago Confirmado</span>';
-    } else {
-        $estados[] = '<span class="estado-pill pago-pendiente">⏳ Pago Pendiente</span>';
-    }
-
-    // Verificar otros estados
-    if ($pedido['anulado'] == '1') {
-        $estados = ['<span class="estado-pill anulado">❌ Anulado</span>']; // Reemplazar todo si está anulado
-    } else {
-        if ($pedido['archivado'] == '1') {
-            $estados[] = '<span class="estado-pill archivado">📁 Archivado</span>';
-        }
-        if ($pedido['enviado'] == '1') {
-            $estados[] = '<span class="estado-pill enviado">🚚 Enviado</span>';
-        }
-        if ($pedido['tiene_guia'] == '1') {
-            $estados[] = '<span class="estado-pill guia">📋 Con Guía</span>';
-        }
-        if ($pedido['tiene_comprobante'] == '1') {
-            $estados[] = '<span class="estado-pill comprobante">📄 Con Comprobante</span>';
-        }
-    }
-
-    return implode(' ', $estados);
-}
-
-function formatear_productos($productos) {
-    if (empty($productos)) return 'Sin productos detallados';
-
-    $html = '<div class="productos-mini">';
-    $total = 0;
-    foreach ($productos as $producto) {
-        $subtotal = $producto['precio'] * $producto['cantidad'];
-        $total += $subtotal;
-        $talla = !empty($producto['talla']) ? " ({$producto['talla']})" : "";
-        $html .= '<div class="producto-item">';
-        $html .= '<span class="producto-nombre">' . htmlspecialchars($producto['nombre']) . $talla . '</span>';
-        $html .= '<span class="producto-cantidad">x' . $producto['cantidad'] . '</span>';
-        $html .= '<span class="producto-precio">$' . number_format($producto['precio'], 0, ',', '.') . '</span>';
-        $html .= '</div>';
-    }
-    $html .= '<div class="productos-total">Total: $' . number_format($total, 0, ',', '.') . '</div>';
-    $html .= '</div>';
-    return $html;
-}
+// Las funciones auxiliares están ahora en ui-helpers.php
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -409,21 +117,11 @@ function formatear_productos($productos) {
             <form method="get" class="filtros-avanzados-form">
                 <div class="filtros-row">
                     <select name="metodo_pago" class="select-avanzado" onchange="aplicarFiltros()">
-                        <option value="">💳 Método de pago</option>
-                        <?php foreach($metodos_pago as $metodo): ?>
-                            <option value="<?php echo htmlspecialchars($metodo); ?>" <?php echo ($metodo_pago==$metodo ? 'selected' : ''); ?>>
-                                <?php echo htmlspecialchars($metodo); ?>
-                            </option>
-                        <?php endforeach; ?>
+                        <?php echo generate_filter_options($metodos_pago, $metodo_pago, 'Método de pago', '💳'); ?>
                     </select>
 
                     <select name="ciudad" class="select-avanzado" onchange="aplicarFiltros()">
-                        <option value="">🏙️ Ciudad</option>
-                        <?php foreach($ciudades as $ciudad_opt): ?>
-                            <option value="<?php echo htmlspecialchars($ciudad_opt); ?>" <?php echo ($ciudad==$ciudad_opt ? 'selected' : ''); ?>>
-                                <?php echo htmlspecialchars($ciudad_opt); ?>
-                            </option>
-                        <?php endforeach; ?>
+                        <?php echo generate_filter_options($ciudades, $ciudad, 'Ciudad', '🏙️'); ?>
                     </select>
 
                     <input type="date" name="fecha_desde" value="<?php echo htmlspecialchars($fecha_desde); ?>" class="input-avanzado" placeholder="Desde" onchange="aplicarFiltros()">
@@ -500,21 +198,23 @@ function formatear_productos($productos) {
 
                                 <!-- Fecha del Pedido -->
                                 <td class="col-fecha">
+                                    <?php $fecha_info = format_date($p['fecha']); ?>
                                     <div class="info-fecha">
-                                        <div class="fecha-principal"><?php echo date('d/m/Y', strtotime($p['fecha'])); ?></div>
-                                        <div class="hora-pedido"><?php echo date('H:i', strtotime($p['fecha'])); ?></div>
+                                        <div class="fecha-principal"><?php echo $fecha_info['fecha_principal']; ?></div>
+                                        <div class="hora-pedido"><?php echo $fecha_info['hora_pedido']; ?></div>
                                     </div>
                                 </td>
 
                                 <!-- Cliente -->
                                 <td class="col-cliente">
+                                    <?php $cliente_info = generate_customer_info($p); ?>
                                     <div class="info-cliente">
-                                        <div class="nombre-cliente"><?php echo htmlspecialchars($p['nombre']); ?></div>
+                                        <div class="nombre-cliente"><?php echo $cliente_info['nombre']; ?></div>
                                         <div class="telefono-ciudad">
-                                            <a href="#" onclick="abrirWhatsApp('<?php echo preg_replace('/[^0-9]/', '', $p['telefono']); ?>'); return false;" class="whatsapp-link" title="Contactar por WhatsApp">
+                                            <a href="#" onclick="abrirWhatsApp('<?php echo $cliente_info['telefono_whatsapp']; ?>'); return false;" class="whatsapp-link" title="Contactar por WhatsApp">
                                                 📱
                                             </a>
-                                            <?php echo htmlspecialchars($p['telefono']) . ' - ' . htmlspecialchars($p['ciudad']); ?>
+                                            <?php echo $cliente_info['telefono_display'] . ' - ' . $cliente_info['ciudad']; ?>
                                         </div>
                                     </div>
                                 </td>
@@ -545,37 +245,27 @@ function formatear_productos($productos) {
 
                                 <!-- Status: Enviado -->
                                 <td class="col-enviado">
-                                    <span class="badge-status <?php echo $p['enviado'] == '1' ? 'status-si' : 'status-no'; ?>">
-                                        <?php echo $p['enviado'] == '1' ? '✅ Sí' : '⏳ No'; ?>
-                                    </span>
+                                    <?php echo generate_status_badge($p['enviado'], 'enviado'); ?>
                                 </td>
 
                                 <!-- Status: Comprobante -->
                                 <td class="col-comprobante" onclick="abrirModalComprobante(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['comprobante']); ?>', '<?php echo $p['tiene_comprobante']; ?>', '<?php echo htmlspecialchars($p['metodo_pago']); ?>')" style="cursor: pointer;" title="Click para ver/subir comprobante">
-                                    <span class="badge-status <?php echo $p['tiene_comprobante'] == '1' ? 'status-si' : 'status-no'; ?>">
-                                        <?php echo $p['tiene_comprobante'] == '1' ? '✅ Sí' : '⏳ No'; ?>
-                                    </span>
+                                    <?php echo generate_status_badge($p['tiene_comprobante'], 'comprobante'); ?>
                                 </td>
 
                                 <!-- Status: Guía -->
                                 <td class="col-guia" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>')" style="cursor: pointer;" title="Click para ver/subir guía">
-                                    <span class="badge-status <?php echo $p['tiene_guia'] == '1' ? 'status-si' : 'status-no'; ?>">
-                                        <?php echo $p['tiene_guia'] == '1' ? '✅ Sí' : '⏳ No'; ?>
-                                    </span>
+                                    <?php echo generate_status_badge($p['tiene_guia'], 'guia'); ?>
                                 </td>
 
                                 <!-- Status: Archivado -->
                                 <td class="col-archivado">
-                                    <span class="badge-status <?php echo $p['archivado'] == '1' ? 'status-archivado' : 'status-activo'; ?>">
-                                        <?php echo $p['archivado'] == '1' ? '📁 Sí' : '📂 No'; ?>
-                                    </span>
+                                    <?php echo generate_status_badge($p['archivado'], 'archivado'); ?>
                                 </td>
 
                                 <!-- Status: Anulado -->
                                 <td class="col-anulado">
-                                    <span class="badge-status <?php echo $p['anulado'] == '1' ? 'status-anulado' : 'status-activo'; ?>">
-                                        <?php echo $p['anulado'] == '1' ? '❌ Sí' : '✅ No'; ?>
-                                    </span>
+                                    <?php echo generate_status_badge($p['anulado'], 'anulado'); ?>
                                 </td>
 
                                 <!-- Acciones -->
