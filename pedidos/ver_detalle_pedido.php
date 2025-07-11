@@ -429,6 +429,21 @@ if ($id && $id > 0) {
 } else {
     $error_message = "ID de pedido no válido o no proporcionado.";
 }
+
+// Verificar si es una petición AJAX
+if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
+    // Responder solo con el contenido del modal
+    header('Content-Type: text/html; charset=UTF-8');
+
+    if (!$pedido_encontrado) {
+        echo '<div class="error-message">Error: ' . h($error_message) . '</div>';
+        exit;
+    }
+
+    // Renderizar solo el contenido del pedido sin HTML completo
+    include 'ver_detalle_pedido_content.php';
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
