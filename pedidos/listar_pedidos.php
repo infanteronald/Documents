@@ -286,7 +286,7 @@ try {
                                 </td>
 
                                 <!-- Status: Anulado -->
-                                <td class="col-anulado">
+                                <td class="col-anulado" onclick="abrirModalAnular(<?php echo $p['id']; ?>, '<?php echo $p['anulado']; ?>', '<?php echo htmlspecialchars($p['nombre']); ?>')" style="cursor: pointer;" title="Click para anular/restaurar pedido">
                                     <?php echo generate_status_badge($p['anulado'], 'anulado'); ?>
                                 </td>
 
@@ -2147,6 +2147,192 @@ function confirmarEntregaTienda(pedidoId) {
         mostrarNotificacion('❌ Error de conexión al confirmar entrega', 'error');
         button.disabled = false;
         button.innerHTML = '🏪 Confirmar Entrega';
+        button.style.opacity = '1';
+    });
+}
+
+// ===== FUNCIÓN PARA ABRIR MODAL DE ANULAR PEDIDO =====
+function abrirModalAnular(pedidoId, anulado, nombreCliente) {
+    try {
+        const modal = document.createElement('div');
+        modal.className = 'modal-detalle-bg';
+        modal.setAttribute('data-pedido-id', pedidoId);
+        
+        let contenidoModal = '';
+        
+        if (anulado == '1') {
+            // Pedido ya está anulado - opción para restaurar
+            contenidoModal = `
+                <div class="modal-detalle" style="max-width: 450px;">
+                    <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                    <h3 style="margin-bottom: 20px; color: var(--vscode-text);">❌ Pedido Anulado - #${pedidoId}</h3>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="background: var(--apple-red-light); padding: 20px; border-radius: 12px; border: 1px solid var(--apple-red); margin-bottom: 15px;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                            <div style="font-size: 1.2rem; font-weight: 600; color: var(--apple-red); margin-bottom: 8px;">
+                                Pedido cancelado
+                            </div>
+                            <div style="color: var(--vscode-text-muted); font-size: 0.95rem; margin-bottom: 8px;">
+                                Cliente: <strong>${nombreCliente}</strong>
+                            </div>
+                            <div style="color: var(--vscode-text-muted); font-size: 0.9rem;">
+                                Este pedido fue cancelado y el cliente fue notificado por email.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-secondary" style="flex: 1; padding: 12px;">
+                            Cerrar
+                        </button>
+                        <button onclick="restaurarPedido(${pedidoId})" class="btn-accion" style="flex: 1; padding: 12px; background: var(--apple-green);">
+                            ↩️ Restaurar Pedido
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Pedido activo - opción para anular
+            contenidoModal = `
+                <div class="modal-detalle" style="max-width: 450px;">
+                    <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                    <h3 style="margin-bottom: 20px; color: var(--vscode-text);">❌ Anular Pedido #${pedidoId}</h3>
+                    
+                    <div style="background: var(--apple-red-light); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--apple-red);">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 1.2rem;">⚠️</span>
+                            <strong style="color: var(--apple-red);">Acción irreversible</strong>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--vscode-text-muted); margin-bottom: 8px;">
+                            Al anular este pedido:
+                        </div>
+                        <ul style="margin: 8px 0 0 20px; font-size: 0.9rem; color: var(--vscode-text-muted);">
+                            <li>❌ <strong>Se marcará como cancelado</strong> (anulado = 1)</li>
+                            <li>📧 <strong>El cliente será notificado por email</strong></li>
+                            <li>📝 <strong>Se agregará una nota automática</strong></li>
+                            <li>📊 <strong>No contará en estadísticas de ventas</strong></li>
+                        </ul>
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 1.1rem; margin-bottom: 8px;">
+                            Cliente: <strong>${nombreCliente}</strong>
+                        </div>
+                        <div style="font-size: 0.95rem; color: var(--vscode-text-muted);">
+                            ¿Confirmas que deseas anular este pedido?
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-secondary" style="flex: 1; padding: 12px;">
+                            ❌ Cancelar
+                        </button>
+                        <button onclick="confirmarAnularPedido(${pedidoId})" class="btn-accion" style="flex: 1; padding: 12px; background: var(--apple-red);">
+                            ❌ Anular Pedido
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        modal.innerHTML = contenidoModal;
+        document.body.appendChild(modal);
+        
+        // Mostrar modal con animación
+        requestAnimationFrame(() => {
+            modal.style.display = 'flex';
+            modal.style.opacity = '0';
+            modal.style.transition = 'opacity 0.3s ease';
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+            });
+        });
+        
+    } catch (error) {
+        console.error('Error abriendo modal de anular:', error);
+        mostrarNotificacion('❌ Error al abrir modal de anulación', 'error');
+    }
+}
+
+// ===== FUNCIÓN PARA CONFIRMAR ANULACIÓN DE PEDIDO =====
+function confirmarAnularPedido(pedidoId) {
+    const modal = document.querySelector(`[data-pedido-id="${pedidoId}"]`);
+    const button = modal.querySelector('button[onclick*="confirmarAnularPedido"]');
+    
+    // Cambiar estado del botón
+    button.disabled = true;
+    button.innerHTML = '⏳ Anulando...';
+    button.style.opacity = '0.7';
+    
+    // Usar la misma lógica que actualizar_estado.php
+    const formData = new FormData();
+    formData.append('id', pedidoId);
+    formData.append('estado', 'anulado');
+    
+    fetch('actualizar_estado.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarNotificacion(`✅ Pedido #${pedidoId} anulado exitosamente. Cliente notificado por email.`, 'success');
+            modal.remove();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (data.error || 'No se pudo anular el pedido'), 'error');
+            button.disabled = false;
+            button.innerHTML = '❌ Anular Pedido';
+            button.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión al anular pedido', 'error');
+        button.disabled = false;
+        button.innerHTML = '❌ Anular Pedido';
+        button.style.opacity = '1';
+    });
+}
+
+// ===== FUNCIÓN PARA RESTAURAR PEDIDO =====
+function restaurarPedido(pedidoId) {
+    const modal = document.querySelector(`[data-pedido-id="${pedidoId}"]`);
+    const button = modal.querySelector('button[onclick*="restaurarPedido"]');
+    
+    // Cambiar estado del botón
+    button.disabled = true;
+    button.innerHTML = '⏳ Restaurando...';
+    button.style.opacity = '0.7';
+    
+    // Restaurar a estado pendiente
+    const formData = new FormData();
+    formData.append('id', pedidoId);
+    formData.append('estado', 'pendiente');
+    
+    fetch('actualizar_estado.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarNotificacion(`✅ Pedido #${pedidoId} restaurado exitosamente.`, 'success');
+            modal.remove();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (data.error || 'No se pudo restaurar el pedido'), 'error');
+            button.disabled = false;
+            button.innerHTML = '↩️ Restaurar Pedido';
+            button.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión al restaurar pedido', 'error');
+        button.disabled = false;
+        button.innerHTML = '↩️ Restaurar Pedido';
         button.style.opacity = '1';
     });
 }

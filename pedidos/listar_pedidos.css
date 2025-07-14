@@ -1683,6 +1683,15 @@ h1 {
     background-color: rgba(255, 149, 0, 0.1);
 }
 
+/* Cursor pointer para columna de anulado clickeable */
+.col-anulado {
+    transition: background-color var(--transition-base);
+}
+
+.col-anulado:hover {
+    background-color: rgba(255, 59, 48, 0.1);
+}
+
 /* Estilos base para modales */
 .modal-detalle-bg {
     position: fixed;
