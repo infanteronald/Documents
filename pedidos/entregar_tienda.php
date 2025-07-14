@@ -1,7 +1,6 @@
 <?php
 /**
- * Marca un pedido como entregado en tienda
- * Cambia tienda=1, enviado=1, tiene_guia=1
+ * Marca un pedido como entregado en tienda - Versión compatible
  */
 
 error_reporting(E_ALL);
@@ -10,6 +9,9 @@ ini_set('display_errors', 1);
 include 'conexion.php';
 
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Método no permitido']);
@@ -18,63 +20,58 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Obtener datos del POST
 $input = json_decode(file_get_contents('php://input'), true);
+
+if (!$input) {
+    echo json_encode(['success' => false, 'error' => 'No se recibieron datos JSON']);
+    exit;
+}
+
 $pedido_id = isset($input['pedido_id']) ? intval($input['pedido_id']) : 0;
 
 if (!$pedido_id || $pedido_id <= 0) {
-    echo json_encode(['success' => false, 'error' => 'ID de pedido inválido']);
+    echo json_encode(['success' => false, 'error' => 'ID de pedido inválido: ' . $pedido_id]);
     exit;
 }
 
 try {
-    // Iniciar transacción
-    $conn->begin_transaction();
-    
-    // Verificar que el pedido existe
-    $stmt = $conn->prepare("SELECT id, nombre, correo FROM pedidos_detal WHERE id = ? LIMIT 1");
-    if (!$stmt) {
-        throw new Exception('Error preparando verificación: ' . $conn->error);
+    // Verificar conexión
+    if ($conn->connect_error) {
+        throw new Exception('Error de conexión a BD: ' . $conn->connect_error);
     }
     
-    $stmt->bind_param("i", $pedido_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Verificar que el pedido existe usando consulta simple
+    $query = "SELECT id, nombre FROM pedidos_detal WHERE id = " . intval($pedido_id) . " LIMIT 1";
+    $result = mysqli_query($conn, $query);
     
-    if ($result->num_rows === 0) {
-        throw new Exception('Pedido no encontrado');
+    if (!$result) {
+        throw new Exception('Error en consulta de verificación: ' . mysqli_error($conn));
     }
     
-    $pedido = $result->fetch_assoc();
-    $stmt->close();
+    if (mysqli_num_rows($result) === 0) {
+        throw new Exception('Pedido no encontrado con ID: ' . $pedido_id);
+    }
     
-    // Actualizar el pedido con entrega en tienda
-    $stmt = $conn->prepare("
+    $pedido = mysqli_fetch_assoc($result);
+    
+    // Actualizar el pedido usando consulta simple
+    $update_query = "
         UPDATE pedidos_detal 
         SET tienda = '1', 
             enviado = '1', 
             tiene_guia = '1',
             guia = 'entrega-tienda.jpg',
-            nota_interna = CONCAT(COALESCE(nota_interna, ''), '\n[', NOW(), '] - Pedido entregado en tienda físicamente')
-        WHERE id = ?
-    ");
+            nota_interna = CONCAT(COALESCE(nota_interna, ''), '\n[" . date('Y-m-d H:i:s') . "] - Pedido entregado en tienda físicamente')
+        WHERE id = " . intval($pedido_id);
     
-    if (!$stmt) {
-        throw new Exception('Error preparando actualización: ' . $conn->error);
+    $update_result = mysqli_query($conn, $update_query);
+    
+    if (!$update_result) {
+        throw new Exception('Error en actualización: ' . mysqli_error($conn));
     }
     
-    $stmt->bind_param("i", $pedido_id);
-    
-    if (!$stmt->execute()) {
-        throw new Exception('Error ejecutando actualización: ' . $stmt->error);
+    if (mysqli_affected_rows($conn) === 0) {
+        throw new Exception('No se pudo actualizar el pedido (sin cambios)');
     }
-    
-    if ($stmt->affected_rows === 0) {
-        throw new Exception('No se pudo actualizar el pedido');
-    }
-    
-    $stmt->close();
-    
-    // Confirmar transacción
-    $conn->commit();
     
     echo json_encode([
         'success' => true,
@@ -84,15 +81,12 @@ try {
     ]);
     
 } catch (Exception $e) {
-    // Revertir transacción en caso de error
-    $conn->rollback();
-    
     error_log("Error en entregar_tienda.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => 'Error interno: ' . $e->getMessage()
+        'error' => $e->getMessage()
     ]);
 }
 
-$conn->close();
+mysqli_close($conn);
 ?>

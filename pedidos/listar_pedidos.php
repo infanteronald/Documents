@@ -186,7 +186,7 @@ try {
                         <th class="col-enviado">🚚 Enviado</th>
                         <th class="col-comprobante">📄 Comprobante</th>
                         <th class="col-guia">📦 Guía</th>
-                        <th class="col-tienda">🏪 Entregado en Tienda</th>
+                        <th class="col-tienda">🏪 Tienda</th>
                         <th class="col-archivado">📁 Archivado</th>
                         <th class="col-anulado">❌ Anulado</th>
                         <th class="col-acciones">⚡ Acciones</th>
@@ -276,8 +276,8 @@ try {
                                 </td>
 
                                 <!-- Status: Entregado en Tienda -->
-                                <td class="col-tienda" onclick="abrirModalTienda(<?php echo $p['id']; ?>, '<?php echo $p['tienda']; ?>')" style="cursor: pointer;" title="Click para marcar como entregado en tienda">
-                                    <?php echo generate_status_badge($p['tienda'], 'tienda'); ?>
+                                <td class="col-tienda" onclick="abrirModalTienda(<?php echo $p['id']; ?>, '<?php echo isset($p['tienda']) ? $p['tienda'] : '0'; ?>')" style="cursor: pointer;" title="Click para marcar como entregado en tienda">
+                                    <?php echo generate_status_badge(isset($p['tienda']) ? $p['tienda'] : '0', 'tienda'); ?>
                                 </td>
 
                                 <!-- Status: Archivado -->
