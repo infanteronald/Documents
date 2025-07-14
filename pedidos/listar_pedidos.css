@@ -1656,6 +1656,15 @@ h1 {
     background-color: rgba(0, 122, 255, 0.1);
 }
 
+/* Cursor pointer para columna de enviado clickeable */
+.col-enviado {
+    transition: background-color var(--transition-base);
+}
+
+.col-enviado:hover {
+    background-color: rgba(0, 122, 255, 0.1);
+}
+
 /* Cursor pointer para columna de guía clickeable */
 .col-guia {
     transition: background-color var(--transition-base);

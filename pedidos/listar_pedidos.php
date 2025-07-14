@@ -261,7 +261,7 @@ try {
                                 </td>
 
                                 <!-- Status: Enviado -->
-                                <td class="col-enviado">
+                                <td class="col-enviado" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>', '<?php echo isset($p['tienda']) ? $p['tienda'] : '0'; ?>')" style="cursor: pointer;" title="Click para ver estado del envío">
                                     <?php echo generate_status_badge($p['enviado'], 'enviado'); ?>
                                 </td>
 
