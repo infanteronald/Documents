@@ -98,7 +98,13 @@ try {
             <div class="mobile-actions">
                 <button onclick="window.open('orden_pedido.php', '_blank')" class="mobile-btn mobile-btn-new" title="Nuevo Pedido">➕</button>
                 <button onclick="location.reload()" class="mobile-btn" title="Actualizar">🔄</button>
-                <button onclick="exportarExcel()" class="mobile-btn" title="Exportar">📊</button>
+                <div class="export-dropdown">
+                    <button class="mobile-btn" title="Exportar" onclick="toggleExportMenu(this)">📊</button>
+                    <div class="export-menu">
+                        <a href="#" onclick="exportarExcel(); return false;">📊 Excel</a>
+                        <a href="#" onclick="exportarPDF(); return false;">📄 PDF</a>
+                    </div>
+                </div>
                 <button onclick="window.print()" class="mobile-btn" title="Imprimir">🖨️</button>
             </div>
 
@@ -122,7 +128,13 @@ try {
             <div class="acciones-compactas desktop-only">
                 <button onclick="window.open('orden_pedido.php', '_blank')" class="btn-compacto btn-nuevo-pedido" title="Nuevo Pedido">➕ Nuevo</button>
                 <button onclick="location.reload()" class="btn-compacto" title="Actualizar">🔄</button>
-                <button onclick="exportarExcel()" class="btn-compacto" title="Exportar">📊</button>
+                <div class="export-dropdown">
+                    <button class="btn-compacto" title="Exportar" onclick="toggleExportMenu(this)">📊 Exportar</button>
+                    <div class="export-menu">
+                        <a href="#" onclick="exportarExcel(); return false;">📊 Excel</a>
+                        <a href="#" onclick="exportarPDF(); return false;">📄 PDF</a>
+                    </div>
+                </div>
                 <button onclick="window.print()" class="btn-compacto" title="Imprimir">🖨️</button>
             </div>
 
@@ -181,7 +193,6 @@ try {
                         <th class="col-fecha">📅 Fecha</th>
                         <th class="col-cliente">👤 Cliente</th>
                         <th class="col-monto">💰 Monto</th>
-                        <th class="col-ver">👁️ Acciones</th>
                         <th class="col-pagado">💳 Pagado</th>
                         <th class="col-enviado">🚚 Enviado</th>
                         <th class="col-comprobante">📄 Comprobante</th>
@@ -189,13 +200,12 @@ try {
                         <th class="col-tienda">🏪 Tienda</th>
                         <th class="col-archivado">📁 Archivado</th>
                         <th class="col-anulado">❌ Anulado</th>
-                        <th class="col-acciones">⚡ Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if(count($pedidos) == 0): ?>
                         <tr>
-                            <td colspan="12" class="tabla-vacia">
+                            <td colspan="11" class="tabla-vacia">
                                 <div class="mensaje-vacio">
                                     <div class="icono-vacio">📭</div>
                                     <div class="titulo-vacio">No hay pedidos para este filtro</div>
@@ -241,17 +251,6 @@ try {
                                     <span class="valor-monto">$<?php echo number_format($p['monto'], 0, ',', '.'); ?></span>
                                 </td>
 
-                                <!-- Acciones -->
-                                <td class="col-ver">
-                                    <div class="botones-acciones">
-                                        <button class="btn-accion-tabla btn-ver-productos" onclick="toggleProductos(<?php echo $p['id']; ?>)" title="Ver productos del pedido">
-                                            👁️
-                                        </button>
-                                        <button class="btn-accion-tabla btn-configurar" onclick="abrirDetallePopup(<?php echo $p['id']; ?>)" title="Configurar pedido">
-                                            ⚙️
-                                        </button>
-                                    </div>
-                                </td>
 
                                 <!-- Status: Pagado -->
                                 <td class="col-pagado" onclick="toggleEstadoPago(<?php echo $p['id']; ?>, <?php echo $p['pagado']; ?>, '<?php echo htmlspecialchars($p['comprobante']); ?>', '<?php echo $p['tiene_comprobante']; ?>', '<?php echo htmlspecialchars($p['metodo_pago']); ?>')" style="cursor: pointer;" title="<?php echo $p['pagado'] == '1' ? 'Click para marcar como NO pagado' : 'Click para subir comprobante'; ?>">
@@ -290,33 +289,6 @@ try {
                                     <?php echo generate_status_badge($p['anulado'], 'anulado'); ?>
                                 </td>
 
-                                <!-- Acciones -->
-                                <td class="col-acciones">
-                                    <div class="dropdown-acciones" style="position: relative;">
-                                        <button class="btn-acciones" onclick="toggleAcciones(<?php echo $p['id']; ?>)">⚡</button>
-                                        <div class="menu-acciones" id="menu-<?php echo $p['id']; ?>">
-                                            <a href="#" class="accion-item ver-detalle" data-id="<?php echo $p['id']; ?>">👁️ Ver Detalle</a>
-                                            <a href="comprobante.php?id=<?php echo $p['id']; ?>" class="accion-item" target="_blank">📄 Comprobante</a>
-
-                                            <?php if ($p['anulado'] == '0'): ?>
-                                                <?php if ($p['pagado'] == '0'): ?>
-                                                    <a href="#" class="accion-item" onclick="confirmarPago(<?php echo $p['id']; ?>)">💰 Confirmar Pago</a>
-                                                <?php endif; ?>
-                                                <?php if ($p['enviado'] == '0'): ?>
-                                                    <a href="#" class="accion-item" onclick="marcarEnviado(<?php echo $p['id']; ?>)">🚚 Marcar Enviado</a>
-                                                <?php endif; ?>
-                                                <?php if ($p['archivado'] == '0'): ?>
-                                                    <a href="#" class="accion-item" onclick="archivarPedido(<?php echo $p['id']; ?>)">📁 Archivar</a>
-                                                <?php else: ?>
-                                                    <a href="#" class="accion-item" onclick="restaurarPedido(<?php echo $p['id']; ?>)">🔄 Restaurar</a>
-                                                <?php endif; ?>
-                                                <a href="#" class="accion-item anular" onclick="anularPedido(<?php echo $p['id']; ?>)">❌ Anular</a>
-                                            <?php else: ?>
-                                                <a href="#" class="accion-item" onclick="restaurarPedido(<?php echo $p['id']; ?>)">🔄 Restaurar</a>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </td>
                             </tr>
                             <!-- Nota: Las filas de productos se crean dinámicamente con JavaScript al hacer clic en el botón ojo -->
                         <?php endforeach; ?>
@@ -1031,19 +1003,6 @@ function verComprobante(pedidoId) {
 // ============================================
 
 // Función para abrir detalle en popup
-function abrirDetallePopup(pedidoId) {
-    const url = `ver_detalle_pedido.php?id=${pedidoId}`;
-
-    // Calcular posición centrada
-    const ancho = 900;
-    const alto = 650;
-    const left = (screen.width - ancho) / 2;
-    const top = (screen.height - alto) / 2;
-
-    const opciones = `width=${ancho},height=${alto},left=${left},top=${top},scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no,directories=no,fullscreen=no`;
-
-    window.open(url, `detalle_pedido_${pedidoId}`, opciones);
-}
 
 // Función para cambiar estado de pago
 function toggleEstadoPago(pedidoId, estadoActual, comprobante, tieneComprobante, metodoPago) {
@@ -1102,41 +1061,7 @@ function cambiarEstadoPago(pedidoId, nuevoEstado) {
 // ============================================
 
 // Función para toggle del dropdown de acciones
-function toggleAcciones(pedidoId) {
-    const menu = document.getElementById(`menu-${pedidoId}`);
-    if (!menu) {
-        console.error(`No se encontró el menú con ID: menu-${pedidoId}`);
-        return;
-    }
 
-    // Cerrar otros menús abiertos
-    document.querySelectorAll('.menu-acciones').forEach(otroMenu => {
-        if (otroMenu !== menu) {
-            otroMenu.classList.remove('mostrar');
-        }
-    });
-
-    // Toggle del menú actual
-    menu.classList.toggle('mostrar');
-}
-
-// Cerrar menús de acciones al hacer click fuera
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('.dropdown-acciones')) {
-        document.querySelectorAll('.menu-acciones').forEach(menu => {
-            menu.classList.remove('mostrar');
-        });
-    }
-});
-
-// Cerrar menús con tecla Escape
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        document.querySelectorAll('.menu-acciones').forEach(menu => {
-            menu.classList.remove('mostrar');
-        });
-    }
-});
 
 // ============================================
 // FUNCIONES DE ACCIONES DE PEDIDOS
@@ -1572,7 +1497,7 @@ function toggleProductos(pedidoId) {
         nuevaFila.id = `productos-${pedidoId}`;
         nuevaFila.className = 'fila-productos';
         nuevaFila.innerHTML = `
-            <td colspan="12" class="productos-container">
+            <td colspan="11" class="productos-container">
                 <div class="productos-loading">
                     <div class="spinner"></div>
                     <span>Cargando productos...</span>
@@ -2335,6 +2260,79 @@ function restaurarPedido(pedidoId) {
         button.innerHTML = '↩️ Restaurar Pedido';
         button.style.opacity = '1';
     });
+}
+
+// ===== FUNCIONES DE EXPORTACIÓN =====
+function toggleExportMenu(button) {
+    const dropdown = button.closest('.export-dropdown');
+    const isActive = dropdown.classList.contains('active');
+    
+    // Cerrar todos los menús desplegables abiertos
+    document.querySelectorAll('.export-dropdown.active').forEach(menu => {
+        menu.classList.remove('active');
+    });
+    
+    // Toggle el menú actual
+    if (!isActive) {
+        dropdown.classList.add('active');
+        
+        // Cerrar el menú si se hace clic fuera de él
+        document.addEventListener('click', function closeMenu(e) {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+    }
+}
+
+function exportarExcel() {
+    // Obtener parámetros actuales de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Construir URL para exportar Excel
+    const exportUrl = 'exportar_excel.php?' + urlParams.toString();
+    
+    mostrarNotificacion('📊 Generando archivo Excel...', 'info');
+    
+    // Crear un enlace temporal para descargar
+    const link = document.createElement('a');
+    link.href = exportUrl;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Cerrar el menú desplegable
+    document.querySelectorAll('.export-dropdown.active').forEach(menu => {
+        menu.classList.remove('active');
+    });
+    
+    setTimeout(() => {
+        mostrarNotificacion('✅ Archivo Excel descargado', 'success');
+    }, 1000);
+}
+
+function exportarPDF() {
+    // Obtener parámetros actuales de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Construir URL para exportar PDF
+    const exportUrl = 'exportar_pdf.php?' + urlParams.toString();
+    
+    mostrarNotificacion('📄 Generando archivo PDF...', 'info');
+    
+    // Abrir en nueva ventana para PDF
+    window.open(exportUrl, '_blank');
+    
+    // Cerrar el menú desplegable
+    document.querySelectorAll('.export-dropdown.active').forEach(menu => {
+        menu.classList.remove('active');
+    });
+    
+    setTimeout(() => {
+        mostrarNotificacion('✅ PDF generado', 'success');
+    }, 1000);
 }
 
 // Ejecutar cuando el DOM esté listo

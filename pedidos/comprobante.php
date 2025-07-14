@@ -13,7 +13,7 @@ $detalles = [];
 
 if ($orden_id) {
     // Obtener datos de la orden desde pedidos_detal
-    $sql = "SELECT id, pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, nota_interna, fecha, estado, fecha_estado, guia, numero_guia, url_imagen_guia, comentario FROM pedidos_detal WHERE id = ?";
+    $sql = "SELECT id, pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, nota_interna, fecha, fecha_estado, guia, numero_guia, url_imagen_guia, comentario FROM pedidos_detal WHERE id = ?";
     $stmt = $conn->prepare($sql);
 
     if (!$stmt) {

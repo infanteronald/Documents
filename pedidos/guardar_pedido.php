@@ -102,14 +102,14 @@ $nombres = array_map(function ($item) {
 $pedido_str = implode(', ', $nombres);
 
 // Insertar pedido en pedidos_detal con todos los campos necesarios
-$sql = "INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, estado";
+$sql = "INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago";
 
 // Agregar campos de Bold si es un pago Bold
 if ($bold_order_id) {
     $sql .= ", bold_order_id, estado_pago";
 }
 
-$sql .= ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sin_enviar'";
+$sql .= ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?";
 
 if ($bold_order_id) {
     $sql .= ", ?, 'pendiente'";

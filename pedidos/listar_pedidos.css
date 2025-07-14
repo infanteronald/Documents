@@ -550,10 +550,6 @@ h1 {
     text-align: center;
 }
 
-.col-acciones {
-    width: 70px;
-    text-align: center;
-}
 
 /* Información de fecha */
 .info-fecha {
@@ -667,51 +663,10 @@ h1 {
     transform: scale(0.95);
 }
 
-/* Contenedor de botones de acciones */
-.botones-acciones {
-    display: flex;
-    gap: var(--space-xs);
-    align-items: center;
-    justify-content: center;
-}
 
-/* Estilos base para botones de acción en tabla */
-.btn-accion-tabla {
-    background: transparent;
-    border: 1px solid var(--vscode-border);
-    color: var(--vscode-text-muted);
-    padding: var(--space-2xs) var(--space-xs);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all var(--transition-fast);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-}
 
-/* Botón ver productos (ojo) */
-.btn-accion-tabla.btn-ver-productos:hover {
-    background: var(--apple-blue-light);
-    border-color: var(--apple-blue);
-    color: var(--apple-blue);
-    transform: scale(1.05);
-}
 
-/* Botón configurar (engranaje) */
-.btn-accion-tabla.btn-configurar:hover {
-    background: rgba(255, 149, 0, 0.1);
-    border-color: var(--apple-orange);
-    color: var(--apple-orange);
-    transform: scale(1.05);
-}
 
-.btn-accion-tabla:active {
-    transform: scale(0.95);
-}
 
 /* Botones de estado de pago */
 .btn-status-pago {
@@ -763,90 +718,16 @@ h1 {
     transform: scale(0.98);
 }
 
-/* ===== MENÚ DE ACCIONES DROPDOWN ===== */
-.dropdown-acciones {
-    position: relative;
-    display: inline-block;
-}
 
-.btn-acciones {
-    background: transparent;
-    border: 1px solid var(--vscode-border);
-    color: var(--vscode-text-muted);
-    padding: var(--space-xs) var(--space-md);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all var(--transition-fast);
-    min-width: 40px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
-.btn-acciones:hover {
-    background: var(--apple-blue-light);
-    border-color: var(--apple-blue);
-    color: var(--apple-blue);
-    transform: scale(1.05);
-}
 
-.btn-acciones:active {
-    transform: scale(0.95);
-}
 
-.menu-acciones {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: var(--vscode-sidebar);
-    border: 1px solid var(--vscode-border);
-    border-radius: var(--radius-md);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    min-width: 180px;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all var(--transition-fast);
-    margin-top: var(--space-2xs);
-}
 
-.menu-acciones.mostrar {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
 
-.accion-item {
-    display: block;
-    padding: var(--space-md) var(--space-lg);
-    color: var(--vscode-text);
-    text-decoration: none;
-    font-size: 0.875rem;
-    border-bottom: 1px solid var(--vscode-border-subtle);
-    transition: all var(--transition-fast);
-    white-space: nowrap;
-}
 
-.accion-item:last-child {
-    border-bottom: none;
-}
 
-.accion-item:hover {
-    background: var(--vscode-sidebar-hover);
-    color: var(--apple-blue);
-}
 
-.accion-item.anular:hover {
-    background: var(--apple-red-light);
-    color: var(--apple-red);
-}
 
-.accion-item:active {
-    transform: scale(0.98);
-}
 
 .btn-status-pago:active {
     transform: scale(0.98);
@@ -1561,8 +1442,7 @@ h1 {
         width: 80px;
     }
 
-    .col-productos,
-    .col-acciones {
+    .col-productos {
         width: 60px;
     }
 }
@@ -2604,5 +2484,69 @@ h1 {
             padding-bottom: max(var(--mobile-padding), env(safe-area-inset-bottom));
         }
         
+    }
+}
+
+/* Estilos para menú desplegable de exportar */
+.export-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.export-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 120px;
+    background: var(--vscode-sidebar);
+    border: 1px solid var(--vscode-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    margin-top: 2px;
+}
+
+.export-menu a {
+    display: block;
+    padding: 8px 12px;
+    color: var(--vscode-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background-color var(--transition-base);
+    border-radius: var(--radius-sm);
+    margin: 2px;
+}
+
+.export-menu a:hover {
+    background: var(--vscode-sidebar-hover);
+    color: var(--apple-blue);
+}
+
+.export-menu a:first-child {
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
+}
+
+.export-menu a:last-child {
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+}
+
+.export-dropdown.active .export-menu {
+    display: block;
+}
+
+/* Estilos responsivos para el menú de exportar */
+@media (max-width: 768px) {
+    .export-menu {
+        min-width: 100px;
+        right: 0;
+        left: auto;
+    }
+    
+    .export-menu a {
+        padding: 10px 8px;
+        font-size: 0.8rem;
     }
 }

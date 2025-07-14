@@ -162,13 +162,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($es_pedido_guardado) {
         // ACTUALIZAR pedido existente
         $pedido_id_guardado = intval($_POST['pedido_id']);
-        $stmt = $conn->prepare("UPDATE pedidos_detal SET pedido = ?, monto = ?, nombre = ?, direccion = ?, telefono = ?, ciudad = ?, barrio = ?, correo = ?, metodo_pago = ?, datos_pago = ?, comprobante = ?, estado = 'sin_enviar' WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE pedidos_detal SET pedido = ?, monto = ?, nombre = ?, direccion = ?, telefono = ?, ciudad = ?, barrio = ?, correo = ?, metodo_pago = ?, datos_pago = ?, comprobante = ? WHERE id = ?");
 
         if (!$stmt) {
             die("Error al preparar la consulta de actualización: " . $conn->error);
         }
 
-        $stmt->bind_param("sdsssssssssi", $productos_texto, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $pedido_id_guardado);
+        $stmt->bind_param("sdssssssssi", $productos_texto, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $pedido_id_guardado);
 
         if (!$stmt->execute()) {
             die("Error al ejecutar la consulta de actualización: " . $stmt->error);
@@ -180,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // INSERTAR nuevo pedido
         if ($es_pago_bold && $bold_order_id) {
             // Insertar pedido Bold con campos específicos
-            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, estado, bold_order_id, estado_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sin_enviar', ?, 'pendiente')");
+            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, bold_order_id, estado_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')");
 
             if (!$stmt) {
                 die("Error al preparar la consulta de inserción Bold: " . $conn->error);
@@ -191,7 +191,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "<!-- Debug: Insertando pedido Bold con Order ID: $bold_order_id -->\n";
         } else {
             // Insertar pedido normal
-            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sin_enviar')");
+            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             if (!$stmt) {
                 die("Error al preparar la consulta de inserción: " . $conn->error);

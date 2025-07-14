@@ -126,8 +126,7 @@ class PedidosFilter {
                 // Información de pago
                 "p.metodo_pago LIKE '%$termino%'",
                 "p.datos_pago LIKE '%$termino%'",
-                // Estados y notas
-                "p.estado LIKE '%$termino%'",
+                // Notas
                 "p.nota_interna LIKE '%$termino%'"
             ];
             
@@ -213,14 +212,14 @@ class PedidosFilter {
     public function buildMainQuery($where, $montoFiltro) {
         return "
             SELECT 
-                p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.estado, p.fecha, p.direccion,
+                p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.fecha, p.direccion,
                 p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
                 p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda,
                 COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto
             FROM pedidos_detal p
             LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
             WHERE $where
-            GROUP BY p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.estado, p.fecha, p.direccion,
+            GROUP BY p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.fecha, p.direccion,
                      p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
                      p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda
             $montoFiltro
