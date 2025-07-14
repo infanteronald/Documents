@@ -10,7 +10,7 @@ require_once 'ui-helpers.php';
 try {
     $filter = new PedidosFilter($conn);
     $filter_data = $filter->processFilters();
-    
+
     // Extraer datos
     $pedidos = $filter_data['pedidos'];
     $total_pedidos = $filter_data['total_pedidos'];
@@ -18,7 +18,7 @@ try {
     $total_paginas = $filter_data['total_paginas'];
     $metodos_pago = $filter_data['metodos_pago'];
     $ciudades = $filter_data['ciudades'];
-    
+
     // Parámetros para la vista
     $params = $filter_data['params'];
     $filtro = $params['filtro'];
@@ -30,7 +30,7 @@ try {
     $page = $params['page'];
     $limite = $params['limite'];
     $offset = ($page - 1) * $limite;
-    
+
 } catch (Exception $e) {
     die("Error en los filtros: " . $e->getMessage());
 }
@@ -45,7 +45,10 @@ try {
     <meta charset="UTF-8">
     <title>Gestión de Pedidos</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0d1117">
     <link rel="stylesheet" href="listar_pedidos.css">
 </head>
 <body>
@@ -57,35 +60,46 @@ try {
         <div class="fila-compacta">
             <!-- Filtros rápidos -->
             <div class="filtros-rapidos">
-                <select name="filtro" class="select-compacto" onchange="aplicarFiltroRapido(this.value)">
-                    <option value="todos" <?php echo ($filtro=='todos' ? 'selected' : ''); ?>>📦 Todos</option>
-                    <option value="hoy" <?php echo ($filtro=='hoy' ? 'selected' : ''); ?>>📅 Hoy</option>
-                    <option value="semana" <?php echo ($filtro=='semana' ? 'selected' : ''); ?>>📊 Semana</option>
-                    <option value="mes" <?php echo ($filtro=='mes' ? 'selected' : ''); ?>>📈 Mes</option>
-                    <option value="ultimos_30" <?php echo ($filtro=='ultimos_30' ? 'selected' : ''); ?>>📆 Últimos 30 días</option>
-                    <option value="ultimos_60" <?php echo ($filtro=='ultimos_60' ? 'selected' : ''); ?>>📅 Últimos 60 días</option>
-                    <option value="ultimos_90" <?php echo ($filtro=='ultimos_90' ? 'selected' : ''); ?>>📊 Últimos 90 días</option>
-                    <option value="pago_pendiente" <?php echo ($filtro=='pago_pendiente' ? 'selected' : ''); ?>>⏳ Pendientes</option>
-                    <option value="pago_confirmado" <?php echo ($filtro=='pago_confirmado' ? 'selected' : ''); ?>>✅ Pagados</option>
-                    <option value="enviados" <?php echo ($filtro=='enviados' ? 'selected' : ''); ?>>🚚 Enviados</option>
-                    <option value="anulados" <?php echo ($filtro=='anulados' ? 'selected' : ''); ?>>❌ Anulados</option>
-                </select>
+                <div class="filtros-fila-mobile">
+                    <select name="filtro" class="select-compacto" onchange="aplicarFiltroRapido(this.value)">
+                        <option value="todos" <?php echo ($filtro=='todos' ? 'selected' : ''); ?>>📦 Todos</option>
+                        <option value="hoy" <?php echo ($filtro=='hoy' ? 'selected' : ''); ?>>📅 Hoy</option>
+                        <option value="semana" <?php echo ($filtro=='semana' ? 'selected' : ''); ?>>📊 Semana</option>
+                        <option value="mes" <?php echo ($filtro=='mes' ? 'selected' : ''); ?>>📈 Mes</option>
+                        <option value="ultimos_30" <?php echo ($filtro=='ultimos_30' ? 'selected' : ''); ?>>📆 Últimos 30 días</option>
+                        <option value="ultimos_60" <?php echo ($filtro=='ultimos_60' ? 'selected' : ''); ?>>📅 Últimos 60 días</option>
+                        <option value="ultimos_90" <?php echo ($filtro=='ultimos_90' ? 'selected' : ''); ?>>📊 Últimos 90 días</option>
+                        <option value="pendientes_atencion" <?php echo ($filtro=='pendientes_atencion' ? 'selected' : ''); ?>>⏳ Pendientes</option>
+                        <option value="pago_confirmado" <?php echo ($filtro=='pago_confirmado' ? 'selected' : ''); ?>>✅ Pagados</option>
+                        <option value="enviados" <?php echo ($filtro=='enviados' ? 'selected' : ''); ?>>🚚 Enviados</option>
+                        <option value="anulados" <?php echo ($filtro=='anulados' ? 'selected' : ''); ?>>❌ Anulados</option>
+                    </select>
+                    <button class="btn-filtros-avanzados" onclick="toggleFiltrosAvanzados()" title="Más filtros">⚙️</button>
+                </div>
 
-                <input type="text"
-                       id="busquedaRapida"
-                       name="buscar"
-                       value="<?php echo htmlspecialchars($buscar); ?>"
-                       placeholder="🔍 Buscar por ID, nombre, email, teléfono, ciudad, monto, fecha, año, mes..."
-                       class="input-compacto"
-                       onkeyup="busquedaEnTiempoReal(this.value)"
-                       onfocus="mostrarEjemplosBusqueda()"
-                       autocomplete="off">
+                <div class="busqueda-fila-mobile">
+                    <input type="text"
+                           id="busquedaRapida"
+                           name="buscar"
+                           value="<?php echo htmlspecialchars($buscar); ?>"
+                           placeholder="🔍 Buscar por ID, nombre, email, teléfono, ciudad, monto, fecha, año, mes..."
+                           class="input-compacto"
+                           onkeyup="busquedaEnTiempoReal(this.value)"
+                           onfocus="mostrarEjemplosBusqueda()"
+                           autocomplete="off">
 
-                <?php if($buscar): ?>
-                    <button type="button" class="btn-limpiar-busqueda" onclick="limpiarBusqueda()" title="Limpiar búsqueda">✕</button>
-                <?php endif; ?>
+                    <?php if($buscar): ?>
+                        <button type="button" class="btn-limpiar-busqueda" onclick="limpiarBusqueda()" title="Limpiar búsqueda">✕</button>
+                    <?php endif; ?>
+                </div>
+            </div>
 
-                <button class="btn-filtros-avanzados" onclick="toggleFiltrosAvanzados()" title="Más filtros">⚙️</button>
+            <!-- Botones de acciones móviles -->
+            <div class="mobile-actions">
+                <button onclick="window.open('orden_pedido.php', '_blank')" class="mobile-btn mobile-btn-new" title="Nuevo Pedido">➕</button>
+                <button onclick="location.reload()" class="mobile-btn" title="Actualizar">🔄</button>
+                <button onclick="exportarExcel()" class="mobile-btn" title="Exportar">📊</button>
+                <button onclick="window.print()" class="mobile-btn" title="Imprimir">🖨️</button>
             </div>
 
             <!-- Estadísticas en línea -->
@@ -104,12 +118,14 @@ try {
                 <?php endif; ?>
             </div>
 
-            <!-- Acciones rápidas -->
-            <div class="acciones-compactas">
+            <!-- Acciones rápidas - Desktop -->
+            <div class="acciones-compactas desktop-only">
+                <button onclick="window.open('orden_pedido.php', '_blank')" class="btn-compacto btn-nuevo-pedido" title="Nuevo Pedido">➕ Nuevo</button>
                 <button onclick="location.reload()" class="btn-compacto" title="Actualizar">🔄</button>
                 <button onclick="exportarExcel()" class="btn-compacto" title="Exportar">📊</button>
                 <button onclick="window.print()" class="btn-compacto" title="Imprimir">🖨️</button>
             </div>
+
         </div>
 
         <!-- Panel de filtros avanzados (oculto por defecto) -->
@@ -170,6 +186,7 @@ try {
                         <th class="col-enviado">🚚 Enviado</th>
                         <th class="col-comprobante">📄 Comprobante</th>
                         <th class="col-guia">📦 Guía</th>
+                        <th class="col-tienda">🏪 Entregado en Tienda</th>
                         <th class="col-archivado">📁 Archivado</th>
                         <th class="col-anulado">❌ Anulado</th>
                         <th class="col-acciones">⚡ Acciones</th>
@@ -254,8 +271,13 @@ try {
                                 </td>
 
                                 <!-- Status: Guía -->
-                                <td class="col-guia" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>')" style="cursor: pointer;" title="Click para ver/subir guía">
+                                <td class="col-guia" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>', '<?php echo $p['tienda']; ?>')" style="cursor: pointer;" title="Click para ver/subir guía">
                                     <?php echo generate_status_badge($p['tiene_guia'], 'guia'); ?>
+                                </td>
+
+                                <!-- Status: Entregado en Tienda -->
+                                <td class="col-tienda" onclick="abrirModalTienda(<?php echo $p['id']; ?>, '<?php echo $p['tienda']; ?>')" style="cursor: pointer;" title="Click para marcar como entregado en tienda">
+                                    <?php echo generate_status_badge($p['tienda'], 'tienda'); ?>
                                 </td>
 
                                 <!-- Status: Archivado -->
@@ -301,6 +323,17 @@ try {
                     <?php endif; ?>
                 </tbody>
             </table>
+
+            <!-- Container de cards para móvil -->
+            <div class="mobile-cards-container">
+                <?php if(count($pedidos) == 0): ?>
+                    <?php echo generate_mobile_empty('No hay pedidos para este filtro. Intenta cambiar los filtros.'); ?>
+                <?php else: ?>
+                    <?php foreach($pedidos as $p): ?>
+                        <?php echo generate_mobile_card($p); ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
         </div>
 
         <!-- Paginación Nueva -->
@@ -347,6 +380,21 @@ let pedidosSeleccionados = [];
 // ===== FUNCIONES DE FILTROS =====
 function aplicarFiltros() {
     document.getElementById('formFiltros').submit();
+}
+
+function toggleFiltrosAvanzados() {
+    const panel = document.getElementById('filtrosAvanzados');
+    const button = document.querySelector('.btn-filtros-avanzados');
+
+    if (panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
+        button.style.background = 'var(--apple-blue)';
+        button.style.color = 'white';
+    } else {
+        panel.style.display = 'none';
+        button.style.background = '';
+        button.style.color = '';
+    }
 }
 
 // ===== FUNCIÓN PARA MANEJAR CAMBIO DE PERÍODO =====
@@ -1300,7 +1348,7 @@ function subirComprobanteAlternativo(pedidoId) {
 }
 
 // ===== FUNCIÓN PARA ABRIR MODAL DE GUÍAS =====
-function abrirModalGuia(pedidoId, guia, tieneGuia, enviado) {
+function abrirModalGuia(pedidoId, guia, tieneGuia, enviado, tienda) {
 
     try {
         const modal = document.createElement('div');
@@ -1309,7 +1357,44 @@ function abrirModalGuia(pedidoId, guia, tieneGuia, enviado) {
 
         let contenidoModal = '';
 
-        if (tieneGuia == '1' && guia && guia.trim() !== '') {
+        // Verificar si es entrega en tienda
+        if (tienda == '1') {
+            // Mostrar modal especial para entrega en tienda
+            contenidoModal = `
+                <div class="modal-detalle" style="max-width: 500px;">
+                    <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                    <h3 style="margin-bottom: 20px; color: var(--vscode-text);">🏪 Entrega en Tienda - Pedido #${pedidoId}</h3>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="background: var(--apple-green-light); padding: 20px; border-radius: 12px; border: 1px solid var(--apple-green); margin-bottom: 15px;">
+                            <img src="https://sequoiaspeed.com.co/pedidos/logo.jpeg" alt="Sequoia Speed Logo" 
+                                 style="max-width: 150px; max-height: 100px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="font-size: 1.2rem; font-weight: 600; color: var(--apple-green); margin-bottom: 8px;">
+                                ✅ Pedido entregado en tienda física
+                            </div>
+                            <div style="color: var(--vscode-text-muted); font-size: 0.95rem;">
+                                Este pedido fue entregado directamente en nuestra tienda física, por lo que no requiere guía de envío.
+                            </div>
+                        </div>
+                        
+                        <div style="background: var(--vscode-sidebar); padding: 15px; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 8px;">
+                                <span style="color: var(--apple-green);">🏪</span>
+                                <strong>Método de entrega:</strong> Recogida en tienda
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                                <span style="color: var(--apple-green);">✅</span>
+                                <span>Estado: Entregado exitosamente</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-accion" style="width: 100%; padding: 12px;">
+                        Cerrar
+                    </button>
+                </div>
+            `;
+        } else if (tieneGuia == '1' && guia && guia.trim() !== '') {
             // Mostrar guía existente con opciones
             const esImagen = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(guia);
             const esPdf = /\.pdf$/i.test(guia);
@@ -1744,6 +1829,335 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         }, 300);
     }, 4000);
 }
+
+// ===============================================
+//           FUNCIONES MÓVILES
+// ===============================================
+
+// Detectar si es dispositivo móvil
+function esMobile() {
+    return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Optimizar interacciones táctiles
+function optimizarTactil() {
+    if (!esMobile()) return;
+
+    // Añadir clase de móvil al body
+    document.body.classList.add('mobile-optimized');
+
+    // Mejorar scrolling en iOS
+    document.addEventListener('touchstart', function() {}, { passive: true });
+    document.addEventListener('touchmove', function() {}, { passive: true });
+
+    // Prevenir zoom en inputs (ya está en CSS con font-size: 16px)
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            // Scroll suave al input
+            setTimeout(() => {
+                this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        });
+    });
+}
+
+// Mejorar navegación por teclado virtual
+function manejarTecladoVirtual() {
+    if (!esMobile()) return;
+
+    let initialViewportHeight = window.innerHeight;
+
+    window.addEventListener('resize', function() {
+        const currentHeight = window.innerHeight;
+        const heightDifference = initialViewportHeight - currentHeight;
+
+        // Si el teclado está abierto (altura redujo significativamente)
+        if (heightDifference > 150) {
+            document.body.classList.add('keyboard-open');
+            // Agregar padding bottom para compensar
+            document.body.style.paddingBottom = heightDifference + 'px';
+        } else {
+            document.body.classList.remove('keyboard-open');
+            document.body.style.paddingBottom = '';
+        }
+    });
+}
+
+// Optimizar gestos táctiles para cards
+function optimizarGestosCards() {
+    if (!esMobile()) return;
+
+    const cards = document.querySelectorAll('.mobile-card');
+
+    cards.forEach(card => {
+        let startY = 0;
+        let startTime = 0;
+
+        card.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+            this.style.transition = 'none';
+        }, { passive: true });
+
+        card.addEventListener('touchmove', function(e) {
+            const currentY = e.touches[0].clientY;
+            const diff = currentY - startY;
+
+            // Pequeño efecto de arrastre
+            if (Math.abs(diff) < 20) {
+                this.style.transform = `translateY(${diff * 0.3}px)`;
+            }
+        }, { passive: true });
+
+        card.addEventListener('touchend', function(e) {
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+
+            this.style.transition = '';
+            this.style.transform = '';
+
+            // Si fue un tap rápido, expandir detalles
+            if (duration < 200) {
+                const pedidoId = this.dataset.id;
+                if (pedidoId) {
+                    toggleProductos(pedidoId);
+                }
+            }
+        }, { passive: true });
+    });
+}
+
+// Mejorar feedback visual para botones móviles
+function mejorarFeedbackTactil() {
+    if (!esMobile()) return;
+
+    const botones = document.querySelectorAll('.mobile-btn, .btn-compacto, button');
+
+    botones.forEach(boton => {
+        boton.addEventListener('touchstart', function() {
+            this.classList.add('touching');
+        }, { passive: true });
+
+        boton.addEventListener('touchend', function() {
+            setTimeout(() => {
+                this.classList.remove('touching');
+            }, 150);
+        }, { passive: true });
+
+        boton.addEventListener('touchcancel', function() {
+            this.classList.remove('touching');
+        }, { passive: true });
+    });
+}
+
+// Optimizar modales para móvil
+function optimizarModalesMobile() {
+    if (!esMobile()) return;
+
+    // Prevenir scroll del body cuando modal está abierto
+    const modales = document.querySelectorAll('.modal-detalle-bg');
+
+    modales.forEach(modal => {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    if (modal.style.display !== 'none') {
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = '';
+                    }
+                }
+            });
+        });
+
+        observer.observe(modal, { attributes: true });
+    });
+}
+
+// Mejorar rendimiento en móvil
+function optimizarRendimientoMobile() {
+    if (!esMobile()) return;
+
+    // Lazy loading para contenido no visible
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.mobile-card').forEach(card => {
+            observer.observe(card);
+        });
+    }
+
+    // Debounce para eventos de scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            // Actualizar estados visuales si es necesario
+        }, 100);
+    }, { passive: true });
+}
+
+
+// Inicializar optimizaciones móviles
+function inicializarMobile() {
+    if (!esMobile()) return;
+
+    optimizarTactil();
+    manejarTecladoVirtual();
+    optimizarGestosCards();
+    mejorarFeedbackTactil();
+    optimizarModalesMobile();
+    optimizarRendimientoMobile();
+
+
+    console.log('✅ Optimizaciones móviles activadas');
+}
+
+// ===== FUNCIÓN PARA ABRIR MODAL DE ENTREGA EN TIENDA =====
+function abrirModalTienda(pedidoId, tienda) {
+    try {
+        const modal = document.createElement('div');
+        modal.className = 'modal-detalle-bg';
+        modal.setAttribute('data-pedido-id', pedidoId);
+        
+        let contenidoModal = '';
+        
+        if (tienda == '1') {
+            // Ya está entregado en tienda
+            contenidoModal = `
+                <div class="modal-detalle" style="max-width: 450px;">
+                    <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                    <h3 style="margin-bottom: 20px; color: var(--vscode-text);">🏪 Entrega en Tienda - Pedido #${pedidoId}</h3>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="background: var(--apple-green-light); padding: 20px; border-radius: 12px; border: 1px solid var(--apple-green);">
+                            <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                            <div style="font-size: 1.2rem; font-weight: 600; color: var(--apple-green);">
+                                Pedido ya entregado en tienda
+                            </div>
+                            <div style="margin-top: 8px; color: var(--vscode-text-muted);">
+                                Este pedido fue marcado como entregado físicamente en la tienda
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-accion" style="width: 100%; padding: 12px;">
+                        Cerrar
+                    </button>
+                </div>
+            `;
+        } else {
+            // Formulario para marcar como entregado
+            contenidoModal = `
+                <div class="modal-detalle" style="max-width: 450px;">
+                    <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
+                    <h3 style="margin-bottom: 20px; color: var(--vscode-text);">🏪 Confirmar Entrega en Tienda - Pedido #${pedidoId}</h3>
+                    
+                    <div style="background: var(--apple-orange-light); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--apple-orange);">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 1.2rem;">⚠️</span>
+                            <strong style="color: var(--apple-orange);">Importante</strong>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--vscode-text-muted);">
+                            Al confirmar, este pedido será marcado automáticamente como:
+                        </div>
+                        <ul style="margin: 8px 0 0 20px; font-size: 0.9rem; color: var(--vscode-text-muted);">
+                            <li>✅ <strong>Enviado</strong> (enviado = 1)</li>
+                            <li>✅ <strong>Con Guía</strong> (tiene_guia = 1)</li>
+                            <li>🏪 <strong>Entregado en Tienda</strong> (tienda = 1)</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 1.1rem; margin-bottom: 10px;">
+                            ¿Confirmas que el pedido fue entregado físicamente en la tienda?
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-secondary" style="flex: 1; padding: 12px;">
+                            ❌ Cancelar
+                        </button>
+                        <button onclick="confirmarEntregaTienda(${pedidoId})" class="btn-accion" style="flex: 1; padding: 12px; background: var(--apple-orange);">
+                            🏪 Confirmar Entrega
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        modal.innerHTML = contenidoModal;
+        document.body.appendChild(modal);
+        
+        // Mostrar modal con animación
+        requestAnimationFrame(() => {
+            modal.style.display = 'flex';
+            modal.style.opacity = '0';
+            modal.style.transition = 'opacity 0.3s ease';
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+            });
+        });
+        
+    } catch (error) {
+        console.error('Error abriendo modal de tienda:', error);
+        mostrarNotificacion('❌ Error al abrir modal de entrega en tienda', 'error');
+    }
+}
+
+// ===== FUNCIÓN PARA CONFIRMAR ENTREGA EN TIENDA =====
+function confirmarEntregaTienda(pedidoId) {
+    const modal = document.querySelector(`[data-pedido-id="${pedidoId}"]`);
+    const button = modal.querySelector('button[onclick*="confirmarEntregaTienda"]');
+    
+    // Cambiar estado del botón
+    button.disabled = true;
+    button.innerHTML = '⏳ Procesando...';
+    button.style.opacity = '0.7';
+    
+    fetch('entregar_tienda.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            pedido_id: pedidoId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarNotificacion(`✅ Pedido #${pedidoId} marcado como entregado en tienda`, 'success');
+            modal.remove();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (data.error || 'No se pudo marcar como entregado'), 'error');
+            button.disabled = false;
+            button.innerHTML = '🏪 Confirmar Entrega';
+            button.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión al confirmar entrega', 'error');
+        button.disabled = false;
+        button.innerHTML = '🏪 Confirmar Entrega';
+        button.style.opacity = '1';
+    });
+}
+
+// Ejecutar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', inicializarMobile);
+
+// Re-ejecutar en cambios de orientación
+window.addEventListener('orientationchange', function() {
+    setTimeout(inicializarMobile, 100);
+});
 
 </script>
 

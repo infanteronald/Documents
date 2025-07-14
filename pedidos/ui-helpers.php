@@ -89,6 +89,10 @@ function generate_status_badge($value, $type) {
         'anulado' => [
             '1' => ['class' => 'status-anulado', 'text' => '❌ Sí'],
             '0' => ['class' => 'status-activo', 'text' => '✅ No']
+        ],
+        'tienda' => [
+            '1' => ['class' => 'status-si', 'text' => '🏪 Sí'],
+            '0' => ['class' => 'status-no', 'text' => '⏳ No']
         ]
     ];
     
@@ -139,5 +143,85 @@ function generate_filter_options($items, $selected_value, $placeholder, $icon = 
         $html .= "</option>";
     }
     return $html;
+}
+
+/**
+ * Genera card móvil para un pedido
+ */
+function generate_mobile_card($pedido) {
+    $fecha_info = format_date($pedido['fecha']);
+    $cliente_info = generate_customer_info($pedido);
+    
+    $html = '<div class="mobile-card" data-id="' . $pedido['id'] . '">';
+    
+    // Header del card
+    $html .= '<div class="mobile-card-header">';
+    $html .= '<div class="mobile-card-id">#' . $pedido['id'] . '</div>';
+    $html .= '<div class="mobile-card-date">' . $fecha_info['fecha_principal'] . ' ' . $fecha_info['hora_pedido'] . '</div>';
+    $html .= '</div>';
+    
+    // Body del card
+    $html .= '<div class="mobile-card-body">';
+    
+    // Cliente
+    $html .= '<div class="mobile-cliente">';
+    $html .= '<div class="mobile-cliente-info">';
+    $html .= '<div class="mobile-cliente-nombre">' . $cliente_info['nombre'] . '</div>';
+    $html .= '<div class="mobile-cliente-contacto">';
+    $html .= '<span>' . $cliente_info['telefono_display'] . ' - ' . $cliente_info['ciudad'] . '</span>';
+    $html .= '</div>';
+    $html .= '</div>';
+    $html .= '<button class="mobile-whatsapp-btn" onclick="abrirWhatsApp(\'' . $cliente_info['telefono_whatsapp'] . '\')" title="WhatsApp">📱</button>';
+    $html .= '</div>';
+    
+    // Monto
+    $html .= '<div class="mobile-monto">';
+    $html .= '<span class="mobile-monto-label">Total</span>';
+    $html .= '<span class="mobile-monto-valor">$' . number_format($pedido['monto'], 0, ',', '.') . '</span>';
+    $html .= '</div>';
+    
+    // Estados
+    $html .= '<div class="mobile-estados">';
+    $html .= generate_mobile_estado_item('💳', 'Pagado', $pedido['pagado'], 'toggleEstadoPago(' . $pedido['id'] . ', ' . $pedido['pagado'] . ', \'' . htmlspecialchars($pedido['comprobante']) . '\', \'' . $pedido['tiene_comprobante'] . '\', \'' . htmlspecialchars($pedido['metodo_pago']) . '\')');
+    $html .= generate_mobile_estado_item('🚚', 'Enviado', $pedido['enviado']);
+    $html .= generate_mobile_estado_item('📄', 'Comprobante', $pedido['tiene_comprobante'], 'abrirModalComprobante(' . $pedido['id'] . ', \'' . htmlspecialchars($pedido['comprobante']) . '\', \'' . $pedido['tiene_comprobante'] . '\', \'' . htmlspecialchars($pedido['metodo_pago']) . '\')');
+    $html .= generate_mobile_estado_item('📦', 'Guía', $pedido['tiene_guia'], 'abrirModalGuia(' . $pedido['id'] . ', \'' . htmlspecialchars($pedido['guia']) . '\', \'' . $pedido['tiene_guia'] . '\', \'' . $pedido['enviado'] . '\')');
+    $html .= '</div>';
+    
+    // Acciones
+    $html .= '<div class="mobile-acciones">';
+    $html .= '<button class="mobile-btn" onclick="toggleProductos(' . $pedido['id'] . ')">👁️ Ver Productos</button>';
+    $html .= '<button class="mobile-btn primary" onclick="abrirDetallePopup(' . $pedido['id'] . ')">⚙️ Configurar</button>';
+    $html .= '</div>';
+    
+    $html .= '</div>'; // mobile-card-body
+    $html .= '</div>'; // mobile-card
+    
+    return $html;
+}
+
+/**
+ * Genera item de estado para móvil
+ */
+function generate_mobile_estado_item($icon, $label, $value, $onclick = '') {
+    $onclick_attr = $onclick ? 'onclick="' . $onclick . '"' : '';
+    $class_value = $value == '1' ? 'si' : 'no';
+    $text_value = $value == '1' ? 'Sí' : 'No';
+    
+    return '<div class="mobile-estado-item" ' . $onclick_attr . '>' .
+           '<span class="mobile-estado-label">' . $icon . ' ' . $label . '</span>' .
+           '<span class="mobile-estado-valor ' . $class_value . '">' . $text_value . '</span>' .
+           '</div>';
+}
+
+/**
+ * Genera mensaje vacío para móvil
+ */
+function generate_mobile_empty($message = 'No hay pedidos para este filtro') {
+    return '<div class="mobile-empty">' .
+           '<div class="mobile-empty-icon">📭</div>' .
+           '<div class="mobile-empty-title">Sin resultados</div>' .
+           '<div class="mobile-empty-subtitle">' . htmlspecialchars($message) . '</div>' .
+           '</div>';
 }
 ?>

@@ -17,7 +17,7 @@ class PedidosFilter {
      */
     public function getFilterParams() {
         return [
-            'filtro' => isset($_GET['filtro']) ? $_GET['filtro'] : 'semana',
+            'filtro' => isset($_GET['filtro']) ? $_GET['filtro'] : 'pendientes_atencion',
             'buscar' => isset($_GET['buscar']) ? trim($_GET['buscar']) : '',
             'metodo_pago' => isset($_GET['metodo_pago']) ? $_GET['metodo_pago'] : '',
             'ciudad' => isset($_GET['ciudad']) ? $_GET['ciudad'] : '',
@@ -63,6 +63,15 @@ class PedidosFilter {
                 return "tiene_comprobante = '0' AND pagado = '0' AND archivado = '0' AND anulado = '0'";
             case 'con_guia':
                 return "tiene_guia = '1' AND archivado = '0' AND anulado = '0'";
+            case 'pendientes_atencion':
+                return "
+                    archivado = '0' AND anulado = '0' AND (
+                        (enviado = '0') OR
+                        (tiene_guia = '0') OR 
+                        (pagado = '0' AND tiene_comprobante = '0' AND metodo_pago NOT LIKE '%efectivo%') OR
+                        (pagado = '0' AND metodo_pago LIKE '%efectivo%')
+                    )
+                ";
             case 'personalizado':
             case 'todos':
             default:
@@ -206,14 +215,14 @@ class PedidosFilter {
             SELECT 
                 p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.estado, p.fecha, p.direccion,
                 p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
-                p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado,
+                p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda,
                 COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto
             FROM pedidos_detal p
             LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
             WHERE $where
             GROUP BY p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.estado, p.fecha, p.direccion,
                      p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
-                     p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado
+                     p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda
             $montoFiltro
             ORDER BY p.fecha DESC
         ";
