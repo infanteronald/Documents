@@ -13,7 +13,7 @@ $detalles = [];
 
 if ($orden_id) {
     // Obtener datos de la orden desde pedidos_detal
-    $sql = "SELECT id, pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, nota_interna, fecha, fecha_estado, guia, numero_guia, url_imagen_guia, comentario FROM pedidos_detal WHERE id = ?";
+    $sql = "SELECT id, pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, nota_interna, fecha, estado, fecha_estado, guia, numero_guia, url_imagen_guia, comentario FROM pedidos_detal WHERE id = ?";
     $stmt = $conn->prepare($sql);
 
     if (!$stmt) {
@@ -27,13 +27,15 @@ if ($orden_id) {
     }
 
     // Bind result variables - TODOS los campos en el orden correcto
-    $stmt->bind_result($id, $pedido, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $comprobante, $nota_interna, $fecha, $estado, $fecha_estado, $guia, $numero_guia, $url_imagen_guia, $comentario);
+    $stmt->bind_result($id, $pedido, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $comprobante, $nota_interna, $fecha, $estado, $fecha_estado, $guia, $numero_guia, $url_imagen_guia, $comentario);
 
     if ($stmt->fetch()) {
         $orden = array(
             'id' => $id,
             'pedido' => $pedido,
-            'monto' => $monto,            'nombre' => $nombre,
+            'monto' => $monto,
+            'descuento' => $descuento,
+            'nombre' => $nombre,
             'direccion' => $direccion,
             'telefono' => $telefono,
             'ciudad' => $ciudad,
@@ -79,8 +81,14 @@ if ($orden_id) {
         $stmt_det->close();
     }
 
-    // Si tenemos detalles individuales, usar el total calculado, sino usar el monto de la tabla principal
-    $monto_final = ($total_calculado > 0) ? $total_calculado : $orden['monto'];
+    // Si tenemos detalles individuales, usar el total calculado menos descuento, sino usar el monto de la tabla principal
+    if ($total_calculado > 0) {
+        // Usar el total calculado y aplicar descuento
+        $monto_final = $total_calculado - ($orden['descuento'] ?? 0);
+    } else {
+        // Usar el monto de la tabla principal (que ya incluye descuento aplicado)
+        $monto_final = $orden['monto'];
+    }
 }
 
 if (!$orden) {
@@ -314,6 +322,24 @@ echo "<!-- DEBUG MONTOS: Total calculado: $total_calculado, Monto original: " . 
           <div class="seccion">
             <div class="seccion-titulo">PAGO</div>
             <div><strong>Método:</strong> <?= htmlspecialchars($orden['metodo_pago'] ?? 'N/A') ?></div>
+            
+            <?php if ($orden['descuento'] > 0): ?>
+                <?php 
+                // Calcular subtotal sin descuento
+                $subtotal_sin_descuento = ($total_calculado > 0) ? $total_calculado : $orden['monto'] + $orden['descuento'];
+                ?>
+                <div style="margin-top: 8px; font-size: 9px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                        <span>Subtotal:</span>
+                        <span>$<?= number_format($subtotal_sin_descuento, 0, ',', '.') ?></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #666;">
+                        <span>Descuento:</span>
+                        <span>-$<?= number_format($orden['descuento'], 0, ',', '.') ?></span>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
             <div class="total-final">TOTAL: $<?= number_format($monto_final, 0, ',', '.') ?></div>
         </div>
 

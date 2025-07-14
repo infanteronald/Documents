@@ -362,10 +362,23 @@ class EmailTemplates {
                 <span class="info-label">Método de Pago:</span>
                 <span class="info-value">' . htmlspecialchars($pedidoData['metodo_pago']) . '</span>
             </div>
+            ' . (isset($pedidoData['descuento']) && $pedidoData['descuento'] > 0 ? '
+            <div class="info-row">
+                <span class="info-label">Subtotal:</span>
+                <span class="info-value">$' . number_format($pedidoData['monto'] + $pedidoData['descuento'], 0, ',', '.') . ' COP</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Descuento:</span>
+                <span class="info-value" style="color: #ff7b72 !important;">-$' . number_format($pedidoData['descuento'], 0, ',', '.') . ' COP</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Total Final:</span>
+                <span class="info-value" style="font-weight: bold; color: #56d364 !important;">$' . number_format($pedidoData['monto'], 0, ',', '.') . ' COP</span>
+            </div>' : '
             <div class="info-row">
                 <span class="info-label">Monto Total:</span>
                 <span class="info-value">$' . number_format($pedidoData['monto'], 0, ',', '.') . ' COP</span>
-            </div>
+            </div>') . '
         </div>
 
         <div class="info-card">
@@ -422,12 +435,28 @@ class EmailTemplates {
                         </tr>';
             }
 
-            // Agregar fila de total
-            $content .= '
+            // Agregar fila de total con descuento si existe
+            if (isset($pedidoData['descuento']) && $pedidoData['descuento'] > 0) {
+                $content .= '
+                        <tr style="border-top: 1px solid #30363d;">
+                            <td colspan="3" style="text-align: right; font-weight: normal; color: #8b949e !important; padding: 8px;">SUBTOTAL:</td>
+                            <td class="price" style="color: #8b949e !important;">$' . number_format($pedidoData['monto'] + $pedidoData['descuento'], 0, ',', '.') . ' COP</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align: right; font-weight: normal; color: #ff7b72 !important; padding: 8px;">DESCUENTO:</td>
+                            <td class="price" style="color: #ff7b72 !important;">-$' . number_format($pedidoData['descuento'], 0, ',', '.') . ' COP</td>
+                        </tr>
+                        <tr style="border-top: 2px solid #30363d;">
+                            <td colspan="3" style="text-align: right; font-weight: bold; color: #f0f6fc !important; padding: 12px 8px;">TOTAL FINAL:</td>
+                            <td class="price" style="font-weight: bold; font-size: 16px; color: #56d364 !important;">$' . number_format($pedidoData['monto'], 0, ',', '.') . ' COP</td>
+                        </tr>';
+            } else {
+                $content .= '
                         <tr style="border-top: 2px solid #30363d;">
                             <td colspan="3" style="text-align: right; font-weight: bold; color: #f0f6fc !important; padding: 12px 8px;">TOTAL:</td>
                             <td class="price" style="font-weight: bold; font-size: 16px; color: #58a6ff !important;">$' . number_format($pedidoData['monto'], 0, ',', '.') . ' COP</td>
                         </tr>';
+            }
 
             $content .= '
                     </tbody>

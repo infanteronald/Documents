@@ -1008,6 +1008,204 @@ while ($row = $res_cat->fetch_assoc()) {
             }
         }
 
+        /* Sección de descuento */
+        .descuento-section {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--vscode-bg);
+            border-radius: 8px;
+            border: 1px solid var(--vscode-border);
+        }
+
+        .descuento-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .descuento-header label {
+            font-weight: 600;
+            color: var(--vscode-text);
+            font-size: 14px;
+        }
+
+        .btn-toggle-descuento {
+            background: var(--apple-blue);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-toggle-descuento:hover {
+            background: var(--apple-blue-hover);
+        }
+
+        .btn-toggle-descuento.active {
+            background: var(--apple-red);
+        }
+
+        .descuento-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 8px;
+            border: 1px solid var(--vscode-border);
+            border-radius: 6px;
+            background: var(--vscode-sidebar);
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .descuento-input-group:focus-within {
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+
+        .currency-symbol {
+            padding: 10px 8px 10px 12px;
+            background: var(--vscode-border);
+            color: var(--vscode-text);
+            font-weight: 600;
+            border-right: 1px solid var(--vscode-border);
+        }
+
+        #descuento-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            color: var(--vscode-text);
+            font-size: 14px;
+            text-align: right;
+            outline: none;
+        }
+
+        #descuento-input::placeholder {
+            color: var(--vscode-text-muted);
+        }
+
+        .btn-clear-descuento {
+            padding: 10px 12px;
+            border: none;
+            background: var(--apple-red);
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background 0.2s ease;
+        }
+
+        .btn-clear-descuento:hover {
+            background: #e60026;
+        }
+
+        .descuento-error {
+            color: var(--apple-red);
+            font-size: 12px;
+            margin-bottom: 4px;
+            min-height: 16px;
+        }
+
+        .descuento-help {
+            color: var(--vscode-text-muted);
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        /* Sección de totales mejorada */
+        .totales-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--vscode-bg);
+            border-radius: 8px;
+            border: 1px solid var(--vscode-border);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+
+        .subtotal-row {
+            color: var(--vscode-text-muted);
+        }
+
+        .descuento-row {
+            border-bottom: 1px solid var(--vscode-border);
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+        }
+
+        .descuento-amount {
+            color: var(--apple-red);
+            font-weight: 600;
+        }
+
+        .total-final-row {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--apple-blue);
+            border-top: 2px solid var(--vscode-border);
+            padding-top: 12px;
+            margin-top: 8px;
+        }
+
+        .total-amount {
+            font-size: 18px;
+        }
+
+        /* Estados de validación */
+        .descuento-input-group.error {
+            border-color: var(--apple-red);
+            box-shadow: 0 0 0 2px rgba(255, 69, 58, 0.1);
+        }
+
+        .descuento-input-group.success {
+            border-color: var(--apple-green);
+            box-shadow: 0 0 0 2px rgba(48, 209, 88, 0.1);
+        }
+
+        /* Responsive para descuentos */
+        @media (max-width: 768px) {
+            .descuento-header {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+            }
+            
+            .btn-toggle-descuento {
+                width: 100%;
+            }
+            
+            .descuento-input-group {
+                font-size: 16px; /* Evita zoom en iOS */
+            }
+            
+            #descuento-input {
+                font-size: 16px;
+            }
+            
+            .total-row {
+                font-size: 13px;
+            }
+            
+            .total-final-row {
+                font-size: 15px;
+            }
+            
+            .total-amount {
+                font-size: 16px;
+            }
+        }
+
         /* Landscape orientation adjustments */
         @media (max-width: 768px) and (orientation: landscape) {
             .header {
@@ -1113,6 +1311,7 @@ while ($row = $res_cat->fetch_assoc()) {
             <h2>Carrito de Compras</h2>
             <button class="clear-cart" onclick="limpiarCarrito()">Limpiar Carrito</button>
         </div>
+        
         <table id="carrito-table">
             <thead>
                 <tr>
@@ -1128,7 +1327,57 @@ while ($row = $res_cat->fetch_assoc()) {
                 <tr><td colspan="6">Tu carrito está vacío.</td></tr>
             </tbody>
         </table>
-        <h3>Total: $<span id="total">0</span></h3>
+        
+        <!-- Sección de totales actualizada -->
+        <div class="totales-section">
+            <div class="total-row subtotal-row">
+                <span>Subtotal:</span>
+                <span>$<span id="subtotal">0</span></span>
+            </div>
+            <div class="total-row total-final-row">
+                <span>Total:</span>
+                <span class="total-amount">$<span id="total">0</span></span>
+            </div>
+        </div>
+        
+        <!-- SECCIÓN DE DESCUENTO - Movida debajo del total -->
+        <div class="descuento-section">
+            <div class="descuento-header">
+                <label for="descuento-input">💰 Descuento:</label>
+                <button type="button" class="btn-toggle-descuento" onclick="toggleDescuento()" id="toggle-desc-btn">
+                    Aplicar Descuento
+                </button>
+            </div>
+            
+            <div id="descuento-container" style="display: none;">
+                <div class="descuento-input-group">
+                    <span class="currency-symbol">$</span>
+                    <input 
+                        type="text" 
+                        id="descuento-input" 
+                        placeholder="0"
+                        maxlength="10"
+                        oninput="validarDescuento(this)"
+                        onblur="aplicarDescuento()"
+                    >
+                    <button type="button" class="btn-clear-descuento" onclick="limpiarDescuento()">✕</button>
+                </div>
+                <div id="descuento-error" class="descuento-error"></div>
+                <div class="descuento-help">
+                    Ingresa el monto sin puntos ni comas. Ej: 15000 para $15.000
+                </div>
+            </div>
+            
+            <!-- Mostrar descuento aplicado y total final -->
+            <div class="total-row descuento-row" id="descuento-display" style="display: none;">
+                <span>Descuento aplicado:</span>
+                <span class="descuento-amount">-$<span id="descuento-monto">0</span></span>
+            </div>
+            <div class="total-row total-final-row" id="total-con-descuento-display" style="display: none;">
+                <span><strong>Total Final:</strong></span>
+                <span class="total-amount"><strong>$<span id="total-con-descuento">0</span></strong></span>
+            </div>
+        </div>
     </div>
     <div id="finalizar-pedido" style="margin-top:30px; text-align:center;">
         <button class="btn" onclick="finalizarPedido()">Finalizar</button>
@@ -1148,6 +1397,8 @@ while ($row = $res_cat->fetch_assoc()) {
 <script>
 let carrito = [];
 let productosPersonalizados = []; // Array para guardar productos personalizados que se deben crear en la DB
+let descuentoAplicado = 0;
+let descuentoVisible = false;
 
 document.getElementById('categoria').addEventListener('change', cargarProductos);
 document.getElementById('busqueda').addEventListener('input', cargarProductos);
@@ -1411,13 +1662,19 @@ function agregarAlCarrito(id, nombre, precio) {
 
 function actualizarCarrito() {
     const carritoTable = document.getElementById('carrito-table').querySelector('tbody');
+    const subtotalElement = document.getElementById('subtotal');
     const totalElement = document.getElementById('total');
+    const descuentoElement = document.getElementById('descuento-monto');
+    const descuentoDisplay = document.getElementById('descuento-display');
+    const totalConDescuentoElement = document.getElementById('total-con-descuento');
+    const totalConDescuentoDisplay = document.getElementById('total-con-descuento-display');
+    
     carritoTable.innerHTML = '';
-    let total = 0;
+    let subtotal = 0;
 
     carrito.forEach((item, index) => {
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
+        const itemSubtotal = item.precio * item.cantidad;
+        subtotal += itemSubtotal;
         carritoTable.innerHTML += `
             <tr>
                 <td>${item.nombre}</td>
@@ -1428,7 +1685,7 @@ function actualizarCarrito() {
                     </div>
                 </td>
                 <td>$${item.precio.toLocaleString()}</td>
-                <td>$${subtotal.toLocaleString()}</td>
+                <td>$${itemSubtotal.toLocaleString()}</td>
                 <td><button class="btn btn-danger" onclick="eliminarDelCarrito(${index})" style="padding: 6px 8px; font-weight: bold; font-size: 16px; min-width: 32px;">-</button></td>
             </tr>
         `;
@@ -1436,9 +1693,41 @@ function actualizarCarrito() {
 
     if (carrito.length === 0) {
         carritoTable.innerHTML = '<tr><td colspan="6">Tu carrito está vacío.</td></tr>';
+        // Si no hay productos, ocultar descuento y resetear
+        if (descuentoVisible) {
+            toggleDescuento();
+        }
     }
 
-    totalElement.textContent = total.toLocaleString();
+    // Validar descuento actual contra nuevo subtotal
+    if (descuentoAplicado > subtotal) {
+        descuentoAplicado = subtotal;
+        document.getElementById('descuento-input').value = subtotal.toLocaleString();
+        if (subtotal > 0) {
+            mostrarMensaje('Descuento ajustado al subtotal máximo', 'error');
+        }
+    }
+
+    // Calcular total inicial (sin descuento)
+    const totalSinDescuento = subtotal;
+
+    // Actualizar displays principales
+    subtotalElement.textContent = subtotal.toLocaleString();
+    totalElement.textContent = totalSinDescuento.toLocaleString();
+    
+    // Manejar displays de descuento
+    if (descuentoAplicado > 0) {
+        descuentoDisplay.style.display = 'flex';
+        totalConDescuentoDisplay.style.display = 'flex';
+        descuentoElement.textContent = descuentoAplicado.toLocaleString();
+        
+        // Calcular total final con descuento
+        const totalFinal = Math.max(0, subtotal - descuentoAplicado);
+        totalConDescuentoElement.textContent = totalFinal.toLocaleString();
+    } else {
+        descuentoDisplay.style.display = 'none';
+        totalConDescuentoDisplay.style.display = 'none';
+    }
 }
 
 function modificarCantidad(index, nuevaCantidad) {
@@ -1457,6 +1746,7 @@ function limpiarCarrito() {
     if (carrito.length === 0) return;
     if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
         carrito = [];
+        limpiarDescuento(); // También limpiar descuento
         actualizarCarrito();
     }
 }
@@ -1467,11 +1757,14 @@ function finalizarPedido() {
         return;
     }
 
-    // Calcular el total
-    let total = 0;
-    carrito.forEach(item => {
-        total += item.precio * item.cantidad;
-    });
+    // Validación final del descuento
+    const subtotal = calcularSubtotal();
+    if (descuentoAplicado > subtotal) {
+        mostrarMensaje('Error: El descuento no puede ser mayor al subtotal', 'error');
+        return;
+    }
+
+    const total = Math.max(0, subtotal - descuentoAplicado);
 
     // Preparar datos para enviar al endpoint
     const carritoParaEnviar = carrito.map(item => ({
@@ -1486,6 +1779,7 @@ function finalizarPedido() {
     // Mostrar mensaje de procesamiento
     mostrarMensaje('Guardando pedido...', 'success');
     const finalizarBtn = document.querySelector('#finalizar-pedido .btn');
+    const originalText = finalizarBtn.textContent;
     finalizarBtn.disabled = true;
     finalizarBtn.textContent = 'Procesando...';
 
@@ -1502,7 +1796,9 @@ function finalizarPedido() {
         },
         body: JSON.stringify({
             carrito: carritoParaEnviar,
-            monto: total
+            monto: total,
+            descuento: descuentoAplicado,
+            subtotal: subtotal // Para verificación adicional
         })
     })
     .then(response => response.json())
@@ -1513,14 +1809,14 @@ function finalizarPedido() {
         } else {
             mostrarMensaje('Error al guardar el pedido: ' + (data.error || 'Error desconocido'), 'error');
             finalizarBtn.disabled = false;
-            finalizarBtn.textContent = 'Finalizar';
+            finalizarBtn.textContent = originalText;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         mostrarMensaje('Error de conexión al guardar el pedido', 'error');
         finalizarBtn.disabled = false;
-        finalizarBtn.textContent = 'Finalizar';
+        finalizarBtn.textContent = originalText;
     });
 }
 
@@ -1627,6 +1923,143 @@ function nuevoPedido() {
         document.querySelector('.search-section').scrollIntoView({ behavior: 'smooth' });
     }
 }
+
+// FUNCIONES DE DESCUENTO
+
+// Función para mostrar/ocultar el campo de descuento
+function toggleDescuento() {
+    const container = document.getElementById('descuento-container');
+    const btn = document.getElementById('toggle-desc-btn');
+    
+    descuentoVisible = !descuentoVisible;
+    
+    if (descuentoVisible) {
+        container.style.display = 'block';
+        btn.textContent = 'Cancelar';
+        btn.classList.add('active');
+        
+        // Focus en el input después de un pequeño delay
+        setTimeout(() => {
+            document.getElementById('descuento-input').focus();
+        }, 100);
+    } else {
+        container.style.display = 'none';
+        btn.textContent = 'Aplicar Descuento';
+        btn.classList.remove('active');
+        limpiarDescuento();
+    }
+}
+
+// Función para validar el descuento mientras se escribe
+function validarDescuento(input) {
+    const value = input.value;
+    const errorDiv = document.getElementById('descuento-error');
+    const inputGroup = input.parentElement;
+    
+    // Limpiar estilos previos
+    inputGroup.classList.remove('error', 'success');
+    errorDiv.textContent = '';
+    
+    // Permitir solo números
+    const numbersOnly = value.replace(/[^0-9]/g, '');
+    if (value !== numbersOnly) {
+        input.value = numbersOnly;
+    }
+    
+    // Validaciones en tiempo real
+    if (numbersOnly === '') {
+        return; // Campo vacío, no mostrar error
+    }
+    
+    const monto = parseInt(numbersOnly);
+    
+    // Validar que no sea negativo o cero
+    if (monto <= 0) {
+        mostrarErrorDescuento('El descuento debe ser mayor a $0', inputGroup);
+        return false;
+    }
+    
+    // Validar que no sea mayor al subtotal
+    const subtotal = calcularSubtotal();
+    if (monto > subtotal) {
+        mostrarErrorDescuento(`El descuento no puede ser mayor al subtotal ($${subtotal.toLocaleString()})`, inputGroup);
+        return false;
+    }
+    
+    // Validar monto máximo razonable (ej: $500,000)
+    if (monto > 500000) {
+        mostrarErrorDescuento('El descuento no puede ser mayor a $500.000', inputGroup);
+        return false;
+    }
+    
+    // Si llega aquí, el monto es válido
+    inputGroup.classList.add('success');
+    return true;
+}
+
+// Función para aplicar el descuento validado
+function aplicarDescuento() {
+    const input = document.getElementById('descuento-input');
+    const value = input.value.trim();
+    
+    if (value === '') {
+        descuentoAplicado = 0;
+        actualizarCarrito();
+        return;
+    }
+    
+    if (validarDescuento(input)) {
+        const monto = parseInt(value);
+        descuentoAplicado = monto;
+        
+        // Formatear el input para mejor UX
+        input.value = monto.toLocaleString();
+        
+        actualizarCarrito();
+        
+        // Mensaje de éxito
+        mostrarMensaje(`Descuento de $${monto.toLocaleString()} aplicado correctamente`, 'success');
+    }
+}
+
+// Función para limpiar el descuento
+function limpiarDescuento() {
+    document.getElementById('descuento-input').value = '';
+    document.getElementById('descuento-error').textContent = '';
+    document.getElementById('descuento-input').parentElement.classList.remove('error', 'success');
+    descuentoAplicado = 0;
+    actualizarCarrito();
+}
+
+// Función auxiliar para mostrar errores
+function mostrarErrorDescuento(mensaje, inputGroup) {
+    document.getElementById('descuento-error').textContent = mensaje;
+    inputGroup.classList.add('error');
+}
+
+// Función auxiliar para calcular subtotal
+function calcularSubtotal() {
+    let subtotal = 0;
+    carrito.forEach(item => {
+        subtotal += item.precio * item.cantidad;
+    });
+    return subtotal;
+}
+
+// Event listeners adicionales
+document.addEventListener('DOMContentLoaded', function() {
+    // Permitir Enter para aplicar descuento
+    document.getElementById('descuento-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            this.blur(); // Trigger onblur que llama aplicarDescuento
+        }
+    });
+    
+    // Prevenir scroll al cambiar cantidad con rueda del mouse
+    document.getElementById('descuento-input').addEventListener('wheel', function(e) {
+        e.preventDefault();
+    });
+});
 </script>
 </body>
 </html>

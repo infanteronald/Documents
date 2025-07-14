@@ -46,6 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $barrio         = $_POST['barrio'];
     $correo         = $_POST['correo'];
     $metodo_pago    = $_POST['metodo_pago'];
+    $descuento      = isset($_POST['descuento']) ? floatval($_POST['descuento']) : 0;
 
     // Detectar si es un pago Bold (cualquiera de los 3 métodos) y extraer datos específicos
     $metodos_bold = ['PSE Bold', 'Botón Bancolombia', 'Tarjeta de Crédito o Débito'];
@@ -162,13 +163,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($es_pedido_guardado) {
         // ACTUALIZAR pedido existente
         $pedido_id_guardado = intval($_POST['pedido_id']);
-        $stmt = $conn->prepare("UPDATE pedidos_detal SET pedido = ?, monto = ?, nombre = ?, direccion = ?, telefono = ?, ciudad = ?, barrio = ?, correo = ?, metodo_pago = ?, datos_pago = ?, comprobante = ? WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE pedidos_detal SET pedido = ?, monto = ?, descuento = ?, nombre = ?, direccion = ?, telefono = ?, ciudad = ?, barrio = ?, correo = ?, metodo_pago = ?, datos_pago = ?, comprobante = ? WHERE id = ?");
 
         if (!$stmt) {
             die("Error al preparar la consulta de actualización: " . $conn->error);
         }
 
-        $stmt->bind_param("sdssssssssi", $productos_texto, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $pedido_id_guardado);
+        $stmt->bind_param("sddsssssssssi", $productos_texto, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $pedido_id_guardado);
 
         if (!$stmt->execute()) {
             die("Error al ejecutar la consulta de actualización: " . $stmt->error);
@@ -180,24 +181,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // INSERTAR nuevo pedido
         if ($es_pago_bold && $bold_order_id) {
             // Insertar pedido Bold con campos específicos
-            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, bold_order_id, estado_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')");
+            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, bold_order_id, estado_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')");
 
             if (!$stmt) {
                 die("Error al preparar la consulta de inserción Bold: " . $conn->error);
             }
 
             $datos_pago = "Pago en proceso - $metodo_pago";
-            $stmt->bind_param("sdssssssssss", $productos_texto, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $bold_order_id);
+            $stmt->bind_param("sddssssssssss", $productos_texto, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $bold_order_id);
             echo "<!-- Debug: Insertando pedido Bold con Order ID: $bold_order_id -->\n";
         } else {
             // Insertar pedido normal
-            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             if (!$stmt) {
                 die("Error al preparar la consulta de inserción: " . $conn->error);
             }
 
-            $stmt->bind_param("sdsssssssss", $productos_texto, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo);
+            $stmt->bind_param("sddsssssssss", $productos_texto, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo);
         }
 
         if (!$stmt->execute()) {

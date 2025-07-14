@@ -11,7 +11,7 @@ if(!$id || !isset($_FILES['comprobante'])) {
 }
 
 // Buscar datos del pedido
-$res = $conn->query("SELECT correo, nombre, monto FROM pedidos_detal WHERE id = $id LIMIT 1");
+$res = $conn->query("SELECT correo, nombre, monto, descuento FROM pedidos_detal WHERE id = $id LIMIT 1");
 if(!$res || $res->num_rows==0) {
     echo json_encode(['success'=>false,'error'=>'Pedido no encontrado']);
     exit;
@@ -65,10 +65,24 @@ if(!$stmt->execute()) {
 // --- Enviar email de confirmación (opcional) ---
 $correo_cliente = $p['correo'];
 $nombre_cliente = $p['nombre'];
-$monto = number_format($p['monto'], 0, ',', '.');
+
+// Calcular monto final considerando descuento
+$descuento = $p['descuento'] ?? 0;
+$monto_final = $p['monto'];
+$monto_formateado = number_format($monto_final, 0, ',', '.');
 
 $asunto = "Comprobante de pago recibido - Pedido #$id";
-$mensaje = "Hola $nombre_cliente,\n\nHemos recibido tu comprobante de pago para el pedido #$id por valor de $".$monto.".\n\nEstamos verificando tu pago y procederemos con el envío de tu pedido.\n\n¡Gracias por tu compra!\nSequoia Speed";
+
+// Mensaje del email con desglose si hay descuento
+if ($descuento > 0) {
+    $subtotal = $monto_final + $descuento;
+    $subtotal_formateado = number_format($subtotal, 0, ',', '.');
+    $descuento_formateado = number_format($descuento, 0, ',', '.');
+    
+    $mensaje = "Hola $nombre_cliente,\n\nHemos recibido tu comprobante de pago para el pedido #$id.\n\nDetalle del pago:\nSubtotal: $".$subtotal_formateado."\nDescuento: -$".$descuento_formateado."\nTotal pagado: $".$monto_formateado."\n\nEstamos verificando tu pago y procederemos con el envío de tu pedido.\n\n¡Gracias por tu compra!\nSequoia Speed";
+} else {
+    $mensaje = "Hola $nombre_cliente,\n\nHemos recibido tu comprobante de pago para el pedido #$id por valor de $".$monto_formateado.".\n\nEstamos verificando tu pago y procederemos con el envío de tu pedido.\n\n¡Gracias por tu compra!\nSequoia Speed";
+}
 $from = "ventas@sequoiaspeed.com.co";
 $headers = "From: Sequoia Speed <$from>\r\n";
 $headers .= "Reply-To: $from\r\n";

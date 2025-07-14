@@ -35,6 +35,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 $carrito = $data['carrito'] ?? [];
 $monto = $data['monto'] ?? 0;
+$descuento = $data['descuento'] ?? 0;
 
 // Extraer información adicional del formulario
 $nombre = $data['nombre'] ?? '';
@@ -48,6 +49,7 @@ $bold_order_id = $data['bold_order_id'] ?? null;
 
 error_log("Carrito recibido: " . print_r($carrito, true));
 error_log("Monto recibido: " . $monto);
+error_log("Descuento recibido: " . $descuento);
 error_log("Método de pago: " . $metodo_pago);
 error_log("Bold Order ID: " . $bold_order_id);
 
@@ -102,14 +104,14 @@ $nombres = array_map(function ($item) {
 $pedido_str = implode(', ', $nombres);
 
 // Insertar pedido en pedidos_detal con todos los campos necesarios
-$sql = "INSERT INTO pedidos_detal (pedido, monto, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago";
+$sql = "INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago";
 
 // Agregar campos de Bold si es un pago Bold
 if ($bold_order_id) {
     $sql .= ", bold_order_id, estado_pago";
 }
 
-$sql .= ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?";
+$sql .= ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
 
 if ($bold_order_id) {
     $sql .= ", ?, 'pendiente'";
@@ -126,9 +128,9 @@ if ($stmt_main_pedido === false) {
 
 // Bind parameters según si es Bold o no
 if ($bold_order_id) {
-    $stmt_main_pedido->bind_param("sdssssssss", $pedido_str, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $bold_order_id);
+    $stmt_main_pedido->bind_param("sddssssssss", $pedido_str, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $bold_order_id);
 } else {
-    $stmt_main_pedido->bind_param("sdsssssss", $pedido_str, $monto, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago);
+    $stmt_main_pedido->bind_param("sddsssssss", $pedido_str, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago);
 }
 if ($stmt_main_pedido->execute() === false) {
     error_log("Error al ejecutar la inserción en pedidos_detal: " . $stmt_main_pedido->error);

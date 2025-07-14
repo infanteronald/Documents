@@ -68,6 +68,30 @@ try {
         throw new Exception('Tabla pedido_detalle no encontrada');
     }
 
+    // Obtener datos completos del pedido (cliente + descuento)
+    $stmt_pedido = $conn->prepare("SELECT 
+        id, monto, descuento,
+        nombre_cliente, email_cliente, telefono_cliente, 
+        ciudad_cliente, barrio_cliente, direccion_entrega,
+        metodo_pago, fecha_pedido, nota_interna,
+        pagado, enviado, anulado
+        FROM pedidos_detal WHERE id = ? LIMIT 1");
+    
+    $cliente_data = [];
+    $descuento = 0;
+    
+    if ($stmt_pedido) {
+        $stmt_pedido->bind_param("i", $id_pedido);
+        $stmt_pedido->execute();
+        $result_pedido = $stmt_pedido->get_result();
+        
+        if ($row = $result_pedido->fetch_assoc()) {
+            $cliente_data = $row;
+            $descuento = floatval($row['descuento'] ?? 0);
+        }
+        $stmt_pedido->close();
+    }
+
     // Usar prepared statement para evitar problemas
     $stmt = $conn->prepare("SELECT nombre, precio, cantidad, talla FROM pedido_detalle WHERE pedido_id = ? ORDER BY id");
     if (!$stmt) {
@@ -119,11 +143,39 @@ try {
     error_log("get_productos_pedido.php: Encontrados " . count($productos) . " productos");
     error_log("get_productos_pedido.php: Productos: " . json_encode($productos));
 
-    // Respuesta exitosa
+    // Calcular totales
+    $subtotal = 0;
+    foreach ($productos as $producto) {
+        $subtotal += $producto['precio'] * $producto['cantidad'];
+    }
+    $total_final = $subtotal - $descuento;
+
+    // Log para debugging del descuento
+    error_log("get_productos_pedido.php: ID pedido: $id_pedido, Descuento encontrado: $descuento, Subtotal: $subtotal, Total final: $total_final");
+
+    // Respuesta exitosa con datos completos
     enviarRespuesta(true, array(
         'productos' => $productos,
         'total' => count($productos),
-        'pedido_id' => $id_pedido
+        'pedido_id' => $id_pedido,
+        'subtotal' => $subtotal,
+        'descuento' => $descuento,
+        'total_final' => $total_final,
+        'cliente' => array(
+            'nombre' => $cliente_data['nombre_cliente'] ?? 'No disponible',
+            'email' => $cliente_data['email_cliente'] ?? 'No disponible',
+            'telefono' => $cliente_data['telefono_cliente'] ?? 'No disponible',
+            'ciudad' => $cliente_data['ciudad_cliente'] ?? 'No disponible',
+            'barrio' => $cliente_data['barrio_cliente'] ?? 'No disponible',
+            'direccion' => $cliente_data['direccion_entrega'] ?? 'No disponible',
+            'metodo_pago' => $cliente_data['metodo_pago'] ?? 'No disponible',
+            'fecha_pedido' => $cliente_data['fecha_pedido'] ?? 'No disponible',
+            'nota_interna' => $cliente_data['nota_interna'] ?? '',
+            'pagado' => ($cliente_data['pagado'] ?? 0) == 1,
+            'enviado' => ($cliente_data['enviado'] ?? 0) == 1,
+            'anulado' => ($cliente_data['anulado'] ?? 0) == 1
+        ),
+        'debug_info' => "Pedido: $id_pedido, Descuento: $descuento, Subtotal: $subtotal"
     ));
 
 } catch (Exception $e) {

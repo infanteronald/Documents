@@ -8,6 +8,9 @@
     "unwantedRecommendations": [
         "ms-vscode.vscode-typescript-next",
         "ms-vscode.vscode-javascript",
-        "ms-python.python"
+        "ms-python.python",
+        "github.copilot",
+        "github.copilot-chat",
+        "github.copilot-labs"
     ]
 }

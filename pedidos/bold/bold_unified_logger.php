@@ -146,7 +146,7 @@ class BoldUnifiedLogger
             $logs['webhooks'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Info del pedido
-            $sql = "SELECT id, bold_order_id, bold_transaction_id, estado_pago, fecha_pedido, metodo_pago
+            $sql = "SELECT id, bold_order_id, bold_transaction_id, estado_pago, fecha_pedido, metodo_pago, monto, descuento
                     FROM pedidos_detal WHERE id = ? OR bold_order_id = ?";
             $stmt = $conn->prepare($sql);
             $stmt->execute([$order_id, $order_id]);

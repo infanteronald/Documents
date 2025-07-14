@@ -314,12 +314,12 @@
     $order_id = $_GET['orden'] ?? '';
 
     // Cambiar consulta para usar pedidos_detal
-    $stmt = $conn->prepare("SELECT id, estado_pago, monto, nombre, correo, pedido FROM pedidos_detal WHERE bold_order_id = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT id, estado_pago, monto, descuento, nombre, correo, pedido FROM pedidos_detal WHERE bold_order_id = ? LIMIT 1");
     $stmt->bind_param("s", $order_id);
     $stmt->execute();
 
     // Usar bind_result para compatibilidad
-    $stmt->bind_result($pedido_id, $estado_pago, $monto, $nombre, $correo, $pedido_detalle);
+    $stmt->bind_result($pedido_id, $estado_pago, $monto, $descuento, $nombre, $correo, $pedido_detalle);
 
     if ($stmt->fetch()) {
         $stmt->close();
@@ -328,7 +328,15 @@
         echo "<h2>Confirmación de Pago</h2>";
         echo "<p><strong>Número de Pedido:</strong> #" . $pedido_id . "</p>";
         echo "<p><strong>Estado del Pago:</strong> " . ucfirst($estado_pago) . "</p>";
-        echo "<p><strong>Monto:</strong> $" . number_format($monto, 0, ',', '.') . "</p>";
+        // Mostrar desglose de monto con descuento
+        if ($descuento > 0) {
+            $subtotal = $monto + $descuento;
+            echo "<p><strong>Subtotal:</strong> $" . number_format($subtotal, 0, ',', '.') . "</p>";
+            echo "<p style='color: var(--apple-green);'><strong>Descuento:</strong> -$" . number_format($descuento, 0, ',', '.') . "</p>";
+            echo "<p><strong>Total Final:</strong> $" . number_format($monto, 0, ',', '.') . "</p>";
+        } else {
+            echo "<p><strong>Monto:</strong> $" . number_format($monto, 0, ',', '.') . "</p>";
+        }
         echo "<p><strong>Nombre:</strong> " . htmlspecialchars($nombre) . "</p>";
         echo "<p><strong>Método de Pago:</strong> " . htmlspecialchars($pedido['metodo_pago']) . "</p>";
 

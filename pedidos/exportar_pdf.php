@@ -234,6 +234,7 @@ window.onload = function() {
                 <th style="width: 60px;">Ciudad</th>
                 <th style="width: 100px;">Dirección</th>
                 <th style="width: 150px;">Productos</th>
+                <th style="width: 40px;">Desc.</th>
                 <th style="width: 50px;">Total</th>
                 <th style="width: 60px;">Método Pago</th>
                 <th style="width: 50px;">Estado</th>
@@ -254,6 +255,7 @@ window.onload = function() {
                 <td class="text"><?php echo htmlspecialchars(cleanForPDF($pedido['ciudad'])); ?></td>
                 <td class="text"><?php echo htmlspecialchars(cleanForPDF(substr($pedido['direccion'], 0, 60))); ?></td>
                 <td class="productos"><?php echo htmlspecialchars(cleanForPDF(substr($pedido['productos'], 0, 100))); ?></td>
+                <td class="number">$<?php echo number_format($pedido['descuento'] ?? 0, 0, ',', '.'); ?></td>
                 <td class="number">$<?php echo number_format($pedido['monto'], 0, ',', '.'); ?></td>
                 <td class="text"><?php echo htmlspecialchars(substr($pedido['metodo_pago'], 0, 15)); ?></td>
                 <td class="text"><?php echo getEstadoTexto($pedido); ?></td>
@@ -267,8 +269,13 @@ window.onload = function() {
             <!-- Fila de totales -->
             <tr class="total-row">
                 <td colspan="8" style="text-align: right;"><strong>TOTALES:</strong></td>
+                <td class="number"><strong>$<?php 
+                    $total_descuentos = 0;
+                    foreach($pedidos as $p) { $total_descuentos += ($p['descuento'] ?? 0); }
+                    echo number_format($total_descuentos, 0, ',', '.'); 
+                ?></strong></td>
                 <td class="number"><strong>$<?php echo number_format($monto_total_real, 0, ',', '.'); ?></strong></td>
-                <td colspan="6"><strong>Total de pedidos: <?php echo number_format($total_pedidos); ?></strong></td>
+                <td colspan="5"><strong>Total de pedidos: <?php echo number_format($total_pedidos); ?></strong></td>
             </tr>
         </tbody>
     </table>

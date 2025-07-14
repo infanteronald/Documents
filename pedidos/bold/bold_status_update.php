@@ -89,7 +89,7 @@ try {
     if (!$stmt->fetch()) {
         $stmt->close();
         // Crear nuevo registro si no existe
-        $stmt = $conn->prepare("INSERT INTO pedidos_detal (bold_order_id, estado_pago, monto, metodo_pago, bold_transaction_id, fecha) VALUES (?, ?, ?, ?, ?, NOW())");
+        $stmt = $conn->prepare("INSERT INTO pedidos_detal (bold_order_id, estado_pago, monto, descuento, metodo_pago, bold_transaction_id, fecha) VALUES (?, ?, ?, 0, ?, ?, NOW())");
         $stmt->bind_param("ssiss", $order_id, $status, $amount, $payment_method, $transaction_id);
 
         if ($stmt->execute()) {

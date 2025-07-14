@@ -27,6 +27,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 $bold_order_id = $data['bold_order_id'] ?? null;
 $pedido_id = $data['pedido_id'] ?? null; // ID del pedido existente desde URL
 $monto = $data['monto'] ?? 0;
+$descuento = $data['descuento'] ?? 0;
 $nombre = $data['nombre'] ?? '';
 $correo = $data['correo'] ?? '';
 $telefono = $data['telefono'] ?? '';
@@ -108,7 +109,8 @@ try {
                 correo = ?,
                 telefono = ?,
                 direccion = ?,
-                monto = CASE WHEN monto = 0 THEN ? ELSE monto END
+                monto = CASE WHEN monto = 0 THEN ? ELSE monto END,
+                descuento = CASE WHEN descuento = 0 THEN ? ELSE descuento END
             WHERE id = ?
         ");
 
@@ -116,9 +118,9 @@ try {
             throw new Exception('Error preparando actualización: ' . $conn->error);
         }
 
-        $stmt->bind_param("sssssssi",
+        $stmt->bind_param("sssssssdi",
             $bold_order_id, $metodo_pago, $nombre, $correo, $telefono,
-            $direccion, $monto, $pedidoIdFinal
+            $direccion, $monto, $descuento, $pedidoIdFinal
         );
 
         if (!$stmt->execute()) {
@@ -160,21 +162,22 @@ try {
                 telefono,
                 direccion,
                 monto,
+                descuento,
                 metodo_pago,
                 productos,
                 estado_pago,
                 fecha,
                 estado
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), 'pendiente')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW(), 'pendiente')
         ");
 
         if (!$stmt) {
             throw new Exception('Error preparando inserción: ' . $conn->error);
         }
 
-        $stmt->bind_param("sssssds",
+        $stmt->bind_param("sssssdds",
             $bold_order_id, $nombre, $correo, $telefono, $direccion,
-            $monto, $metodo_pago, $productos_texto
+            $monto, $descuento, $metodo_pago, $productos_texto
         );
 
         if (!$stmt->execute()) {

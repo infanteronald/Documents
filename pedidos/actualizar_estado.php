@@ -21,7 +21,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         // Obtener datos del pedido para las notificaciones
-        $query = "SELECT nombre, correo, telefono, ciudad, barrio, monto FROM pedidos_detal WHERE id = ? LIMIT 1";
+        $query = "SELECT nombre, correo, telefono, ciudad, barrio, monto, descuento FROM pedidos_detal WHERE id = ? LIMIT 1";
         $stmt = $conn->prepare($query);
         if (!$stmt) {
             echo json_encode(['success' => false, 'error' => 'Error en preparación de consulta: ' . $conn->error]);
@@ -34,7 +34,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             exit;
         }
 
-        $stmt->bind_result($nombre_cliente, $correo_cliente, $telefono_cliente, $ciudad_cliente, $barrio_cliente, $monto);
+        $stmt->bind_result($nombre_cliente, $correo_cliente, $telefono_cliente, $ciudad_cliente, $barrio_cliente, $monto, $descuento);
         if (!$stmt->fetch()) {
             echo json_encode(['success' => false, 'error' => 'Pedido no encontrado']);
             exit;
@@ -164,6 +164,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     'ciudad_cliente' => $ciudad_cliente,
                     'barrio_cliente' => $barrio_cliente,
                     'monto' => $monto,
+                    'descuento' => $descuento ?? 0,
+                    'subtotal' => $monto + ($descuento ?? 0),
                     'nuevo_estado' => $estado_texto,
                     'timestamp' => $timestamp
                 ]);
@@ -172,6 +174,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $emailCliente = EmailTemplates::generarEmailCambioEstadoCliente([
                     'numero_pedido' => $id,
                     'nombre_cliente' => $nombre_cliente,
+                    'monto' => $monto,
+                    'descuento' => $descuento ?? 0,
+                    'subtotal' => $monto + ($descuento ?? 0),
                     'nuevo_estado' => $estado_texto,
                     'timestamp' => $timestamp
                 ]);

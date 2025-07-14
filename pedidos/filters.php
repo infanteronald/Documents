@@ -214,14 +214,20 @@ class PedidosFilter {
             SELECT 
                 p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.fecha, p.direccion,
                 p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
-                p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda,
-                COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto
+                p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda, p.descuento,
+                COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto_productos,
+                CASE 
+                    WHEN COALESCE(SUM(pd.cantidad * pd.precio), 0) > 0 THEN 
+                        COALESCE(SUM(pd.cantidad * pd.precio), 0) - COALESCE(p.descuento, 0)
+                    ELSE 
+                        COALESCE(p.monto, 0)
+                END as monto
             FROM pedidos_detal p
             LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
             WHERE $where
             GROUP BY p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.fecha, p.direccion,
                      p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
-                     p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda
+                     p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda, p.descuento, p.monto
             $montoFiltro
             ORDER BY p.fecha DESC
         ";
@@ -234,11 +240,17 @@ class PedidosFilter {
         return "
             SELECT COUNT(*) as total, COALESCE(SUM(monto_temp), 0) as monto_total
             FROM (
-                SELECT COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto_temp
+                SELECT 
+                    CASE 
+                        WHEN COALESCE(SUM(pd.cantidad * pd.precio), 0) > 0 THEN 
+                            COALESCE(SUM(pd.cantidad * pd.precio), 0) - COALESCE(p.descuento, 0)
+                        ELSE 
+                            COALESCE(p.monto, 0)
+                    END as monto_temp
                 FROM pedidos_detal p
                 LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
                 WHERE $where
-                GROUP BY p.id
+                GROUP BY p.id, p.monto, p.descuento
                 $montoFiltro
             ) as subquery
         ";

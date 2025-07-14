@@ -3,9 +3,21 @@ require_once "conexion.php";
 $pedido_id = isset($_GET['pedido']) ? intval($_GET['pedido']) : 0;
 $detalles = [];
 $monto = 0;
+$descuento = 0;
 
 // Procesamiento de pedido existente por ID
 if ($pedido_id) {
+  // Obtener el descuento desde pedidos_detal
+  $stmt_desc = $conn->prepare("SELECT descuento FROM pedidos_detal WHERE id = ? LIMIT 1");
+  $stmt_desc->bind_param("i", $pedido_id);
+  $stmt_desc->execute();
+  $stmt_desc->bind_result($descuento_db);
+  if ($stmt_desc->fetch()) {
+    $descuento = $descuento_db ?? 0;
+  }
+  $stmt_desc->close();
+  
+  // Obtener detalles del pedido
   $res = $conn->query("SELECT * FROM pedido_detalle WHERE pedido_id = $pedido_id");
   while ($row = $res->fetch_assoc()) {
     $detalles[] = $row;
@@ -358,6 +370,20 @@ if ($pedido_id) {
                     <td style="text-align:right;">$<?= number_format($item['precio'] * $item['cantidad'], 0, ',', '.') ?></td>
                   </tr>
                 <?php endforeach; ?>
+                <?php if ($descuento > 0): ?>
+                  <tr style="border-top: 2px solid var(--vscode-border);">
+                    <td colspan="3" style="text-align:right; font-weight:600; color: var(--vscode-text-muted); padding-top:8px;">Subtotal:</td>
+                    <td style="text-align:right; font-weight:600; padding-top:8px;">$<?= number_format($monto, 0, ',', '.') ?></td>
+                  </tr>
+                  <tr>
+                    <td colspan="3" style="text-align:right; font-weight:600; color: #ff6b6b;">Descuento:</td>
+                    <td style="text-align:right; font-weight:600; color: #ff6b6b;">-$<?= number_format($descuento, 0, ',', '.') ?></td>
+                  </tr>
+                  <tr style="border-top: 2px solid var(--apple-blue); background: var(--gray-dark);">
+                    <td colspan="3" style="text-align:right; font-weight:700; color: var(--apple-blue); font-size:0.8rem;">TOTAL FINAL:</td>
+                    <td style="text-align:right; font-weight:700; color: var(--apple-blue); font-size:0.8rem;">$<?= number_format($monto - $descuento, 0, ',', '.') ?></td>
+                  </tr>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
@@ -365,13 +391,16 @@ if ($pedido_id) {
 
         <!-- Campo oculto con el ID del pedido -->
         <input type="hidden" name="pedido_id" value="<?= $pedido_id ?>">
+        
+        <!-- Campo oculto con el descuento aplicado -->
+        <input type="hidden" name="descuento" value="<?= $descuento ?>">
 
         <!-- Campo de monto sólo lectura -->
         <input
           type="text"
           name="monto"
           style="text-align:right;"
-          value="$<?= number_format($monto, 0, ',', '.') ?>"
+          value="$<?= number_format($monto - $descuento, 0, ',', '.') ?>"
           readonly
           required>
       <?php elseif ($pedido_id): ?>
@@ -379,13 +408,16 @@ if ($pedido_id) {
           No se encontraron detalles para este pedido.
         </div>
         <input type="hidden" name="pedido_id" value="<?= $pedido_id ?>">
+        
+        <!-- Campo oculto con el descuento aplicado -->
+        <input type="hidden" name="descuento" value="<?= $descuento ?>">
 
         <!-- Campo de monto sólo lectura cuando pedido_id existe pero sin detalles -->
         <input
           type="text"
           name="monto"
           style="text-align:right;"
-          value="$<?= number_format($monto, 0, ',', '.') ?>"
+          value="$<?= number_format($monto - $descuento, 0, ',', '.') ?>"
           readonly
           required>
       <?php else: ?>
@@ -582,9 +614,9 @@ if ($pedido_id) {
         const orderId = 'SEQ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         console.log('✅ ID orden generado:', orderId);
 
-        // Obtener el monto del pedido con manejo seguro
+        // Obtener el monto del pedido con manejo seguro (ya con descuento aplicado)
         console.log('🔧 PASO 4: Obteniendo monto...');
-        let monto = <?php echo json_encode($monto > 0 ? $monto : 0); ?>;
+        let monto = <?php echo json_encode(($monto - $descuento) > 0 ? ($monto - $descuento) : 0); ?>;
         console.log('✅ Monto desde PHP:', monto, 'Tipo:', typeof monto);
 
         // Si no hay monto del PHP, intentar obtenerlo del campo del formulario

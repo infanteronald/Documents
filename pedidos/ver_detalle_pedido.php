@@ -559,7 +559,10 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                     <div class="info-card" style="grid-column: span 3;">
                         <h3>Cliente</h3>
                         <p><?php echo h($p['nombre'] ?? 'Sin nombre'); ?></p>
-                        <p style="font-size: 0.85rem; opacity: 0.8;"><?php echo h($p['correo'] ?? 'Sin email'); ?></p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; font-size: 0.85rem; opacity: 0.8;">
+                            <div>📧 <?php echo h($p['correo'] ?? 'Sin email'); ?></div>
+                            <div>📞 <?php echo h($p['telefono'] ?? 'Sin teléfono'); ?></div>
+                        </div>
                     </div>
 
                     <!-- Segunda fila: Dirección -->
@@ -579,6 +582,34 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                         <?php endif; ?>
                     </div>
                     <?php endif; ?>
+
+                    <!-- Método de Pago -->
+                    <div class="info-card" style="grid-column: span 3;">
+                        <h3>Método de Pago</h3>
+                        <p><?php echo h($p['metodo_pago'] ?? 'No especificado'); ?></p>
+                        <?php if (!empty($p['monto'] ?? '')): ?>
+                        <div style="margin-top: 8px; font-size: 0.85rem; opacity: 0.8;">
+                            <?php if (($p['descuento'] ?? 0) > 0): ?>
+                                <?php 
+                                // Calcular subtotal: usar total_productos si existe, sino calcular desde monto + descuento
+                                $subtotal_correcto = ($total_productos > 0) ? $total_productos : $p['monto'] + $p['descuento'];
+                                $total_final = ($total_productos > 0) ? $total_productos - $p['descuento'] : $p['monto'];
+                                ?>
+                                <div style="margin-bottom: 4px;">
+                                    📊 Subtotal: $<?php echo number_format($subtotal_correcto, 0, ',', '.'); ?>
+                                </div>
+                                <div style="margin-bottom: 4px; color: #ff7b72;">
+                                    🎯 Descuento: -$<?php echo number_format($p['descuento'], 0, ',', '.'); ?>
+                                </div>
+                                <div style="font-weight: 600; color: #56d364;">
+                                    💰 Total: $<?php echo number_format($total_final, 0, ',', '.'); ?>
+                                </div>
+                            <?php else: ?>
+                                💰 Monto: $<?php echo number_format($total_productos > 0 ? $total_productos : $p['monto'], 0, ',', '.'); ?>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
 
                     <!-- Tercera fila: Fecha, Estado, Enviado -->
                     <div class="info-card compact">
@@ -664,7 +695,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <!-- Productos Mobile Container -->
                     <div class="mobile-products-container">
                         <?php if (!empty($productos)): ?>
@@ -674,20 +705,20 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                                     <div class="mobile-product-name"><?php echo h($producto['nombre']); ?></div>
                                     <div class="mobile-product-quantity">x<?php echo $producto['cantidad']; ?></div>
                                 </div>
-                                
+
                                 <?php if (!empty($producto['descripcion'])): ?>
                                 <div class="mobile-product-description">
                                     <?php echo h($producto['descripcion']); ?>
                                 </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if (!empty($producto['talla'])): ?>
                                 <div class="mobile-product-size">
                                     <span class="mobile-size-label">Talla:</span>
                                     <span class="mobile-size-value"><?php echo h($producto['talla']); ?></span>
                                 </div>
                                 <?php endif; ?>
-                                
+
                                 <div class="mobile-product-pricing">
                                     <div class="mobile-unit-price">
                                         <span class="mobile-price-label">Precio unitario:</span>
@@ -711,10 +742,23 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                     <!-- Total del Pedido -->
                     <div class="total-section" style="margin-top: 20px; text-align: right;">
                         <div class="total-card" style="display: inline-block; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: white; padding: 15px 25px; border-radius: 8px;">
-                            <h4 style="margin: 0 0 5px 0; opacity: 0.9; font-size: 0.9rem;">Total del Pedido</h4>
-                            <div class="amount" style="font-size: 1.8rem; font-weight: 700; margin: 0;">
-                                $<?php echo number_format($total_productos, 0, ',', '.'); ?>
-                            </div>
+                            <?php if (($p['descuento'] ?? 0) > 0): ?>
+                                <h4 style="margin: 0 0 5px 0; opacity: 0.9; font-size: 0.9rem;">Resumen de Totales</h4>
+                                <div style="font-size: 1rem; margin-bottom: 4px; opacity: 0.9;">
+                                    Subtotal: $<?php echo number_format($total_productos, 0, ',', '.'); ?>
+                                </div>
+                                <div style="font-size: 1rem; margin-bottom: 8px; opacity: 0.9;">
+                                    Descuento: -$<?php echo number_format($p['descuento'], 0, ',', '.'); ?>
+                                </div>
+                                <div class="amount" style="font-size: 1.8rem; font-weight: 700; margin: 0;">
+                                    $<?php echo number_format($total_productos - $p['descuento'], 0, ',', '.'); ?>
+                                </div>
+                            <?php else: ?>
+                                <h4 style="margin: 0 0 5px 0; opacity: 0.9; font-size: 0.9rem;">Total del Pedido</h4>
+                                <div class="amount" style="font-size: 1.8rem; font-weight: 700; margin: 0;">
+                                    $<?php echo number_format($total_productos, 0, ',', '.'); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php else: ?>
@@ -1070,8 +1114,17 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                         <div class="metric-card" style="background: #21262d; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #3d444d;">
                             <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 5px;">💰 Valor total</div>
                             <div style="color: #238636; font-weight: 700; font-size: 1.2rem;">
-                                $<?php echo number_format($total_productos, 0, ',', '.'); ?>
+                                <?php 
+                                $valor_total_final = ($p['descuento'] ?? 0) > 0 ? $total_productos - $p['descuento'] : $total_productos;
+                                echo '$' . number_format($valor_total_final, 0, ',', '.'); 
+                                ?>
                             </div>
+                            <?php if (($p['descuento'] ?? 0) > 0): ?>
+                                <div style="font-size: 0.7rem; color: #8b949e; margin-top: 3px;">
+                                    Subtotal: $<?php echo number_format($total_productos, 0, ',', '.'); ?><br>
+                                    Descuento: -$<?php echo number_format($p['descuento'], 0, ',', '.'); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="metric-card" style="background: #21262d; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #3d444d;">
@@ -1087,413 +1140,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                                 <?php echo h($p['metodo_pago'] ?? 'N/A'); ?>
                             </div>
                         </div>                    </div>
-
-                    <?php if (!empty($correo_cliente) || !empty($telefono_cliente)): ?>
-
-                    <!-- ===== SISTEMA UNIFICADO DE ESTADÍSTICAS DEL CLIENTE ===== -->
-                    <div class="estadisticas-unificadas" style="margin-top: 30px; background: #30363d; border: 1px solid #3d444d; border-radius: 12px; padding: 25px;">
-
-                        <!-- Encabezado del módulo -->
-                        <div style="text-align: center; margin-bottom: 25px;">
-                            <h3 style="color: #f79000; font-size: 1.3rem; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                🚀 Análisis Completo del Cliente
-                            </h3>
-                            <p style="color: #8b949e; font-size: 0.9rem; margin: 0;">
-                                Dashboard integral con todas las métricas de comportamiento, valor y rendimiento
-                            </p>
-                        </div>
-
-                        <!-- SECCIÓN 1: MÉTRICAS PRINCIPALES -->
-                        <div style="margin-bottom: 30px;">
-                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
-                                📈 Métricas Principales
-                            </h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
-
-                                <!-- LTV -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #1f6feb15 0%, #0969da15 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #1f6feb;"
-                                     data-tooltip="LTV (Lifetime Value): Valor total histórico de todas las compras del cliente. Métrica clave para identificar clientes valiosos.">
-                                    <div style="color: #1f6feb; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">👤 LTV Cliente</div>
-                                    <div style="color: #58a6ff; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
-                                        $<?php echo number_format(floatval($cliente_stats['ltv']['valor_total_historico'] ?? 0), 0, ',', '.'); ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        <?php echo intval($cliente_stats['ltv']['total_pedidos'] ?? 0); ?> pedidos realizados
-                                    </div>
-                                </div>
-
-                                <!-- Ticket Promedio -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #23863615 0%, #2ea04315 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #238636; cursor: help;"
-                                     title="Ticket Promedio: Valor promedio de compra del cliente. Se calcula dividiendo el total gastado por el número de pedidos realizados.">
-                                    <div style="color: #238636; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                        💰 Ticket Promedio
-                                        <span style="font-size: 0.6rem; opacity: 0.7; cursor: help;" title="Valor promedio por pedido del cliente">ℹ️</span>
-                                    </div>
-                                    <div style="color: #3fb950; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
-                                        $<?php echo number_format(floatval($cliente_stats['ltv']['ticket_promedio'] ?? 0), 0, ',', '.'); ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        <?php
-                                        $general = floatval($cliente_stats['promedio_general']['ticket_promedio_general'] ?? 0);
-                                        $cliente_prom = floatval($cliente_stats['ltv']['ticket_promedio'] ?? 0);
-                                        if ($general > 0) {
-                                            $diferencia = (($cliente_prom - $general) / $general) * 100;
-                                            echo ($diferencia > 0 ? '+' : '') . number_format($diferencia, 0) . '% vs promedio';
-                                        } else {
-                                            echo 'vs promedio general';
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-
-                                <!-- Score RFM -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #dc262615 0%, #f8514915 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #dc2626; cursor: help;"
-                                     title="RFM: Recency (recencia), Frequency (frecuencia), Monetary (monetario). Clasifica al cliente según cuándo, qué tan frecuente y cuánto compra.">
-                                    <div style="color: #dc2626; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                        📊 Clasificación RFM
-                                        <span style="font-size: 0.6rem; opacity: 0.7; cursor: help;" title="RFM analiza Recencia, Frecuencia y Valor Monetario">ℹ️</span>
-                                    </div>
-                                    <div style="color: #f87171; font-weight: 700; font-size: 1rem; margin-bottom: 4px; line-height: 1.2;">
-                                        <?php echo h($cliente_stats['rfm']['clasificacion'] ?? '🔄 Active'); ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        R<?php echo intval($cliente_stats['rfm']['score_r'] ?? 0); ?>F<?php echo intval($cliente_stats['rfm']['score_f'] ?? 0); ?>M<?php echo intval($cliente_stats['rfm']['score_m'] ?? 0); ?> •
-                                        <?php echo intval($cliente_stats['rfm']['recencia_dias'] ?? 0); ?> días
-                                    </div>
-                                </div>
-
-                                <!-- Tasa de Éxito -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #a855f715 0%, #9333ea15 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #a855f7;">
-                                    <div style="color: #a855f7; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">📈 Tasa de Éxito</div>
-                                    <div style="color: #c084fc; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
-                                        <?php
-                                        $pagados = intval($cliente_stats['ltv']['pedidos_pagados'] ?? 0);
-                                        $total = intval($cliente_stats['ltv']['total_pedidos'] ?? 0);
-                                        $tasa = $total > 0 ? ($pagados / $total) * 100 : 0;
-                                        echo number_format($tasa, 0) . '%';
-                                        ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        <?php echo $pagados; ?>/<?php echo $total; ?> pedidos pagados
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SECCIÓN 2: ANÁLISIS DE COMPORTAMIENTO -->
-                        <div style="margin-bottom: 30px;">
-                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
-                                🧠 Análisis de Comportamiento
-                            </h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
-
-                                <!-- Última Actividad -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #05966915 0%, #10b98115 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #059669;">
-                                    <div style="color: #059669; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">📅 Última Actividad</div>
-                                    <div style="color: #34d399; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
-                                        <?php
-                                        $dias_ultima = intval($cliente_stats['actividad']['dias_ultima_compra'] ?? 0);
-                                        if ($dias_ultima == 0) {
-                                            echo 'Hoy';
-                                        } elseif ($dias_ultima == 1) {
-                                            echo 'Ayer';
-                                        } else {
-                                            echo $dias_ultima . ' días';
-                                        }
-                                        ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        desde última compra
-                                    </div>
-                                </div>
-
-                                <!-- Tendencia de Gasto -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #ea580c15 0%, #f9731615 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #ea580c;">
-                                    <div style="color: #ea580c; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">📈 Tendencia Gasto</div>
-                                    <div style="color: #fb923c; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">
-                                        <?php
-                                        $tendencia = $cliente_stats['tendencia']['tendencia'] ?? 'estable';
-                                        $cambio = floatval($cliente_stats['tendencia']['porcentaje_cambio'] ?? 0);
-
-                                        if ($tendencia == 'creciente') {
-                                            echo '📈 +' . number_format(abs($cambio), 0) . '%';
-                                        } elseif ($tendencia == 'decreciente') {
-                                            echo '📉 -' . number_format(abs($cambio), 0) . '%';
-                                        } elseif ($tendencia == 'nuevo') {
-                                            echo '🆕 Cliente Nuevo';
-                                        } else {
-                                            echo '➡️ Estable';
-                                        }
-                                        ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        últimos 3 pedidos
-                                    </div>
-                                </div>
-
-                                <!-- Hora Preferida -->
-                                <div class="metric-card-unified" style="background: #21262d; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #3d444d;">
-                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">⏰ Hora Preferida</div>
-                                    <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem; margin-bottom: 4px;">
-                                        <?php
-                                        $hora = intval($cliente_stats['hora_preferida']['hora'] ?? 0);
-                                        if ($hora >= 6 && $hora < 12) {
-                                            echo $hora . ':00 🌅';
-                                        } elseif ($hora >= 12 && $hora < 18) {
-                                            echo $hora . ':00 ☀️';
-                                        } elseif ($hora >= 18 && $hora < 22) {
-                                            echo $hora . ':00 🌆';
-                                        } else {
-                                            echo $hora . ':00 🌙';
-                                        }
-                                        ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        <?php echo intval($cliente_stats['hora_preferida']['pedidos_en_hora'] ?? 0); ?> pedidos en esa hora
-                                    </div>
-                                </div>
-
-                                <!-- Método de Pago Preferido -->
-                                <div class="metric-card-unified" style="background: #21262d; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #3d444d;">
-                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">� Pago Preferido</div>
-                                    <div style="color: #e6edf3; font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; line-height: 1.2;">
-                                        <?php echo h($cliente_stats['metodo_preferido']['metodo_pago'] ?? 'N/A'); ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        usado <?php echo intval($cliente_stats['metodo_preferido']['veces_usado'] ?? 0); ?> veces
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SECCIÓN 3: POSICIONAMIENTO Y RENDIMIENTO -->
-                        <div style="margin-bottom: 30px;">
-                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
-                                🏆 Posicionamiento y Rendimiento
-                            </h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
-
-                                <!-- Ranking Global -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #be185d15 0%, #ec489915 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #be185d;">
-                                    <div style="color: #be185d; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">🏆 Ranking Global</div>
-                                    <div style="color: #f472b6; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
-                                        Top <?php echo number_format(100 - floatval($cliente_stats['ranking']['percentil'] ?? 0), 0); ?>%
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        Posición #<?php echo intval($cliente_stats['ranking']['posicion'] ?? 0); ?> de <?php echo intval($cliente_stats['ranking']['total_clientes'] ?? 0); ?>
-                                    </div>
-                                </div>
-
-                                <!-- Tipo de Cliente -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #fb850015 0%, #fd7e1415 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #fb8500;">
-                                    <div style="color: #fb8500; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">🎯 Tipo de Cliente</div>
-                                    <div style="color: #f0883e; font-weight: 700; font-size: 1rem; margin-bottom: 4px;">
-                                        <?php
-                                        $total_pedidos = intval($cliente_stats['ltv']['total_pedidos'] ?? 0);
-                                        $valor_total = floatval($cliente_stats['ltv']['valor_total_historico'] ?? 0);
-
-                                        if ($total_pedidos >= 5 && $valor_total >= 500000) {
-                                            echo '👑 VIP';
-                                        } elseif ($total_pedidos >= 3 || $valor_total >= 200000) {
-                                            echo '⭐ Recurrente';
-                                        } elseif ($total_pedidos == 1) {
-                                            echo '🆕 Nuevo';
-                                        } else {
-                                            echo '🔄 Activo';
-                                        }
-                                        ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        <?php
-                                        $primer_pedido = $cliente_stats['ltv']['primer_pedido'] ?? '';
-                                        if ($primer_pedido) {
-                                            $fecha_primer = new DateTime($primer_pedido);
-                                            $ahora = new DateTime();
-                                            $antiguedad = $ahora->diff($fecha_primer);
-                                            if ($antiguedad->days > 365) {
-                                                echo 'Cliente desde ' . $antiguedad->y . ' año' . ($antiguedad->y > 1 ? 's' : '');
-                                            } elseif ($antiguedad->days > 30) {
-                                                echo 'Cliente desde ' . intval($antiguedad->days / 30) . ' mes' . (intval($antiguedad->days / 30) > 1 ? 'es' : '');
-                                            } else {
-                                                echo 'Cliente desde ' . $antiguedad->days . ' día' . ($antiguedad->days > 1 ? 's' : '');
-                                            }
-                                        } else {
-                                            echo 'Cliente nuevo';
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-
-                                <!-- Tasa de Recurrencia del Sistema -->
-                                <div class="metric-card-unified" style="background: linear-gradient(135deg, #7c3aed15 0%, #8b5cf615 100%); padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #7c3aed;">
-                                    <div style="color: #7c3aed; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">� Recurrencia Sistema</div>
-                                    <div style="color: #a78bfa; font-weight: 700; font-size: 1.3rem; margin-bottom: 4px;">
-                                        <?php
-                                        $tasa_recurrencia = floatval($cliente_stats['recurrencia']['tasa_recurrencia_sistema'] ?? 0);
-                                        echo number_format($tasa_recurrencia, 1) . '%';
-                                        ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        clientes realizan compras múltiples
-                                    </div>
-                                </div>
-
-                                <!-- Tiempo Promedio de Envío -->
-                                <div class="metric-card-unified" style="background: #21262d; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #3d444d;">
-                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">� Tiempo Envío</div>
-                                    <div style="color: #e6edf3; font-weight: 600; font-size: 1.1rem; margin-bottom: 4px;">
-                                        <?php
-                                        $tiempo_promedio = floatval($cliente_stats['tiempo_procesamiento']['tiempo_promedio_envio'] ?? 0);
-                                        if ($tiempo_promedio > 0) {
-                                            echo number_format($tiempo_promedio, 1) . ' días';
-                                        } else {
-                                            echo 'N/A';
-                                        }
-                                        ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        promedio histórico
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SECCIÓN 4: PRODUCTOS Y PREFERENCIAS -->
-                        <?php if (!empty($cliente_stats['productos_favoritos'])): ?>
-                        <div style="margin-bottom: 30px;">
-                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
-                                🛍️ Productos y Preferencias
-                            </h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                                <?php foreach ($cliente_stats['productos_favoritos'] as $index => $producto): ?>
-                                <div class="metric-card-unified" style="background: #21262d; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid #3d444d;">
-                                    <div style="color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; font-weight: 600;">
-                                        <?php
-                                        if ($index == 0) echo '🥇 Producto #1';
-                                        elseif ($index == 1) echo '🥈 Producto #2';
-                                        else echo '🥉 Producto #3';
-                                        ?>
-                                    </div>
-                                    <div style="color: #e6edf3; font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; line-height: 1.3;">
-                                        <?php echo h($producto['nombre']); ?>
-                                    </div>
-                                    <div style="color: #8b949e; font-size: 0.7rem;">
-                                        <?php echo intval($producto['total_comprado']); ?> unidades • <?php echo intval($producto['veces_pedido']); ?> pedidos
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- SECCIÓN 5: INSIGHTS Y RECOMENDACIONES -->
-                        <div>
-                            <h4 style="color: #58a6ff; font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #3d444d; padding-bottom: 8px;">
-                                💡 Insights y Recomendaciones
-                            </h4>
-                            <div style="background: linear-gradient(135deg, #f7931e15 0%, #f7931e05 100%); border: 1px solid #f7931e; border-radius: 8px; padding: 18px;">
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; font-size: 0.85rem;">
-
-                                    <div style="color: #e6edf3;">
-                                        📊 <strong>Performance General:</strong>
-                                        <?php
-                                        $tasa_exito = $total > 0 ? ($pagados / $total) * 100 : 0;
-                                        if ($tasa_exito >= 80) {
-                                            echo '<span style="color: #3fb950;">Excelente cliente con alta conversión</span>';
-                                        } elseif ($tasa_exito >= 60) {
-                                            echo '<span style="color: #f0883e;">Cliente confiable con buena conversión</span>';
-                                        } else {
-                                            echo '<span style="color: #f85149;">Requiere seguimiento y atención especial</span>';
-                                        }
-                                        ?>
-                                    </div>
-
-                                    <div style="color: #e6edf3;">
-                                        🎯 <strong>Estrategia Recomendada:</strong>
-                                        <?php
-                                        $clasificacion_rfm = $cliente_stats['rfm']['clasificacion'] ?? '';
-                                        if (strpos($clasificacion_rfm, 'Champions') !== false) {
-                                            echo '<span style="color: #f79000;">Programa VIP exclusivo y beneficios premium</span>';
-                                        } elseif (strpos($clasificacion_rfm, 'Loyal') !== false) {
-                                            echo '<span style="color: #58a6ff;">Programa de fidelización y recompensas</span>';
-                                        } elseif (strpos($clasificacion_rfm, 'At Risk') !== false) {
-                                            echo '<span style="color: #f85149;">Campaña de retención urgente y ofertas especiales</span>';
-                                        } elseif (strpos($clasificacion_rfm, 'New') !== false) {
-                                            echo '<span style="color: #3fb950;">Incentivar segunda compra con descuentos</span>';
-                                        } else {
-                                            echo '<span style="color: #8b949e;">Mantener engagement con contenido relevante</span>';
-                                        }
-                                        ?>
-                                    </div>
-
-                                    <div style="color: #e6edf3;">
-                                        📈 <strong>Análisis de Tendencia:</strong>
-                                        <?php
-                                        $tendencia = $cliente_stats['tendencia']['tendencia'] ?? 'estable';
-                                        if ($tendencia == 'creciente') {
-                                            echo '<span style="color: #3fb950;">Cliente en crecimiento - potencial upselling</span>';
-                                        } elseif ($tendencia == 'decreciente') {
-                                            echo '<span style="color: #f85149;">Revisar satisfacción y ofrecer soporte</span>';
-                                        } else {
-                                            echo '<span style="color: #58a6ff;">Comportamiento estable - mantener relación</span>';
-                                        }
-                                        ?>
-                                    </div>
-
-                                    <div style="color: #e6edf3;">
-                                        ⏰ <strong>Estado de Actividad:</strong>
-                                        <?php
-                                        $dias_ultima = intval($cliente_stats['actividad']['dias_ultima_compra'] ?? 0);
-                                        if ($dias_ultima <= 30) {
-                                            echo '<span style="color: #3fb950;">Cliente muy activo - momento ideal para ofertas</span>';
-                                        } elseif ($dias_ultima <= 90) {
-                                            echo '<span style="color: #f0883e;">Cliente activo - mantener comunicación regular</span>';
-                                        } elseif ($dias_ultima <= 180) {
-                                            echo '<span style="color: #f85149;">Riesgo de inactividad - campaña de reactivación</span>';
-                                        } else {
-                                            echo '<span style="color: #6e7681;">Cliente inactivo - estrategia de recuperación</span>';
-                                        }
-                                        ?>
-                                    </div>
-
-                                    <div style="color: #e6edf3;">
-                                        🏆 <strong>Posición Competitiva:</strong>
-                                        <?php
-                                        $percentil = floatval($cliente_stats['ranking']['percentil'] ?? 0);
-                                        if ($percentil >= 90) {
-                                            echo '<span style="color: #f79000;">Top 10% - Cliente elite con máxima prioridad</span>';
-                                        } elseif ($percentil >= 75) {
-                                            echo '<span style="color: #3fb950;">Top 25% - Cliente premium con alta prioridad</span>';
-                                        } elseif ($percentil >= 50) {
-                                            echo '<span style="color: #58a6ff;">Top 50% - Cliente valioso con potencial</span>';
-                                        } else {
-                                            echo '<span style="color: #8b949e;">Gran potencial de crecimiento y desarrollo</span>';
-                                        }
-                                        ?>
-                                    </div>
-
-                                    <div style="color: #e6edf3;">
-                                        🔄 <strong>Contexto del Sistema:</strong>
-                                        <?php
-                                        $tasa_recurrencia = floatval($cliente_stats['recurrencia']['tasa_recurrencia_sistema'] ?? 0);
-                                        if ($tasa_recurrencia >= 50) {
-                                            echo '<span style="color: #3fb950;">Sistema con alta fidelidad de clientes</span>';
-                                        } elseif ($tasa_recurrencia >= 30) {
-                                            echo '<span style="color: #f0883e;">Retención promedio del mercado</span>';
-                                        } else {
-                                            echo '<span style="color: #f85149;">Oportunidad de mejorar estrategia de retención</span>';
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <?php endif; ?>
                 </div>
-
-            <?php endif; ?>
 
             <!-- ===== SISTEMA DE PESTAÑAS DE CONTEXTO ===== -->
             <div class="pestanas-contexto" style="margin-top: 30px; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; overflow: hidden;">
@@ -1925,6 +1572,10 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+            <?php endif; ?>
         </div>
     </div>
 

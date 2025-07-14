@@ -50,6 +50,9 @@ class BoldNotificationSystem {
                     'customer_name' => $pedido['nombre'],
                     'order_id' => $pedido['pedido'],
                     'amount' => number_format($pedido['monto'], 0, ',', '.'),
+                    'descuento' => number_format($pedido['descuento'] ?? 0, 0, ',', '.'),
+                    'subtotal' => number_format(($pedido['monto'] + ($pedido['descuento'] ?? 0)), 0, ',', '.'),
+                    'has_discount' => ($pedido['descuento'] ?? 0) > 0,
                     'payment_method' => $pedido['metodo_pago'],
                     'transaction_id' => $paymentData['transaction_id'] ?? 'N/A',
                     'payment_date' => date('d/m/Y H:i'),
@@ -204,7 +207,17 @@ class BoldNotificationSystem {
             $message = "🎉 *NUEVO PAGO CONFIRMADO*\n\n";
             $message .= "📦 *Pedido:* #{$pedido['pedido']}\n";
             $message .= "👤 *Cliente:* {$pedido['nombre']}\n";
-            $message .= "💰 *Monto:* $" . number_format($pedido['monto'], 0, ',', '.') . "\n";
+            
+            // Mostrar desglose si hay descuento
+            if (($pedido['descuento'] ?? 0) > 0) {
+                $subtotal = $pedido['monto'] + $pedido['descuento'];
+                $message .= "💰 *Subtotal:* $" . number_format($subtotal, 0, ',', '.') . "\n";
+                $message .= "🎁 *Descuento:* -$" . number_format($pedido['descuento'], 0, ',', '.') . "\n";
+                $message .= "✅ *Total Final:* $" . number_format($pedido['monto'], 0, ',', '.') . "\n";
+            } else {
+                $message .= "💰 *Monto:* $" . number_format($pedido['monto'], 0, ',', '.') . "\n";
+            }
+            
             $message .= "💳 *Método:* {$pedido['metodo_pago']}\n";
             $message .= "📍 *Dirección:* {$pedido['direccion']}\n";
             $message .= "📞 *Teléfono:* {$pedido['telefono']}\n";
@@ -227,7 +240,7 @@ class BoldNotificationSystem {
      */
     private function getPedidoDetails($pedidoId) {
         $stmt = $this->conn->prepare("
-            SELECT * FROM pedidos_detal
+            SELECT *, descuento FROM pedidos_detal
             WHERE id = ? OR bold_order_id = ?
         ");
         $stmt->bind_param("ss", $pedidoId, $pedidoId);
@@ -319,7 +332,14 @@ class BoldNotificationSystem {
 
                             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
                                 <p><strong>Número de Pedido:</strong> {{order_id}}</p>
+                                {{#has_discount}}
+                                <p><strong>Subtotal:</strong> ${{subtotal}} COP</p>
+                                <p style="color: #28a745;"><strong>Descuento:</strong> -${{descuento}} COP</p>
+                                <p style="border-top: 1px solid #ddd; padding-top: 10px;"><strong>Total Pagado:</strong> ${{amount}} COP</p>
+                                {{/has_discount}}
+                                {{^has_discount}}
                                 <p><strong>Monto Pagado:</strong> ${{amount}} COP</p>
+                                {{/has_discount}}
                                 <p><strong>Método de Pago:</strong> {{payment_method}}</p>
                                 <p><strong>ID de Transacción:</strong> {{transaction_id}}</p>
                                 <p><strong>Fecha de Pago:</strong> {{payment_date}}</p>

@@ -359,7 +359,8 @@ html {
 /* =============================================== */
 
 .mobile-products-container {
-    display: none; /* Hidden by default, shown on mobile */
+    display: none;
+    /* Hidden by default, shown on mobile */
 }
 
 .mobile-product-card {
@@ -561,9 +562,17 @@ html {
 }
 
 @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 /* =============================================== */
@@ -662,9 +671,6 @@ html {
 /*                 PRINT SECTIONS                  */
 /* =============================================== */
 
-.estadisticas-unificadas {
-    transition: var(--transition-slow);
-}
 
 .print-section {
     text-align: center;
@@ -818,16 +824,6 @@ html {
     transform: translateY(0);
 }
 
-.metric-card-unified {
-    position: relative;
-    transition: var(--transition-slow);
-    cursor: default;
-}
-
-.metric-card-unified:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
 
 .archivo-item {
     transition: var(--transition-slow);
@@ -1121,7 +1117,8 @@ html {
         font-size: 1rem !important;
         margin-bottom: 8px !important;
         letter-spacing: 0.2px;
-        color: #58a6ff; /* Better contrast on mobile */
+        color: #58a6ff;
+        /* Better contrast on mobile */
     }
 
     .info-card p {
@@ -1136,7 +1133,8 @@ html {
     }
 
     .productos-table {
-        display: none; /* Hide table on mobile */
+        display: none;
+        /* Hide table on mobile */
     }
 
     .mobile-products-container {
@@ -1189,7 +1187,8 @@ html {
     }
 
     /* Buttons mobile - Consolidated */
-    .btn, .btn-print {
+    .btn,
+    .btn-print {
         padding: 15px 25px;
         font-size: 1rem;
         border-radius: var(--radius-lg);
@@ -1204,7 +1203,8 @@ html {
     }
 
     /* Touch feedback effect */
-    .btn::before, .btn-print::before {
+    .btn::before,
+    .btn-print::before {
         content: '';
         position: absolute;
         top: 50%;
@@ -1217,7 +1217,8 @@ html {
         transition: width 0.3s, height 0.3s;
     }
 
-    .btn:active::before, .btn-print:active::before {
+    .btn:active::before,
+    .btn-print:active::before {
         width: 300px;
         height: 300px;
     }
@@ -1232,7 +1233,8 @@ html {
         width: 100%;
         max-width: 250px;
         padding: 15px;
-        font-size: 16px; /* Prevent zoom on iOS */
+        font-size: 16px;
+        /* Prevent zoom on iOS */
         border-radius: var(--radius-lg);
     }
 
@@ -1273,7 +1275,8 @@ html {
     .modal-actions button {
         width: 100% !important;
         min-height: var(--mobile-touch-target);
-        font-size: 16px; /* Prevent zoom on iOS */
+        font-size: 16px;
+        /* Prevent zoom on iOS */
         border-radius: var(--radius-lg);
     }
 
@@ -1284,11 +1287,15 @@ html {
     }
 
     /* Form inputs mobile optimization - Consolidated */
-    input, select, textarea {
-        font-size: 16px !important; /* Prevent zoom on iOS */
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+        /* Prevent zoom on iOS */
     }
 
-    input[type="file"], select {
+    input[type="file"],
+    select {
         padding: 12px !important;
         border-radius: var(--radius-lg) !important;
         min-height: var(--mobile-touch-target);
@@ -1329,16 +1336,21 @@ html {
         user-select: none;
     }
 
-    input, textarea, [contenteditable] {
+    input,
+    textarea,
+    [contenteditable] {
         -webkit-user-select: text;
         user-select: text;
     }
 
-    button, [role="button"], a {
+    button,
+    [role="button"],
+    a {
         touch-action: manipulation;
     }
 
-    body, html {
+    body,
+    html {
         overflow-x: hidden;
     }
 
@@ -1416,7 +1428,8 @@ html {
         border-radius: 4px !important;
     }
 
-    .btn, .btn-print {
+    .btn,
+    .btn-print {
         padding: 12px 20px;
         font-size: 0.9rem;
     }

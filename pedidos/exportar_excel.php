@@ -175,6 +175,7 @@ echo "\xEF\xBB\xBF";
                 <th>Ciudad</th>
                 <th>Dirección</th>
                 <th>Productos</th>
+                <th>Descuento</th>
                 <th>Total</th>
                 <th>Método de Pago</th>
                 <th>Estado</th>
@@ -196,6 +197,7 @@ echo "\xEF\xBB\xBF";
                 <td class="text"><?php echo htmlspecialchars(cleanForExcel($pedido['ciudad'])); ?></td>
                 <td class="text"><?php echo htmlspecialchars(cleanForExcel($pedido['direccion'])); ?></td>
                 <td class="text"><?php echo htmlspecialchars(cleanForExcel($pedido['productos'])); ?></td>
+                <td class="number"><?php echo number_format($pedido['descuento'] ?? 0, 0, ',', '.'); ?></td>
                 <td class="number"><?php echo number_format($pedido['monto'], 0, ',', '.'); ?></td>
                 <td class="text"><?php echo htmlspecialchars($pedido['metodo_pago']); ?></td>
                 <td class="text"><?php echo getEstadoTexto($pedido); ?></td>
@@ -210,8 +212,13 @@ echo "\xEF\xBB\xBF";
             <!-- Fila de totales -->
             <tr class="total-row">
                 <td colspan="8" style="text-align: right;">TOTALES:</td>
+                <td class="number"><?php 
+                    $total_descuentos = 0;
+                    foreach($pedidos as $p) { $total_descuentos += ($p['descuento'] ?? 0); }
+                    echo number_format($total_descuentos, 0, ',', '.'); 
+                ?></td>
                 <td class="number"><?php echo number_format($monto_total_real, 0, ',', '.'); ?></td>
-                <td colspan="7">Total de pedidos: <?php echo number_format($total_pedidos); ?></td>
+                <td colspan="6">Total de pedidos: <?php echo number_format($total_pedidos); ?></td>
             </tr>
         </tbody>
     </table>

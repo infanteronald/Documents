@@ -19,9 +19,10 @@ class Pedido
      */
     public function crear($datos)
     {
-        $stmt = $this->conn->prepare("INSERT INTO pedidos_detal (cliente, telefono, direccion, total, fecha, estado) VALUES (?, ?, ?, ?, NOW(), ?)");
+        $stmt = $this->conn->prepare("INSERT INTO pedidos_detal (nombre, telefono, direccion, monto, descuento, fecha, estado) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
         $estado = "pendiente";
-        $stmt->bind_param("sssds", $datos["cliente"], $datos["telefono"], $datos["direccion"], $datos["total"], $estado);
+        $descuento = $datos["descuento"] ?? 0;
+        $stmt->bind_param("sssdds", $datos["nombre"], $datos["telefono"], $datos["direccion"], $datos["monto"], $descuento, $estado);
 
         if ($stmt->execute()) {
             return $this->conn->insert_id;
@@ -207,7 +208,39 @@ class Pedido
         $result = $this->conn->query("SELECT COUNT(*) as hoy FROM pedidos_detal WHERE DATE(fecha) = CURDATE() AND estado != 'archivado'");
         $stats['hoy'] = $result->fetch_assoc()['hoy'];
 
+        // Estadísticas de descuentos
+        $result = $this->conn->query("SELECT SUM(monto) as ventas_netas, SUM(IFNULL(descuento, 0)) as descuentos_totales FROM pedidos_detal WHERE estado != 'archivado'");
+        $ventas_data = $result->fetch_assoc();
+        $stats['ventas_netas'] = $ventas_data['ventas_netas'] ?? 0;
+        $stats['descuentos_totales'] = $ventas_data['descuentos_totales'] ?? 0;
+        $stats['ventas_brutas'] = $stats['ventas_netas'] + $stats['descuentos_totales'];
+
         return $stats;
+    }
+
+    /**
+     * Actualizar descuento de un pedido
+     */
+    public function actualizarDescuento($id, $descuento)
+    {
+        $stmt = $this->conn->prepare("UPDATE pedidos_detal SET descuento = ? WHERE id = ?");
+        $stmt->bind_param("di", $descuento, $id);
+
+        return $stmt->execute();
+    }
+
+    /**
+     * Obtener descuento de un pedido
+     */
+    public function obtenerDescuento($id)
+    {
+        $stmt = $this->conn->prepare("SELECT descuento FROM pedidos_detal WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $row = $result->fetch_assoc();
+        return $row ? $row['descuento'] : 0;
     }
 
     /**
@@ -233,7 +266,7 @@ class Pedido
         }
 
         if (!empty($buscar)) {
-            $where .= " AND (cliente LIKE \"%$buscar%\" OR telefono LIKE \"%$buscar%\" OR direccion LIKE \"%$buscar%\")";
+            $where .= " AND (nombre LIKE \"%$buscar%\" OR telefono LIKE \"%$buscar%\" OR direccion LIKE \"%$buscar%\" OR correo LIKE \"%$buscar%\")";
         }
 
         return $where;

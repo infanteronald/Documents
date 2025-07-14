@@ -193,6 +193,7 @@ try {
                         <th class="col-fecha">📅 Fecha</th>
                         <th class="col-cliente">👤 Cliente</th>
                         <th class="col-monto">💰 Monto</th>
+                        <th class="col-ver">👁️ Acciones</th>
                         <th class="col-pagado">💳 Pagado</th>
                         <th class="col-enviado">🚚 Enviado</th>
                         <th class="col-comprobante">📄 Comprobante</th>
@@ -205,7 +206,7 @@ try {
                 <tbody>
                     <?php if(count($pedidos) == 0): ?>
                         <tr>
-                            <td colspan="11" class="tabla-vacia">
+                            <td colspan="12" class="tabla-vacia">
                                 <div class="mensaje-vacio">
                                     <div class="icono-vacio">📭</div>
                                     <div class="titulo-vacio">No hay pedidos para este filtro</div>
@@ -248,9 +249,32 @@ try {
 
                                 <!-- Monto -->
                                 <td class="col-monto">
-                                    <span class="valor-monto">$<?php echo number_format($p['monto'], 0, ',', '.'); ?></span>
+                                    <?php if ($p['descuento'] > 0): ?>
+                                        <div class="monto-con-descuento">
+                                            <?php 
+                                            // Calcular subtotal: usar monto_productos si existe, sino calcular desde monto + descuento
+                                            $subtotal = ($p['monto_productos'] > 0) ? $p['monto_productos'] : $p['monto'] + $p['descuento'];
+                                            ?>
+                                            <div class="subtotal-pedido">$<?php echo number_format($subtotal, 0, ',', '.'); ?></div>
+                                            <div class="descuento-pedido">-$<?php echo number_format($p['descuento'], 0, ',', '.'); ?></div>
+                                            <div class="total-pedido">$<?php echo number_format($p['monto'], 0, ',', '.'); ?></div>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="valor-monto">$<?php echo number_format($p['monto'], 0, ',', '.'); ?></span>
+                                    <?php endif; ?>
                                 </td>
 
+                                <!-- Acciones -->
+                                <td class="col-ver">
+                                    <div class="botones-acciones">
+                                        <button class="btn-accion-tabla btn-ver-productos" onclick="toggleProductos(<?php echo $p['id']; ?>)" title="Ver productos del pedido">
+                                            👁️
+                                        </button>
+                                        <button class="btn-accion-tabla btn-configurar" onclick="abrirDetallePopup(<?php echo $p['id']; ?>)" title="Configurar pedido">
+                                            ⚙️
+                                        </button>
+                                    </div>
+                                </td>
 
                                 <!-- Status: Pagado -->
                                 <td class="col-pagado" onclick="toggleEstadoPago(<?php echo $p['id']; ?>, <?php echo $p['pagado']; ?>, '<?php echo htmlspecialchars($p['comprobante']); ?>', '<?php echo $p['tiene_comprobante']; ?>', '<?php echo htmlspecialchars($p['metodo_pago']); ?>')" style="cursor: pointer;" title="<?php echo $p['pagado'] == '1' ? 'Click para marcar como NO pagado' : 'Click para subir comprobante'; ?>">
@@ -1289,10 +1313,10 @@ function abrirModalGuia(pedidoId, guia, tieneGuia, enviado, tienda) {
                 <div class="modal-detalle" style="max-width: 500px;">
                     <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
                     <h3 style="margin-bottom: 20px; color: var(--vscode-text);">🏪 Entrega en Tienda - Pedido #${pedidoId}</h3>
-                    
+
                     <div style="text-align: center; margin-bottom: 20px;">
                         <div style="background: var(--apple-green-light); padding: 20px; border-radius: 12px; border: 1px solid var(--apple-green); margin-bottom: 15px;">
-                            <img src="https://sequoiaspeed.com.co/pedidos/logo.jpeg" alt="Sequoia Speed Logo" 
+                            <img src="https://sequoiaspeed.com.co/pedidos/logo.jpeg" alt="Sequoia Speed Logo"
                                  style="max-width: 150px; max-height: 100px; border-radius: 8px; margin-bottom: 15px;">
                             <div style="font-size: 1.2rem; font-weight: 600; color: var(--apple-green); margin-bottom: 8px;">
                                 ✅ Pedido entregado en tienda física
@@ -1301,7 +1325,7 @@ function abrirModalGuia(pedidoId, guia, tieneGuia, enviado, tienda) {
                                 Este pedido fue entregado directamente en nuestra tienda física, por lo que no requiere guía de envío.
                             </div>
                         </div>
-                        
+
                         <div style="background: var(--vscode-sidebar); padding: 15px; border-radius: 8px;">
                             <div style="display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 8px;">
                                 <span style="color: var(--apple-green);">🏪</span>
@@ -1313,7 +1337,7 @@ function abrirModalGuia(pedidoId, guia, tieneGuia, enviado, tienda) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-accion" style="width: 100%; padding: 12px;">
                         Cerrar
                     </button>
@@ -1497,7 +1521,7 @@ function toggleProductos(pedidoId) {
         nuevaFila.id = `productos-${pedidoId}`;
         nuevaFila.className = 'fila-productos';
         nuevaFila.innerHTML = `
-            <td colspan="11" class="productos-container">
+            <td colspan="12" class="productos-container">
                 <div class="productos-loading">
                     <div class="spinner"></div>
                     <span>Cargando productos...</span>
@@ -1538,100 +1562,176 @@ function cargarProductosPedido(pedidoId) {
     fetch(`get_productos_pedido.php?id=${pedidoId}`)
         .then(response => response.json())
         .then(data => {
-            if (data.success && data.productos) {
-                // Calcular totales
-                const total = data.productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0);
+            if (data.success && data.productos && data.cliente) {
+                console.log('Datos completos recibidos:', data);
+                
+                const subtotal = data.subtotal || 0;
+                const descuento = data.descuento || 0;
+                const totalFinal = data.total_final || subtotal;
                 const cantidadTotal = data.productos.reduce((sum, p) => sum + parseInt(p.cantidad), 0);
+                const cliente = data.cliente;
+
+                // Función para formatear fecha
+                function formatearFecha(fecha) {
+                    if (!fecha || fecha === 'No disponible') return 'No disponible';
+                    try {
+                        const d = new Date(fecha);
+                        return d.toLocaleDateString('es-CO', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } catch (e) {
+                        return fecha;
+                    }
+                }
+
+                // Función para estado de pedido
+                function obtenerEstadoPedido(cliente) {
+                    if (cliente.anulado) return { texto: 'Anulado', clase: 'estado-anulado', icono: '❌' };
+                    if (cliente.enviado) return { texto: 'Enviado', clase: 'estado-enviado', icono: '🚚' };
+                    if (cliente.pagado) return { texto: 'Pago Confirmado', clase: 'estado-pagado', icono: '✅' };
+                    return { texto: 'Pago Pendiente', clase: 'estado-pendiente', icono: '⏳' };
+                }
+
+                const estado = obtenerEstadoPedido(cliente);
 
                 let html = `
-                    <div class="carrito-moderno">
-                        <div class="carrito-header-moderno">
-                            <div class="carrito-info">
-                                <div class="carrito-titulo-principal">
-                                    <span class="carrito-icono">🛒</span>
-                                    <span>Detalles del Pedido #${pedidoId}</span>
-                                </div>
-                                <div class="carrito-estadisticas">
-                                    <div class="stat-item">
-                                        <span class="stat-numero">${data.productos.length}</span>
-                                        <span class="stat-label">productos</span>
-                                    </div>
-                                    <div class="stat-divider">•</div>
-                                    <div class="stat-item">
-                                        <span class="stat-numero">${cantidadTotal}</span>
-                                        <span class="stat-label">unidades</span>
-                                    </div>
+                    <div class="modal-pedido-completo">
+                        <!-- HEADER DEL MODAL -->
+                        <div class="modal-header">
+                            <div class="modal-titulo">
+                                <span class="pedido-icono">📋</span>
+                                <span class="pedido-numero">Pedido #${pedidoId}</span>
+                                <div class="pedido-estado ${estado.clase}">
+                                    ${estado.icono} ${estado.texto}
                                 </div>
                             </div>
-                            <button class="btn-cerrar-moderno" onclick="toggleProductos(${pedidoId})" title="Cerrar detalles">
-                                <span class="cerrar-icono">✕</span>
-                            </button>
+                            <button class="btn-cerrar-modal" onclick="toggleProductos(${pedidoId})" title="Cerrar">✕</button>
                         </div>
 
-                        <div class="productos-grid">
+                        <!-- INFORMACIÓN DEL CLIENTE -->
+                        <div class="seccion-cliente">
+                            <div class="seccion-titulo">
+                                <span class="seccion-icono">👤</span>
+                                <span>Información del Cliente</span>
+                            </div>
+                            <div class="cliente-grid">
+                                <div class="cliente-campo">
+                                    <span class="campo-label">Nombre:</span>
+                                    <span class="campo-valor">${cliente.nombre}</span>
+                                </div>
+                                <div class="cliente-campo">
+                                    <span class="campo-label">Teléfono:</span>
+                                    <span class="campo-valor">
+                                        <a href="https://wa.me/57${cliente.telefono}" target="_blank" class="telefono-link">
+                                            📱 ${cliente.telefono}
+                                        </a>
+                                    </span>
+                                </div>
+                                <div class="cliente-campo">
+                                    <span class="campo-label">Email:</span>
+                                    <span class="campo-valor">${cliente.email}</span>
+                                </div>
+                                <div class="cliente-campo">
+                                    <span class="campo-label">Ciudad:</span>
+                                    <span class="campo-valor">${cliente.ciudad}</span>
+                                </div>
+                                <div class="cliente-campo">
+                                    <span class="campo-label">Barrio:</span>
+                                    <span class="campo-valor">${cliente.barrio}</span>
+                                </div>
+                                <div class="cliente-campo">
+                                    <span class="campo-label">Dirección:</span>
+                                    <span class="campo-valor">${cliente.direccion}</span>
+                                </div>
+                                <div class="cliente-campo">
+                                    <span class="campo-label">Método de Pago:</span>
+                                    <span class="campo-valor">${cliente.metodo_pago}</span>
+                                </div>
+                                <div class="cliente-campo">
+                                    <span class="campo-label">Fecha del Pedido:</span>
+                                    <span class="campo-valor">${formatearFecha(cliente.fecha_pedido)}</span>
+                                </div>
+                                ${cliente.nota_interna ? `
+                                <div class="cliente-campo nota-campo">
+                                    <span class="campo-label">Nota Interna:</span>
+                                    <span class="campo-valor">${cliente.nota_interna}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <!-- PRODUCTOS DEL PEDIDO -->
+                        <div class="seccion-productos">
+                            <div class="seccion-titulo">
+                                <span class="seccion-icono">🛍️</span>
+                                <span>Productos del Pedido (${data.productos.length} productos • ${cantidadTotal} unidades)</span>
+                            </div>
+                            <div class="productos-tabla">
+                                <div class="tabla-header">
+                                    <div class="col-producto">Producto</div>
+                                    <div class="col-talla">Talla</div>
+                                    <div class="col-precio">Precio Unit.</div>
+                                    <div class="col-cantidad">Cant.</div>
+                                    <div class="col-subtotal">Subtotal</div>
+                                </div>
                 `;
 
                 data.productos.forEach((producto, index) => {
-                    const subtotal = producto.cantidad * producto.precio;
-                    const animationDelay = index * 0.1;
-
+                    const subtotalProducto = producto.cantidad * producto.precio;
+                    
                     html += `
-                        <div class="producto-card" style="animation-delay: ${animationDelay}s">
-                            <div class="producto-card-header">
-                                <div class="producto-numero">#${index + 1}</div>
-                                <div class="producto-badge">
-                                    <span class="badge-cantidad">${producto.cantidad}x</span>
+                        <div class="tabla-fila">
+                            <div class="col-producto">
+                                <div class="producto-info">
+                                    <span class="producto-numero">#${index + 1}</span>
+                                    <span class="producto-nombre">${producto.nombre}</span>
                                 </div>
                             </div>
-
-                            <div class="producto-card-body">
-                                <h4 class="producto-nombre-moderno">${producto.nombre}</h4>
-
-                                <div class="producto-precios">
-                                    <div class="precio-unitario">
-                                        <span class="precio-label">Precio unitario</span>
-                                        <span class="precio-valor">$${Number(producto.precio).toLocaleString()}</span>
-                                    </div>
-                                    <div class="precio-total">
-                                        <span class="precio-label">Subtotal</span>
-                                        <span class="precio-valor precio-destacado">$${subtotal.toLocaleString()}</span>
-                                    </div>
-                                </div>
+                            <div class="col-talla">
+                                ${producto.talla && producto.talla.trim() ? 
+                                    `<span class="talla-badge">${producto.talla}</span>` : 
+                                    '<span class="sin-talla">-</span>'
+                                }
                             </div>
-
-                            <div class="producto-card-footer">
-                                <div class="producto-indicador">
-                                    <div class="indicador-barra" style="width: ${(subtotal / total) * 100}%"></div>
-                                </div>
-                                <div class="producto-porcentaje">
-                                    ${((subtotal / total) * 100).toFixed(1)}% del total
-                                </div>
+                            <div class="col-precio">$${Number(producto.precio).toLocaleString()}</div>
+                            <div class="col-cantidad">
+                                <span class="cantidad-badge">${producto.cantidad}</span>
+                            </div>
+                            <div class="col-subtotal">
+                                <span class="subtotal-valor">$${subtotalProducto.toLocaleString()}</span>
                             </div>
                         </div>
                     `;
                 });
 
                 html += `
+                            </div>
                         </div>
 
-                        <div class="carrito-resumen-moderno">
-                            <div class="resumen-gradient">
-                                <div class="resumen-contenido">
-                                    <div class="resumen-items">
-                                        <div class="resumen-item">
-                                            <span class="resumen-icono">📦</span>
-                                            <span class="resumen-texto">Total productos: ${data.productos.length}</span>
-                                        </div>
-                                        <div class="resumen-item">
-                                            <span class="resumen-icono">🔢</span>
-                                            <span class="resumen-texto">Total unidades: ${cantidadTotal}</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="resumen-total">
-                                        <div class="total-label">Total del Pedido</div>
-                                        <div class="total-valor">$${total.toLocaleString()}</div>
-                                    </div>
+                        <!-- RESUMEN FINANCIERO -->
+                        <div class="seccion-resumen">
+                            <div class="seccion-titulo">
+                                <span class="seccion-icono">💰</span>
+                                <span>Resumen Financiero</span>
+                            </div>
+                            <div class="resumen-financiero">
+                                <div class="resumen-linea">
+                                    <span class="resumen-label">Subtotal productos:</span>
+                                    <span class="resumen-valor">$${subtotal.toLocaleString()}</span>
+                                </div>
+                                ${descuento > 0 ? `
+                                <div class="resumen-linea descuento-linea">
+                                    <span class="resumen-label">Descuento aplicado:</span>
+                                    <span class="resumen-valor descuento-valor">-$${descuento.toLocaleString()}</span>
+                                </div>
+                                ` : ''}
+                                <div class="resumen-linea total-linea">
+                                    <span class="resumen-label">Total final:</span>
+                                    <span class="resumen-valor total-valor">$${totalFinal.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -1951,9 +2051,9 @@ function abrirModalTienda(pedidoId, tienda) {
         const modal = document.createElement('div');
         modal.className = 'modal-detalle-bg';
         modal.setAttribute('data-pedido-id', pedidoId);
-        
+
         let contenidoModal = '';
-        
+
         if (tienda == '1') {
             // Ya está entregado en tienda
             contenidoModal = `
@@ -1982,7 +2082,7 @@ function abrirModalTienda(pedidoId, tienda) {
                 <div class="modal-detalle" style="max-width: 450px;">
                     <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
                     <h3 style="margin-bottom: 20px; color: var(--vscode-text);">🏪 Confirmar Entrega en Tienda - Pedido #${pedidoId}</h3>
-                    
+
                     <div style="background: var(--apple-orange-light); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--apple-orange);">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                             <span style="font-size: 1.2rem;">⚠️</span>
@@ -1997,13 +2097,13 @@ function abrirModalTienda(pedidoId, tienda) {
                             <li>🏪 <strong>Entregado en Tienda</strong> (tienda = 1)</li>
                         </ul>
                     </div>
-                    
+
                     <div style="text-align: center; margin-bottom: 20px;">
                         <div style="font-size: 1.1rem; margin-bottom: 10px;">
                             ¿Confirmas que el pedido fue entregado físicamente en la tienda?
                         </div>
                     </div>
-                    
+
                     <div style="display: flex; gap: 10px;">
                         <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-secondary" style="flex: 1; padding: 12px;">
                             ❌ Cancelar
@@ -2015,10 +2115,10 @@ function abrirModalTienda(pedidoId, tienda) {
                 </div>
             `;
         }
-        
+
         modal.innerHTML = contenidoModal;
         document.body.appendChild(modal);
-        
+
         // Mostrar modal con animación
         requestAnimationFrame(() => {
             modal.style.display = 'flex';
@@ -2028,7 +2128,7 @@ function abrirModalTienda(pedidoId, tienda) {
                 modal.style.opacity = '1';
             });
         });
-        
+
     } catch (error) {
         console.error('Error abriendo modal de tienda:', error);
         mostrarNotificacion('❌ Error al abrir modal de entrega en tienda', 'error');
@@ -2039,12 +2139,12 @@ function abrirModalTienda(pedidoId, tienda) {
 function confirmarEntregaTienda(pedidoId) {
     const modal = document.querySelector(`[data-pedido-id="${pedidoId}"]`);
     const button = modal.querySelector('button[onclick*="confirmarEntregaTienda"]');
-    
+
     // Cambiar estado del botón
     button.disabled = true;
     button.innerHTML = '⏳ Procesando...';
     button.style.opacity = '0.7';
-    
+
     fetch('entregar_tienda.php', {
         method: 'POST',
         headers: {
@@ -2082,16 +2182,16 @@ function abrirModalAnular(pedidoId, anulado, nombreCliente) {
         const modal = document.createElement('div');
         modal.className = 'modal-detalle-bg';
         modal.setAttribute('data-pedido-id', pedidoId);
-        
+
         let contenidoModal = '';
-        
+
         if (anulado == '1') {
             // Pedido ya está anulado - opción para restaurar
             contenidoModal = `
                 <div class="modal-detalle" style="max-width: 450px;">
                     <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
                     <h3 style="margin-bottom: 20px; color: var(--vscode-text);">❌ Pedido Anulado - #${pedidoId}</h3>
-                    
+
                     <div style="text-align: center; margin-bottom: 20px;">
                         <div style="background: var(--apple-red-light); padding: 20px; border-radius: 12px; border: 1px solid var(--apple-red); margin-bottom: 15px;">
                             <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
@@ -2106,7 +2206,7 @@ function abrirModalAnular(pedidoId, anulado, nombreCliente) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="display: flex; gap: 10px;">
                         <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-secondary" style="flex: 1; padding: 12px;">
                             Cerrar
@@ -2123,7 +2223,7 @@ function abrirModalAnular(pedidoId, anulado, nombreCliente) {
                 <div class="modal-detalle" style="max-width: 450px;">
                     <button class="cerrar-modal" onclick="this.closest('.modal-detalle-bg').remove()">×</button>
                     <h3 style="margin-bottom: 20px; color: var(--vscode-text);">❌ Anular Pedido #${pedidoId}</h3>
-                    
+
                     <div style="background: var(--apple-red-light); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--apple-red);">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                             <span style="font-size: 1.2rem;">⚠️</span>
@@ -2139,7 +2239,7 @@ function abrirModalAnular(pedidoId, anulado, nombreCliente) {
                             <li>📊 <strong>No contará en estadísticas de ventas</strong></li>
                         </ul>
                     </div>
-                    
+
                     <div style="text-align: center; margin-bottom: 20px;">
                         <div style="font-size: 1.1rem; margin-bottom: 8px;">
                             Cliente: <strong>${nombreCliente}</strong>
@@ -2148,7 +2248,7 @@ function abrirModalAnular(pedidoId, anulado, nombreCliente) {
                             ¿Confirmas que deseas anular este pedido?
                         </div>
                     </div>
-                    
+
                     <div style="display: flex; gap: 10px;">
                         <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-secondary" style="flex: 1; padding: 12px;">
                             ❌ Cancelar
@@ -2160,10 +2260,10 @@ function abrirModalAnular(pedidoId, anulado, nombreCliente) {
                 </div>
             `;
         }
-        
+
         modal.innerHTML = contenidoModal;
         document.body.appendChild(modal);
-        
+
         // Mostrar modal con animación
         requestAnimationFrame(() => {
             modal.style.display = 'flex';
@@ -2173,7 +2273,7 @@ function abrirModalAnular(pedidoId, anulado, nombreCliente) {
                 modal.style.opacity = '1';
             });
         });
-        
+
     } catch (error) {
         console.error('Error abriendo modal de anular:', error);
         mostrarNotificacion('❌ Error al abrir modal de anulación', 'error');
@@ -2184,17 +2284,17 @@ function abrirModalAnular(pedidoId, anulado, nombreCliente) {
 function confirmarAnularPedido(pedidoId) {
     const modal = document.querySelector(`[data-pedido-id="${pedidoId}"]`);
     const button = modal.querySelector('button[onclick*="confirmarAnularPedido"]');
-    
+
     // Cambiar estado del botón
     button.disabled = true;
     button.innerHTML = '⏳ Anulando...';
     button.style.opacity = '0.7';
-    
+
     // Usar la misma lógica que actualizar_estado.php
     const formData = new FormData();
     formData.append('id', pedidoId);
     formData.append('estado', 'anulado');
-    
+
     fetch('actualizar_estado.php', {
         method: 'POST',
         body: formData
@@ -2225,17 +2325,17 @@ function confirmarAnularPedido(pedidoId) {
 function restaurarPedido(pedidoId) {
     const modal = document.querySelector(`[data-pedido-id="${pedidoId}"]`);
     const button = modal.querySelector('button[onclick*="restaurarPedido"]');
-    
+
     // Cambiar estado del botón
     button.disabled = true;
     button.innerHTML = '⏳ Restaurando...';
     button.style.opacity = '0.7';
-    
+
     // Restaurar a estado pendiente
     const formData = new FormData();
     formData.append('id', pedidoId);
     formData.append('estado', 'pendiente');
-    
+
     fetch('actualizar_estado.php', {
         method: 'POST',
         body: formData
@@ -2266,16 +2366,16 @@ function restaurarPedido(pedidoId) {
 function toggleExportMenu(button) {
     const dropdown = button.closest('.export-dropdown');
     const isActive = dropdown.classList.contains('active');
-    
+
     // Cerrar todos los menús desplegables abiertos
     document.querySelectorAll('.export-dropdown.active').forEach(menu => {
         menu.classList.remove('active');
     });
-    
+
     // Toggle el menú actual
     if (!isActive) {
         dropdown.classList.add('active');
-        
+
         // Cerrar el menú si se hace clic fuera de él
         document.addEventListener('click', function closeMenu(e) {
             if (!dropdown.contains(e.target)) {
@@ -2289,12 +2389,12 @@ function toggleExportMenu(button) {
 function exportarExcel() {
     // Obtener parámetros actuales de la URL
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     // Construir URL para exportar Excel
     const exportUrl = 'exportar_excel.php?' + urlParams.toString();
-    
+
     mostrarNotificacion('📊 Generando archivo Excel...', 'info');
-    
+
     // Crear un enlace temporal para descargar
     const link = document.createElement('a');
     link.href = exportUrl;
@@ -2302,12 +2402,12 @@ function exportarExcel() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     // Cerrar el menú desplegable
     document.querySelectorAll('.export-dropdown.active').forEach(menu => {
         menu.classList.remove('active');
     });
-    
+
     setTimeout(() => {
         mostrarNotificacion('✅ Archivo Excel descargado', 'success');
     }, 1000);
@@ -2316,20 +2416,20 @@ function exportarExcel() {
 function exportarPDF() {
     // Obtener parámetros actuales de la URL
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     // Construir URL para exportar PDF
     const exportUrl = 'exportar_pdf.php?' + urlParams.toString();
-    
+
     mostrarNotificacion('📄 Generando archivo PDF...', 'info');
-    
+
     // Abrir en nueva ventana para PDF
     window.open(exportUrl, '_blank');
-    
+
     // Cerrar el menú desplegable
     document.querySelectorAll('.export-dropdown.active').forEach(menu => {
         menu.classList.remove('active');
     });
-    
+
     setTimeout(() => {
         mostrarNotificacion('✅ PDF generado', 'success');
     }, 1000);
@@ -2342,6 +2442,25 @@ document.addEventListener('DOMContentLoaded', inicializarMobile);
 window.addEventListener('orientationchange', function() {
     setTimeout(inicializarMobile, 100);
 });
+
+// ============================================
+// FUNCIONES PARA MODAL DE DETALLE
+// ============================================
+
+// Función para abrir detalle en popup
+function abrirDetallePopup(pedidoId) {
+    const url = `ver_detalle_pedido.php?id=${pedidoId}`;
+
+    // Calcular posición centrada
+    const ancho = 900;
+    const alto = 650;
+    const left = (screen.width - ancho) / 2;
+    const top = (screen.height - alto) / 2;
+
+    const opciones = `width=${ancho},height=${alto},left=${left},top=${top},scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no,directories=no,fullscreen=no`;
+
+    window.open(url, `detalle_pedido_${pedidoId}`, opciones);
+}
 
 </script>
 

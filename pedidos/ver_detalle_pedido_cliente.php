@@ -734,8 +734,19 @@ if ($id && $id > 0) {
                         </div>
                         <div class="total-section">
                             <div class="total-card">
-                                <h3>Total del Pedido</h3>
-                                <div class="amount">$<?php echo number_format($total_productos, 0, ',', '.'); ?></div>
+                                <?php if (isset($p['descuento']) && $p['descuento'] > 0): ?>
+                                    <h3>Resumen de Totales</h3>
+                                    <div style="font-size: 1.1rem; margin-bottom: 8px;">
+                                        Subtotal: $<?php echo number_format($total_productos, 0, ',', '.'); ?>
+                                    </div>
+                                    <div style="font-size: 1.1rem; margin-bottom: 8px; color: #238636;">
+                                        Descuento: -$<?php echo number_format($p['descuento'], 0, ',', '.'); ?>
+                                    </div>
+                                    <div class="amount">$<?php echo number_format($total_productos - $p['descuento'], 0, ',', '.'); ?></div>
+                                <?php else: ?>
+                                    <h3>Total del Pedido</h3>
+                                    <div class="amount">$<?php echo number_format($total_productos, 0, ',', '.'); ?></div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php else: ?>

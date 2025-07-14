@@ -25,7 +25,7 @@ function processPaymentCallback()
         BoldUnifiedLogger::logActivity($order_id, 'callback_received', "Status: $status, Transaction: $transaction_id", 'info');
 
         // Buscar pedido en base de datos
-        $sql = "SELECT * FROM pedidos_detal WHERE bold_order_id = ? OR id = ?";
+        $sql = "SELECT *, descuento FROM pedidos_detal WHERE bold_order_id = ? OR id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->execute([$order_id, $order_id]);
         $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -116,8 +116,24 @@ function sendConfirmationEmail($pedido, $transaction_id)
 
             <ul>
                 <li><strong>Pedido:</strong> #{$pedido['id']}</li>
-                <li><strong>Transacción:</strong> {$transaction_id}</li>
-                <li><strong>Total:</strong> $" . number_format($pedido['total'], 0, ',', '.') . "</li>
+                <li><strong>Transacción:</strong> {$transaction_id}</li>";
+                
+                // Mostrar desglose con descuento si aplica
+                $descuento = $pedido['descuento'] ?? 0;
+                $monto_final = $pedido['monto'] ?? 0;
+                
+                if ($descuento > 0) {
+                    $subtotal = $monto_final + $descuento;
+                    $email_body .= "
+                    <li><strong>Subtotal:</strong> $" . number_format($subtotal, 0, ',', '.') . "</li>
+                    <li><strong>Descuento:</strong> <span style='color: #28a745;'>-$" . number_format($descuento, 0, ',', '.') . "</span></li>
+                    <li><strong>Total Final:</strong> $" . number_format($monto_final, 0, ',', '.') . "</li>";
+                } else {
+                    $email_body .= "
+                    <li><strong>Total:</strong> $" . number_format($monto_final, 0, ',', '.') . "</li>";
+                }
+                
+                $email_body .= "
                 <li><strong>Fecha:</strong> " . date('Y-m-d H:i:s') . "</li>
             </ul>
 

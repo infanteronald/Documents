@@ -69,7 +69,7 @@ try {
     error_log("Bold Status API - Tabla pedidos_detal encontrada");
 
     // Buscar el pedido por bold_order_id
-    $stmt = $conn->prepare("SELECT id, monto, estado_pago, bold_transaction_id, fecha FROM pedidos_detal WHERE bold_order_id = ? ORDER BY fecha DESC LIMIT 1");
+    $stmt = $conn->prepare("SELECT id, monto, descuento, estado_pago, bold_transaction_id, fecha FROM pedidos_detal WHERE bold_order_id = ? ORDER BY fecha DESC LIMIT 1");
 
     if (!$stmt) {
         error_log("Bold Status API - Error preparando consulta: " . $conn->error);
@@ -86,11 +86,12 @@ try {
     // Usar bind_result para compatibilidad (en lugar de get_result)
     $pedidoId = null;
     $monto = null;
+    $descuento = null;
     $estadoPago = null;
     $boldTransactionId = null;
     $fecha = null;
 
-    $stmt->bind_result($pedidoId, $monto, $estadoPago, $boldTransactionId, $fecha);
+    $stmt->bind_result($pedidoId, $monto, $descuento, $estadoPago, $boldTransactionId, $fecha);
 
     if (!$stmt->fetch()) {
         error_log("Bold Status API - Pedido no encontrado: " . $order_id);
@@ -131,6 +132,8 @@ try {
         'order_id' => $order_id,
         'pedido_id' => $pedidoId,
         'amount' => intval($monto),
+        'discount' => intval($descuento ?? 0),
+        'subtotal' => intval($monto + ($descuento ?? 0)),
         'payment_method' => 'PSE Bold',
         'transaction_id' => $boldTransactionId,
         'updated_at' => $fecha,

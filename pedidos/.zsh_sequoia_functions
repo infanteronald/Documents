@@ -31,18 +31,17 @@ limpiar() {
     setopt NULL_GLOB
 
     # ====================================================
-    # 📄 BORRAR TODOS LOS ARCHIVOS .MD
+    # 📄 ARCHIVOS .MD - OMITIDOS (PRESERVADOS)
     # ====================================================
-    echo "📄 [1/4] Borrando archivos .md..."
+    echo "📄 [1/4] Archivos .md preservados (no se borran)..."
     local md_count=0
     for file in *.md; do
         if [[ -f "$file" ]]; then
             ((md_count++))
-            ((total++))
-            rm -f "$file" && echo "    🗑️  Borrado: $file"
+            echo "    ✅ Preservado: $file"
         fi
     done
-    echo "    ✅ Archivos .md: $md_count archivos"
+    echo "    ✅ Archivos .md preservados: $md_count archivos"
 
     # ====================================================
     # �️ BORRAR TODOS LOS ARCHIVOS .SQL
@@ -163,11 +162,12 @@ sync-sequoia() {
         --exclude='.DS_Store' \
         --exclude='*.log' \
         --exclude='.zsh*' \
+        --exclude='CLAUDE.md' \
         --exclude='**/check_sftp_status.sh' \
         --exclude='**/clean-temp-files.sh' \
         --exclude='**/test_*.html' \
         --exclude='**/*_fixed.php' \
-        -e "ssh -i /Users/ronaldinfante/id_rsa -p 7822" \
+        -e "ssh -i /Users/ronaldinfante/id_rsa -p 7822 -o PasswordAuthentication=no -o PreferredAuthentications=publickey" \
         /Users/ronaldinfante/Documents/pedidos/ \
         motodota@68.66.226.124:/home/motodota/sequoiaspeed.com.co/pedidos/
 

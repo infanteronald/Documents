@@ -35,11 +35,13 @@ class ReportController
             $stmt->execute();
             $pedidosHoy = $stmt->get_result()->fetch_assoc()["total"];
             
-            // Ventas del mes
-            $stmt = $conn->prepare("SELECT SUM(total) as ventas FROM pedidos_detal WHERE DATE_FORMAT(fecha, \"%Y-%m\") = ?");
+            // Ventas del mes (considerando descuentos)
+            $stmt = $conn->prepare("SELECT SUM(monto) as ventas, SUM(IFNULL(descuento, 0)) as descuentos_totales FROM pedidos_detal WHERE DATE_FORMAT(fecha, \"%Y-%m\") = ?");
             $stmt->bind_param("s", $thisMonth);
             $stmt->execute();
-            $ventasMes = $stmt->get_result()->fetch_assoc()["ventas"] ?? 0;
+            $result = $stmt->get_result()->fetch_assoc();
+            $ventasMes = $result["ventas"] ?? 0;
+            $descuentosMes = $result["descuentos_totales"] ?? 0;
             
             // Estados de pedidos
             $stmt = $conn->prepare("SELECT estado, COUNT(*) as cantidad FROM pedidos_detal WHERE DATE(fecha) = ? GROUP BY estado");
@@ -54,6 +56,8 @@ class ReportController
             $dashboardData = [
                 "pedidos_hoy" => $pedidosHoy,
                 "ventas_mes" => $ventasMes,
+                "descuentos_mes" => $descuentosMes,
+                "ventas_brutas_mes" => $ventasMes + $descuentosMes,
                 "estados_pedidos" => $estadosPedidos,
                 "timestamp" => time()
             ];

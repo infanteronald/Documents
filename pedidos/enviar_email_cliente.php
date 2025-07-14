@@ -22,12 +22,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Obtener datos del pedido
-        $stmt = $conn->prepare("SELECT id, nombre, correo, pedido, monto, direccion, telefono, ciudad, barrio, metodo_pago, datos_pago, fecha FROM pedidos_detal WHERE id = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT id, nombre, correo, pedido, monto, descuento, direccion, telefono, ciudad, barrio, metodo_pago, datos_pago, fecha FROM pedidos_detal WHERE id = ? LIMIT 1");
         $stmt->bind_param("i", $pedido_id);
         $stmt->execute();
 
         // Usar bind_result para compatibilidad
-        $stmt->bind_result($id, $nombre, $correo, $pedido_detalle, $monto, $direccion, $telefono, $ciudad, $barrio, $metodo_pago, $datos_pago, $fecha, $estado);
+        $stmt->bind_result($id, $nombre, $correo, $pedido_detalle, $monto, $descuento, $direccion, $telefono, $ciudad, $barrio, $metodo_pago, $datos_pago, $fecha, $estado);
 
         if (!$stmt->fetch()) {
             $stmt->close();
@@ -44,6 +44,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'correo' => $correo,
             'pedido' => $pedido_detalle,
             'monto' => $monto,
+            'descuento' => $descuento ?? 0,
+            'subtotal' => $monto + ($descuento ?? 0),
             'direccion' => $direccion,
             'telefono' => $telefono,
             'ciudad' => $ciudad,

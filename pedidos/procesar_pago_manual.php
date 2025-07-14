@@ -18,12 +18,12 @@ echo "<h3>Order ID: <code>$order_id</code></h3>\n";
 echo "<h3>Status: <code>$status</code></h3>\n";
 
 // 1. Buscar si ya existe el pedido
-$stmt = $conn->prepare("SELECT id, pedido, estado_pago, bold_order_id, nombre, correo FROM pedidos_detal WHERE bold_order_id = ?");
+$stmt = $conn->prepare("SELECT id, pedido, estado_pago, bold_order_id, nombre, correo, monto, descuento FROM pedidos_detal WHERE bold_order_id = ?");
 $stmt->bind_param("s", $order_id);
 $stmt->execute();
 
 // Usar bind_result para compatibilidad
-$stmt->bind_result($pedido_id, $pedido_detalle, $estado_pago, $bold_order_id, $nombre, $correo);
+$stmt->bind_result($pedido_id, $pedido_detalle, $estado_pago, $bold_order_id, $nombre, $correo, $monto, $descuento);
 
 if ($stmt->fetch()) {
     $stmt->close();
@@ -110,12 +110,12 @@ if (isset($_GET['assign_to'])) {
         echo "</div>\n";
 
         // Mostrar detalles del pedido actualizado
-        $stmt_verify = $conn->prepare("SELECT pedido, nombre, monto, bold_order_id, estado_pago, fecha_pago FROM pedidos_detal WHERE id = ?");
+        $stmt_verify = $conn->prepare("SELECT pedido, nombre, monto, descuento, bold_order_id, estado_pago, fecha_pago FROM pedidos_detal WHERE id = ?");
         $stmt_verify->bind_param("i", $pedido_id);
         $stmt_verify->execute();
 
         // Usar bind_result para compatibilidad
-        $stmt_verify->bind_result($pedido_detalle, $nombre, $monto, $bold_order_id, $estado_pago_actual, $fecha_pago);
+        $stmt_verify->bind_result($pedido_detalle, $nombre, $monto, $descuento_verify, $bold_order_id, $estado_pago_actual, $fecha_pago);
 
         if ($stmt_verify->fetch()) {
             $stmt_verify->close();
@@ -124,11 +124,18 @@ if (isset($_GET['assign_to'])) {
             echo "<table border='1' style='border-collapse: collapse;'>\n";
             echo "<tr><td><strong>Pedido</strong></td><td>{$pedido_detalle}</td></tr>\n";
             echo "<tr><td><strong>Cliente</strong></td><td>{$nombre}</td></tr>\n";
-            echo "<tr><td><strong>Monto</strong></td><td>$" . number_format($monto) . "</td></tr>\n";
+            if ($descuento_verify > 0) {
+                echo "<tr><td><strong>Subtotal</strong></td><td>$" . number_format($monto + $descuento_verify) . "</td></tr>\n";
+                echo "<tr><td><strong>Descuento</strong></td><td style='color: #28a745;'>-$" . number_format($descuento_verify) . "</td></tr>\n";
+                echo "<tr><td><strong>Total Final</strong></td><td><strong>$" . number_format($monto) . "</strong></td></tr>\n";
+            } else {
+                echo "<tr><td><strong>Monto</strong></td><td>$" . number_format($monto) . "</td></tr>\n";
+            }
             echo "<tr><td><strong>Bold Order ID</strong></td><td>{$bold_order_id}</td></tr>\n";
             echo "<tr><td><strong>Estado Pago</strong></td><td>{$estado_pago_actual}</td></tr>\n";
             echo "<tr><td><strong>Fecha Pago</strong></td><td>{$fecha_pago}</td></tr>\n";
-        echo "</table>\n";
+            echo "</table>\n";
+        }
 
     } else {
         echo "<div style='background: #f8d7da; padding: 15px; border-radius: 5px;'>\n";
