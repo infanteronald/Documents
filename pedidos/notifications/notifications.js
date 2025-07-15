@@ -126,11 +126,13 @@ class NotificationSystem {
      */
     async loadDropdownNotifications() {
         try {
-            const response = await fetch('/pedidos/notifications/notifications.php?action=get_all&limit=20');
+            const response = await fetch('notifications/notifications.php?action=get_all&limit=20');
             const data = await response.json();
             
             if (data.success && data.data.notifications) {
                 this.renderDropdownNotifications(data.data.notifications);
+            } else {
+                console.log('No notifications found or error:', data);
             }
         } catch (error) {
             console.error('Error loading dropdown notifications:', error);
@@ -143,7 +145,9 @@ class NotificationSystem {
     renderDropdownNotifications(notifications) {
         const list = document.getElementById('notification-dropdown-list');
         
-        if (notifications.length === 0) {
+        console.log('Renderizando notificaciones:', notifications);
+        
+        if (!notifications || notifications.length === 0) {
             list.innerHTML = `
                 <div class="notification-dropdown-empty">
                     <div class="notification-dropdown-empty-icon">🔔</div>
@@ -161,7 +165,7 @@ class NotificationSystem {
             
             return `
                 <div class="notification-dropdown-item ${isUnread ? 'unread' : ''}" 
-                     onclick="notificationSystem.handleDropdownItemClick('${notification.id}', ${JSON.stringify(notification.data).replace(/"/g, '&quot;')})">
+                     onclick="notificationSystem.handleDropdownItemClick('${notification.id}', ${JSON.stringify(notification.data || {}).replace(/"/g, '&quot;')})">
                     <div class="notification-dropdown-icon ${notification.type}">
                         ${icon}
                     </div>
@@ -225,7 +229,7 @@ class NotificationSystem {
      */
     async markAllAsRead() {
         try {
-            await fetch('/pedidos/notifications/notifications.php', {
+            await fetch('notifications/notifications.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -269,7 +273,7 @@ class NotificationSystem {
             this.eventSource.close();
         }
 
-        this.eventSource = new EventSource('/pedidos/notifications/notifications_sse.php');
+        this.eventSource = new EventSource('notifications/notifications_sse.php');
         
         this.eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -292,7 +296,7 @@ class NotificationSystem {
      */
     async loadPreferences() {
         try {
-            const response = await fetch('/pedidos/notifications/notifications.php?action=get_preferences');
+            const response = await fetch('notifications/notifications.php?action=get_preferences');
             const data = await response.json();
             if (data.success) {
                 this.preferences = data.preferences;
@@ -308,7 +312,7 @@ class NotificationSystem {
      */
     async loadUnreadNotifications() {
         try {
-            const response = await fetch('/pedidos/notifications/notifications.php?action=get_unread');
+            const response = await fetch('notifications/notifications.php?action=get_unread');
             const data = await response.json();
             if (data.success && data.data.notifications) {
                 // Actualizar contador del badge
@@ -396,7 +400,7 @@ class NotificationSystem {
      */
     async markAsRead(id) {
         try {
-            const response = await fetch('/pedidos/notifications/notifications.php', {
+            const response = await fetch('notifications/notifications.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -423,7 +427,7 @@ class NotificationSystem {
      */
     async markAsDisplayed(id) {
         try {
-            await fetch('/pedidos/notifications/notifications.php', {
+            await fetch('notifications/notifications.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -557,7 +561,7 @@ function showNotification(type, title, message, options = {}) {
     
     // Guardar en backend si se requiere
     if (options.persist !== false) {
-        fetch('/pedidos/notifications/notifications.php', {
+        fetch('notifications/notifications.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

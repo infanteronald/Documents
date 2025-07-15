@@ -71,7 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $limit = (int)($_GET['limit'] ?? 100);
             $offset = (int)($_GET['offset'] ?? 0);
             
-            $query = "SELECT * FROM notifications 
+            $query = "SELECT id, user_id, type, title, message, data_json, read_at, created_at, expires_at 
+                      FROM notifications 
                       WHERE user_id = 'admin'
                       ORDER BY created_at DESC 
                       LIMIT ? OFFSET ?";
@@ -79,15 +80,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $stmt = $conn->prepare($query);
             $stmt->bind_param("ii", $limit, $offset);
             $stmt->execute();
-            $result = $stmt->get_result();
+            
+            // Usar bind_result para compatibilidad
+            $stmt->store_result();
+            $stmt->bind_result($id, $user_id, $type, $title, $message, $data_json, $read_at, $created_at, $expires_at);
             
             $notifications = [];
-            while ($row = $result->fetch_assoc()) {
-                $row['data'] = $row['data_json'] ? json_decode($row['data_json'], true) : null;
-                unset($row['data_json']);
-                $notifications[] = $row;
+            while ($stmt->fetch()) {
+                $notification = [
+                    'id' => $id,
+                    'user_id' => $user_id,
+                    'type' => $type,
+                    'title' => $title,
+                    'message' => $message,
+                    'data' => $data_json ? json_decode($data_json, true) : null,
+                    'read_at' => $read_at,
+                    'created_at' => $created_at,
+                    'expires_at' => $expires_at
+                ];
+                $notifications[] = $notification;
             }
             
+            $stmt->close();
             jsonResponse(true, ['notifications' => $notifications]);
             break;
             
