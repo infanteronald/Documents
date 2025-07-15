@@ -7,8 +7,12 @@
 class NotificationSystem {
     constructor() {
         this.container = null;
+        this.bell = null;
+        this.dropdown = null;
         this.eventSource = null;
         this.notifications = [];
+        this.unreadCount = 0;
+        this.isDropdownOpen = false;
         this.preferences = {
             sound_enabled: true,
             auto_dismiss_seconds: 10,
@@ -22,7 +26,7 @@ class NotificationSystem {
      * Inicializar el sistema
      */
     init() {
-        // Crear contenedor si no existe
+        // Crear contenedor de toasts si no existe
         if (!document.querySelector('.notifications-container')) {
             this.container = document.createElement('div');
             this.container.className = 'notifications-container';
@@ -30,6 +34,9 @@ class NotificationSystem {
         } else {
             this.container = document.querySelector('.notifications-container');
         }
+
+        // Crear campanita
+        this.createNotificationBell();
 
         // Iniciar conexión SSE
         this.connectSSE();
@@ -39,6 +46,219 @@ class NotificationSystem {
         
         // Cargar notificaciones no leídas
         this.loadUnreadNotifications();
+    }
+
+    /**
+     * Crear campanita de notificaciones
+     */
+    createNotificationBell() {
+        this.bell = document.createElement('div');
+        this.bell.className = 'notification-bell';
+        this.bell.innerHTML = `
+            <div class="notification-bell-icon" onclick="notificationSystem.toggleDropdown()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                </svg>
+                <div class="notification-bell-badge" style="display: none;">0</div>
+            </div>
+            <div class="notification-dropdown">
+                <div class="notification-dropdown-header">
+                    <h3 class="notification-dropdown-title">Notificaciones</h3>
+                    <div class="notification-dropdown-actions">
+                        <button class="notification-dropdown-btn" onclick="notificationSystem.markAllAsRead()">
+                            Marcar todas
+                        </button>
+                    </div>
+                </div>
+                <div class="notification-dropdown-list" id="notification-dropdown-list">
+                    <div class="notification-dropdown-empty">
+                        <div class="notification-dropdown-empty-icon">🔔</div>
+                        <div class="notification-dropdown-empty-title">Sin notificaciones</div>
+                        <div class="notification-dropdown-empty-subtitle">No tienes notificaciones nuevas</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(this.bell);
+        this.dropdown = this.bell.querySelector('.notification-dropdown');
+        
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', (e) => {
+            if (!this.bell.contains(e.target) && this.isDropdownOpen) {
+                this.closeDropdown();
+            }
+        });
+    }
+
+    /**
+     * Toggle del dropdown
+     */
+    toggleDropdown() {
+        if (this.isDropdownOpen) {
+            this.closeDropdown();
+        } else {
+            this.openDropdown();
+        }
+    }
+
+    /**
+     * Abrir dropdown
+     */
+    openDropdown() {
+        this.isDropdownOpen = true;
+        this.dropdown.classList.add('show');
+        this.bell.querySelector('.notification-bell-icon').classList.add('active');
+        this.loadDropdownNotifications();
+    }
+
+    /**
+     * Cerrar dropdown
+     */
+    closeDropdown() {
+        this.isDropdownOpen = false;
+        this.dropdown.classList.remove('show');
+        this.bell.querySelector('.notification-bell-icon').classList.remove('active');
+    }
+
+    /**
+     * Cargar notificaciones para el dropdown
+     */
+    async loadDropdownNotifications() {
+        try {
+            const response = await fetch('/pedidos/notifications/notifications.php?action=get_all&limit=20');
+            const data = await response.json();
+            
+            if (data.success && data.data.notifications) {
+                this.renderDropdownNotifications(data.data.notifications);
+            }
+        } catch (error) {
+            console.error('Error loading dropdown notifications:', error);
+        }
+    }
+
+    /**
+     * Renderizar notificaciones en el dropdown
+     */
+    renderDropdownNotifications(notifications) {
+        const list = document.getElementById('notification-dropdown-list');
+        
+        if (notifications.length === 0) {
+            list.innerHTML = `
+                <div class="notification-dropdown-empty">
+                    <div class="notification-dropdown-empty-icon">🔔</div>
+                    <div class="notification-dropdown-empty-title">Sin notificaciones</div>
+                    <div class="notification-dropdown-empty-subtitle">No tienes notificaciones nuevas</div>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = notifications.map(notification => {
+            const isUnread = !notification.read_at;
+            const timeAgo = this.getTimeAgo(notification.created_at);
+            const icon = this.getIcon(notification.type);
+            
+            return `
+                <div class="notification-dropdown-item ${isUnread ? 'unread' : ''}" 
+                     onclick="notificationSystem.handleDropdownItemClick('${notification.id}', ${JSON.stringify(notification.data).replace(/"/g, '&quot;')})">
+                    <div class="notification-dropdown-icon ${notification.type}">
+                        ${icon}
+                    </div>
+                    <div class="notification-dropdown-content">
+                        <div class="notification-dropdown-item-title">${this.escapeHtml(notification.title)}</div>
+                        <div class="notification-dropdown-item-message">${this.escapeHtml(notification.message)}</div>
+                        <div class="notification-dropdown-item-time">${timeAgo}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Manejar click en item del dropdown
+     */
+    handleDropdownItemClick(notificationId, data) {
+        // Marcar como leída
+        this.markAsRead(notificationId);
+        
+        // Si tiene acción, ejecutarla
+        if (data && data.actions && data.actions.length > 0) {
+            const action = data.actions[0];
+            if (action.url) {
+                if (action.target === '_blank') {
+                    window.open(action.url, '_blank');
+                } else {
+                    window.location.href = action.url;
+                }
+            }
+        }
+        
+        // Cerrar dropdown
+        this.closeDropdown();
+    }
+
+    /**
+     * Obtener tiempo relativo
+     */
+    getTimeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return 'Hace un momento';
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `Hace ${minutes} min`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `Hace ${hours}h`;
+        } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `Hace ${days}d`;
+        }
+    }
+
+    /**
+     * Marcar todas como leídas
+     */
+    async markAllAsRead() {
+        try {
+            await fetch('/pedidos/notifications/notifications.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'mark_all_read'
+                })
+            });
+            
+            // Actualizar contador
+            this.updateBadgeCount(0);
+            
+            // Recargar dropdown
+            this.loadDropdownNotifications();
+            
+        } catch (error) {
+            console.error('Error marking all as read:', error);
+        }
+    }
+
+    /**
+     * Actualizar contador del badge
+     */
+    updateBadgeCount(count) {
+        const badge = this.bell.querySelector('.notification-bell-badge');
+        this.unreadCount = count;
+        
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
+        }
     }
 
     /**
@@ -55,6 +275,8 @@ class NotificationSystem {
             const data = JSON.parse(event.data);
             if (data.type === 'notification') {
                 this.showNotification(data.notification);
+                // Incrementar contador del badge
+                this.updateBadgeCount(this.unreadCount + 1);
             }
         };
 
@@ -88,13 +310,25 @@ class NotificationSystem {
         try {
             const response = await fetch('/pedidos/notifications/notifications.php?action=get_unread');
             const data = await response.json();
-            if (data.success && data.notifications) {
-                data.notifications.forEach(notification => {
-                    this.showNotification(notification, false);
-                });
+            if (data.success && data.data.notifications) {
+                // Actualizar contador del badge
+                this.updateBadgeCount(data.data.notifications.length);
+                
+                // Mostrar toasts solo para las más recientes (máximo 3) cuando cargamos por primera vez
+                if (!this.bell.classList.contains('initialized')) {
+                    const recentNotifications = data.data.notifications.slice(0, 3);
+                    recentNotifications.forEach(notification => {
+                        this.showNotification(notification, false);
+                    });
+                    this.bell.classList.add('initialized');
+                }
+            } else {
+                // Si no hay notificaciones, asegurar que el badge esté oculto
+                this.updateBadgeCount(0);
             }
         } catch (error) {
             console.error('Error loading notifications:', error);
+            this.updateBadgeCount(0);
         }
     }
 
@@ -162,7 +396,7 @@ class NotificationSystem {
      */
     async markAsRead(id) {
         try {
-            await fetch('/pedidos/notifications/notifications.php', {
+            const response = await fetch('/pedidos/notifications/notifications.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -172,6 +406,13 @@ class NotificationSystem {
                     notification_id: id
                 })
             });
+            
+            if (response.ok) {
+                // Decrementar contador del badge si la notificación estaba no leída
+                if (this.unreadCount > 0) {
+                    this.updateBadgeCount(this.unreadCount - 1);
+                }
+            }
         } catch (error) {
             console.error('Error marking as read:', error);
         }
