@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 include 'conexion.php';
 require_once 'filters.php';
 require_once 'ui-helpers.php';
+require_once 'notifications/notification_helpers.php';
 
 // Inicializar filtros usando la nueva clase
 try {
@@ -50,6 +51,9 @@ try {
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0d1117">
     <link rel="stylesheet" href="listar_pedidos.css">
+    
+    <!-- Sistema de Notificaciones -->
+    <link rel="stylesheet" href="notifications/notifications.css">
 </head>
 <body>
 <div class="sticky-bar">
@@ -216,7 +220,7 @@ try {
                         </tr>
                     <?php else: ?>
                         <?php foreach($pedidos as $p): ?>
-                            <tr class="fila-pedido" data-id="<?php echo $p['id']; ?>">
+                            <tr class="fila-pedido" data-id="<?php echo $p['id']; ?>" data-metodo-pago="<?php echo htmlspecialchars($p['metodo_pago'] ?? 'No especificado'); ?>" data-monto="<?php echo $p['monto']; ?>" data-descuento="<?php echo $p['descuento'] ?? 0; ?>">
                                 <!-- ID del Pedido -->
                                 <td class="col-id">
                                     <a href="#" class="enlace-pedido ver-detalle" data-id="<?php echo $p['id']; ?>">
@@ -267,7 +271,7 @@ try {
                                 <!-- Acciones -->
                                 <td class="col-ver">
                                     <div class="botones-acciones">
-                                        <button class="btn-accion-tabla btn-ver-productos" onclick="toggleProductos(<?php echo $p['id']; ?>)" title="Ver productos del pedido">
+                                        <button class="btn-accion-tabla btn-ver-productos" onclick="toggleDetallesPedido(<?php echo $p['id']; ?>)" title="Ver detalles completos del pedido">
                                             👁️
                                         </button>
                                         <button class="btn-accion-tabla btn-configurar" onclick="abrirDetallePopup(<?php echo $p['id']; ?>)" title="Configurar pedido">
@@ -314,7 +318,127 @@ try {
                                 </td>
 
                             </tr>
-                            <!-- Nota: Las filas de productos se crean dinámicamente con JavaScript al hacer clic en el botón ojo -->
+                            
+                            <!-- Fila de detalles expandible (oculta por defecto) -->
+                            <tr id="detalle-<?php echo $p['id']; ?>" class="fila-detalle-pedido" style="display: none;">
+                                <td colspan="100%">
+                                    <div class="contenido-detalle-pedido">
+                                        <div class="detalle-grid-expandible">
+                                            <!-- Información del Cliente -->
+                                            <div class="detalle-seccion-expandible">
+                                                <h4>👤 Información del Cliente</h4>
+                                                <div class="detalle-info-compact">
+                                                    <div class="info-item">
+                                                        <strong>Nombre:</strong> <?php echo htmlspecialchars($p['nombre'] ?? 'No especificado'); ?>
+                                                    </div>
+                                                    <div class="info-item">
+                                                        <strong>Email:</strong> <?php echo htmlspecialchars($p['correo'] ?? 'No especificado'); ?>
+                                                    </div>
+                                                    <div class="info-item">
+                                                        <strong>Teléfono:</strong> <?php echo htmlspecialchars($p['telefono'] ?? 'No especificado'); ?>
+                                                    </div>
+                                                    <div class="info-item">
+                                                        <strong>Ciudad:</strong> <?php echo htmlspecialchars($p['ciudad'] ?? 'No especificado'); ?>
+                                                    </div>
+                                                    <div class="info-item">
+                                                        <strong>Barrio:</strong> <?php echo htmlspecialchars($p['barrio'] ?? 'No especificado'); ?>
+                                                    </div>
+                                                    <div class="info-item info-full">
+                                                        <strong>Dirección:</strong> <?php echo htmlspecialchars($p['direccion'] ?? 'No especificada'); ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Información del Pedido (Carrito) -->
+                                            <div class="detalle-seccion-expandible pedido-completo">
+                                                <h4>🛒 Información del Pedido</h4>
+                                                
+                                                <!-- Información básica del pedido -->
+                                                <div class="pedido-info-header">
+                                                    <div class="info-item-inline">
+                                                        <strong>Fecha:</strong> 
+                                                        <?php 
+                                                        if (!empty($p['fecha']) && $p['fecha'] != '0000-00-00 00:00:00') {
+                                                            echo date('d/m/Y H:i', strtotime($p['fecha']));
+                                                        } else {
+                                                            echo 'No especificada';
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                    <div class="info-item-inline">
+                                                        <strong>Estado:</strong> 
+                                                        <?php 
+                                                        $estado_texto = 'Pendiente';
+                                                        $estado_clase = 'pendiente';
+                                                        
+                                                        if ($p['anulado'] == 1) {
+                                                            $estado_texto = 'Anulado';
+                                                            $estado_clase = 'anulado';
+                                                        } elseif ($p['archivado'] == 1) {
+                                                            $estado_texto = 'Archivado';
+                                                            $estado_clase = 'archivado';
+                                                        } elseif ($p['enviado'] == 1) {
+                                                            $estado_texto = 'Enviado';
+                                                            $estado_clase = 'enviado';
+                                                        } elseif ($p['pagado'] == 1) {
+                                                            $estado_texto = 'Pago Confirmado';
+                                                            $estado_clase = 'pago-confirmado';
+                                                        } else {
+                                                            $estado_texto = 'Pendiente de Pago';
+                                                            $estado_clase = 'pago-pendiente';
+                                                        }
+                                                        ?>
+                                                        <span class="badge-small <?php echo $estado_clase; ?>"><?php echo $estado_texto; ?></span>
+                                                    </div>
+                                                    <div class="info-item-inline">
+                                                        <strong>Pagado:</strong> <?php echo ($p['pagado'] == 1) ? '✅ Sí' : '❌ No'; ?>
+                                                    </div>
+                                                    <div class="info-item-inline">
+                                                        <strong>Enviado:</strong> <?php echo ($p['enviado'] == 1) ? '✅ Sí' : '❌ No'; ?>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Tabla de productos del carrito -->
+                                                <div id="productos-container-<?php echo $p['id']; ?>">
+                                                    <div class="productos-loading">
+                                                        <div class="spinner-small"></div>
+                                                        <p>Cargando productos...</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <?php if (!empty($p['nota_interna'])): ?>
+                                                <div class="detalle-seccion-expandible">
+                                                    <h4>📝 Notas Internas</h4>
+                                                    <div class="nota-interna"><?php echo nl2br(htmlspecialchars($p['nota_interna'])); ?></div>
+                                                </div>
+                                            <?php endif; ?>
+                                            
+                                            <?php if (!empty($p['guia'])): ?>
+                                                <div class="detalle-seccion-expandible">
+                                                    <h4>🚚 Información de Envío</h4>
+                                                    <div class="detalle-info-compact">
+                                                        <div class="info-item">
+                                                            <strong>Guía:</strong> <?php echo htmlspecialchars($p['guia']); ?>
+                                                        </div>
+                                                        <?php if (!empty($p['transportadora'])): ?>
+                                                            <div class="info-item">
+                                                                <strong>Transportadora:</strong> <?php echo htmlspecialchars($p['transportadora']); ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?>
+                                            
+                                            <div class="detalle-acciones-expandible">
+                                                <button onclick="abrirDetallePopup(<?php echo $p['id']; ?>)" class="btn-expandible btn-primario">
+                                                    ⚙️ Abrir en Ventana Completa
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
@@ -895,13 +1019,16 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
                 '<small style="color: #8b949e; display: block; margin-top: 5px;">Formatos aceptados: JPG, PNG, PDF (máx. 5MB)</small>' +
                 '</div>' +
                 '<button type="submit" class="btn-neon" style="width: 100%; margin-bottom: 15px;">📤 Subir Comprobante</button>' +
+                '<div id="comprobante-status-' + pedidoId + '" style="margin-top: 15px;"></div>' +
                 '</form>' +
                 '<div style="text-align: center; border-top: 1px solid #30363d; padding-top: 15px;">' +
                 '<p style="margin-bottom: 15px; color: #8b949e;">¿Es pago en efectivo?</p>' +
                 '<button onclick="marcarComoEfectivo(' + pedidoId + ', true)" class="btn-secondary">💵 Marcar como Efectivo</button>' +
                 '</div>' +
                 '</div>';
-        }        modal.innerHTML = contenidoModal;
+        }
+        
+        modal.innerHTML = contenidoModal;
 
 
         // Asegurar que no haya otros modales abiertos
@@ -927,7 +1054,7 @@ function abrirModalComprobante(pedidoId, comprobante, tieneComprobante, metodoPa
         if (form) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                subirComprobanteForm(pedidoId, this);
+                procesarSubidaComprobante(pedidoId, this, modal);
             });
         }
 
@@ -979,18 +1106,31 @@ function procesarSubidaComprobante(pedidoId, form, modal) {
     submitBtn.textContent = '⏳ Subiendo...';
     statusDiv.innerHTML = '<span style="color: var(--vscode-text-muted);">Subiendo comprobante...</span>';
 
-    fetch('subir_comprobante_modern.php', {
+    fetch('subir_comprobante.php', {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            statusDiv.innerHTML = '<span style="color: #238636;">✅ Comprobante subido correctamente</span>';
+            let mensaje = '<span style="color: #238636;">✅ Comprobante subido correctamente</span>';
+            
+            // Mostrar estado del envío de emails
+            if (data.email_cliente_enviado && data.email_ventas_enviado) {
+                mensaje += '<br><span style="color: #238636;">📧 Emails enviados al cliente y ventas</span>';
+            } else if (data.email_cliente_enviado) {
+                mensaje += '<br><span style="color: #238636;">📧 Email enviado al cliente</span><br><span style="color: #da3633;">⚠️ Error enviando a ventas</span>';
+            } else if (data.email_ventas_enviado) {
+                mensaje += '<br><span style="color: #238636;">📧 Email enviado a ventas</span><br><span style="color: #da3633;">⚠️ Error enviando al cliente</span>';
+            } else {
+                mensaje += '<br><span style="color: #da3633;">⚠️ Error enviando emails</span>';
+            }
+            
+            statusDiv.innerHTML = mensaje;
             setTimeout(() => {
                 modal.remove();
-                location.reload(); // O actualizar la UI específica
-            }, 2000);
+                location.reload();
+            }, 3000);
         } else {
             statusDiv.innerHTML = '<span style="color: #da3633;">❌ ' + (data.error || 'Error al subir') + '</span>';
             submitBtn.disabled = false;
@@ -1156,42 +1296,6 @@ if (!document.querySelector('#feedback-styles')) {
 // ============================================
 // FUNCIONES AUXILIARES PARA COMPROBANTES
 // ============================================
-function subirComprobanteForm(pedidoId, form) {
-    const formData = new FormData(form);
-    const statusDiv = modal.querySelector(`#comprobante-status-${pedidoId}`);
-    const submitBtn = form.querySelector('button[type="submit"]');
-
-    // Deshabilitar botón y mostrar cargando
-    const textoOriginal = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '⏳ Subiendo...';
-
-    fetch('subir_comprobante.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Cerrar modal
-            form.closest('.modal-detalle-bg').remove();
-
-            // Actualizar la página o la fila específica
-            mostrarNotificacion('✅ Comprobante subido exitosamente', 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            mostrarNotificacion('❌ Error: ' + (data.message || 'No se pudo subir el comprobante'), 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = textoOriginal;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        mostrarNotificacion('❌ Error de conexión al subir comprobante', 'error');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = textoOriginal;
-    });
-}
 
 function marcarComoEfectivo(pedidoId, esEfectivo) {
     const datos = {
@@ -1225,7 +1329,13 @@ function marcarComoEfectivo(pedidoId, esEfectivo) {
 }
 
 function reemplazarComprobante(pedidoId) {
-    abrirModalComprobante(pedidoId);
+    // Cerrar modal actual
+    document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
+    
+    // Abrir modal de subida después de cerrar el anterior
+    setTimeout(() => {
+        abrirModalComprobante(pedidoId, '', '0', 'transferencia');
+    }, 100);
 }
 
 function eliminarComprobante(pedidoId) {
@@ -1791,12 +1901,26 @@ function subirGuia(pedidoId) {
         if (data.success) {
             statusDiv.style.background = 'var(--apple-green-light)';
             statusDiv.style.color = 'var(--apple-green)';
-            statusDiv.innerHTML = '✅ ' + data.message;
+            
+            let mensaje = '✅ ' + data.message;
+            
+            // Mostrar estado del envío de emails
+            if (data.email_cliente_enviado && data.email_ventas_enviado) {
+                mensaje += '<br>📧 Emails enviados al cliente y ventas';
+            } else if (data.email_cliente_enviado) {
+                mensaje += '<br>📧 Email enviado al cliente ⚠️ Error enviando a ventas';
+            } else if (data.email_ventas_enviado) {
+                mensaje += '<br>📧 Email enviado a ventas ⚠️ Error enviando al cliente';
+            } else {
+                mensaje += '<br>⚠️ Error enviando emails';
+            }
+            
+            statusDiv.innerHTML = mensaje;
 
             setTimeout(() => {
                 document.querySelector(`[data-pedido-id="${pedidoId}"]`)?.remove();
                 location.reload();
-            }, 2000);
+            }, 3000);
         } else {
             statusDiv.style.background = 'var(--apple-red-light)';
             statusDiv.style.color = 'var(--apple-red)';
@@ -2071,9 +2195,30 @@ function abrirModalTienda(pedidoId, tienda) {
                             </div>
                         </div>
                     </div>
-                    <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-accion" style="width: 100%; padding: 12px;">
-                        Cerrar
-                    </button>
+                    
+                    <div style="background: var(--apple-red-light); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--apple-red);">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 1.2rem;">⚠️</span>
+                            <strong style="color: var(--apple-red);">¿Necesitas revertir esta acción?</strong>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--vscode-text-muted);">
+                            Si marcaste este pedido por error, puedes revertir la entrega en tienda. Esto cambiará:
+                        </div>
+                        <ul style="margin: 8px 0 0 20px; font-size: 0.9rem; color: var(--vscode-text-muted);">
+                            <li>❌ <strong>Enviado</strong> → No (enviado = 0)</li>
+                            <li>❌ <strong>Con Guía</strong> → No (tiene_guia = 0)</li>
+                            <li>❌ <strong>Entregado en Tienda</strong> → No (tienda = 0)</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="this.closest('.modal-detalle-bg').remove()" class="btn-accion" style="flex: 1; padding: 12px;">
+                            Cerrar
+                        </button>
+                        <button onclick="revertirEntregaTienda(${pedidoId})" class="btn-secondary" style="flex: 1; padding: 12px; background: var(--apple-red); color: white;">
+                            ↩️ Revertir Entrega
+                        </button>
+                    </div>
                 </div>
             `;
         } else {
@@ -2145,13 +2290,14 @@ function confirmarEntregaTienda(pedidoId) {
     button.innerHTML = '⏳ Procesando...';
     button.style.opacity = '0.7';
 
-    fetch('entregar_tienda.php', {
+    fetch('tienda_handler.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            pedido_id: pedidoId
+            pedido_id: pedidoId,
+            action: 'entregar'
         })
     })
     .then(response => response.json())
@@ -2172,6 +2318,58 @@ function confirmarEntregaTienda(pedidoId) {
         mostrarNotificacion('❌ Error de conexión al confirmar entrega', 'error');
         button.disabled = false;
         button.innerHTML = '🏪 Confirmar Entrega';
+        button.style.opacity = '1';
+    });
+}
+
+// ===== FUNCIÓN PARA REVERTIR ENTREGA EN TIENDA =====
+function revertirEntregaTienda(pedidoId) {
+    const modal = document.querySelector(`[data-pedido-id="${pedidoId}"]`);
+    const button = modal.querySelector('button[onclick*="revertirEntregaTienda"]');
+
+    // Cambiar estado del botón
+    button.disabled = true;
+    button.innerHTML = '⏳ Revirtiendo...';
+    button.style.opacity = '0.7';
+
+    fetch('tienda_handler.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            pedido_id: pedidoId,
+            action: 'revertir'
+        })
+    })
+    .then(response => {
+        console.log('Revert response status:', response.status);
+        return response.text().then(text => {
+            console.log('Revert raw response:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error('Invalid JSON response: ' + text);
+            }
+        });
+    })
+    .then(data => {
+        if (data.success) {
+            mostrarNotificacion(`↩️ Pedido #${pedidoId} - Entrega en tienda revertida`, 'success');
+            modal.remove();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarNotificacion('❌ Error: ' + (data.error || 'No se pudo revertir la entrega'), 'error');
+            button.disabled = false;
+            button.innerHTML = '↩️ Revertir Entrega';
+            button.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error de conexión al revertir entrega', 'error');
+        button.disabled = false;
+        button.innerHTML = '↩️ Revertir Entrega';
         button.style.opacity = '1';
     });
 }
@@ -2462,7 +2660,164 @@ function abrirDetallePopup(pedidoId) {
     window.open(url, `detalle_pedido_${pedidoId}`, opciones);
 }
 
+// Función para mostrar/ocultar detalles y cargar productos via AJAX
+function toggleDetallesPedido(pedidoId) {
+    const filaDetalle = document.getElementById(`detalle-${pedidoId}`);
+    const boton = event.target;
+    const productosContainer = document.getElementById(`productos-container-${pedidoId}`);
+    
+    // Si la fila está visible, ocultarla
+    if (filaDetalle.style.display !== 'none') {
+        filaDetalle.style.display = 'none';
+        boton.innerHTML = '👁️';
+        boton.title = 'Ver detalles completos del pedido';
+    } else {
+        // Mostrar la fila con animación
+        filaDetalle.style.display = 'table-row';
+        boton.innerHTML = '👁️';
+        boton.title = 'Ocultar detalles del pedido';
+        
+        // Cargar productos si no se han cargado ya
+        if (productosContainer && productosContainer.innerHTML.includes('Cargando productos')) {
+            cargarProductosPedido(pedidoId);
+        }
+    }
+}
+
+// Función para cargar productos via AJAX
+function cargarProductosPedido(pedidoId) {
+    const container = document.getElementById(`productos-container-${pedidoId}`);
+    
+    // Obtener datos del pedido desde la fila principal
+    const filaPedido = document.querySelector(`tr[data-id="${pedidoId}"]`);
+    const metodoPago = filaPedido ? filaPedido.getAttribute('data-metodo-pago') : 'No especificado';
+    const montoPedido = filaPedido ? parseFloat(filaPedido.getAttribute('data-monto')) : 0;
+    const descuentoPedido = filaPedido ? parseFloat(filaPedido.getAttribute('data-descuento')) : 0;
+    
+    fetch(`get_productos_pedido.php?id=${pedidoId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Datos recibidos:', data); // Debug
+            if (data.success && data.productos && data.productos.length > 0) {
+                let html = `
+                    <div class="carrito-tabla-container">
+                        <table class="carrito-tabla">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Talla</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unit.</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                let subtotalCalculado = 0;
+                data.productos.forEach(producto => {
+                    const precio = parseFloat(producto.precio) || 0;
+                    const cantidad = parseInt(producto.cantidad) || 0;
+                    const subtotalProducto = precio * cantidad;
+                    subtotalCalculado += subtotalProducto;
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div class="producto-info">
+                                    <div class="producto-nombre">${producto.nombre}</div>
+                                </div>
+                            </td>
+                            <td class="text-center">${producto.talla || '-'}</td>
+                            <td class="text-center cantidad-col">${cantidad}</td>
+                            <td class="text-right precio-col">$${formatNumber(precio)}</td>
+                            <td class="text-right subtotal-col">
+                                <strong>$${formatNumber(subtotalProducto)}</strong>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pedido-resumen">
+                        <div class="resumen-linea">
+                            <span>Subtotal:</span>
+                            <span>$${formatNumber(subtotalCalculado)}</span>
+                        </div>
+                `;
+                
+                if (descuentoPedido > 0) {
+                    html += `
+                        <div class="resumen-linea descuento">
+                            <span>Descuento:</span>
+                            <span>-$${formatNumber(descuentoPedido)}</span>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                        <div class="resumen-linea total">
+                            <span><strong>Total:</strong></span>
+                            <span><strong>$${formatNumber(montoPedido)}</strong></span>
+                        </div>
+                        <div class="resumen-linea metodo-pago">
+                            <span><strong>Método de Pago:</strong></span>
+                            <span>${metodoPago}</span>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+            } else {
+                // No hay productos, mostrar resumen básico
+                container.innerHTML = `
+                    <div class="no-productos-con-resumen">
+                        <div style="text-align: center; padding: 20px; color: var(--vscode-text-muted);">
+                            <p>No hay productos registrados en este pedido</p>
+                            <small>Pedido ID: ${pedidoId}</small>
+                        </div>
+                        <div class="pedido-resumen">
+                            <div class="resumen-linea total">
+                                <span><strong>Total del Pedido:</strong></span>
+                                <span><strong>$${formatNumber(montoPedido)}</strong></span>
+                            </div>
+                            <div class="resumen-linea metodo-pago">
+                                <span><strong>Método de Pago:</strong></span>
+                                <span>${metodoPago}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando productos:', error);
+            container.innerHTML = `
+                <div class="error-productos" style="text-align: center; padding: 20px; color: var(--apple-red);">
+                    <p>Error al cargar productos</p>
+                    <small>${error.message}</small>
+                </div>
+            `;
+        });
+}
+
+// Función auxiliar para formatear números
+function formatNumber(num) {
+    // Verificar si es un número válido
+    const numero = parseFloat(num);
+    if (isNaN(numero) || numero === null || numero === undefined) {
+        return '0';
+    }
+    return new Intl.NumberFormat('es-CO').format(numero);
+}
+
 </script>
+
+<!-- Sistema de Notificaciones -->
+<script src="notifications/notifications.js"></script>
 
 </body>
 </html>

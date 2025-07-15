@@ -1,9 +1,11 @@
 <?php
 include 'conexion.php';
+include 'email_templates.php';
+require_once 'notifications/notification_helpers.php';
 
 header('Content-Type: application/json');
 
-$id = isset($_POST['pedido_id']) ? intval($_POST['pedido_id']) : 0;
+$id = isset($_POST['pedido_id']) ? intval($_POST['pedido_id']) : (isset($_POST['id_pedido']) ? intval($_POST['id_pedido']) : 0);
 
 if(!$id || !isset($_FILES['comprobante'])) {
     echo json_encode(['success'=>false,'error'=>'Faltan datos o archivo']);
@@ -11,7 +13,7 @@ if(!$id || !isset($_FILES['comprobante'])) {
 }
 
 // Buscar datos del pedido
-$res = $conn->query("SELECT correo, nombre, monto, descuento FROM pedidos_detal WHERE id = $id LIMIT 1");
+$res = $conn->query("SELECT correo, nombre, monto, descuento, metodo_pago FROM pedidos_detal WHERE id = $id LIMIT 1");
 if(!$res || $res->num_rows==0) {
     echo json_encode(['success'=>false,'error'=>'Pedido no encontrado']);
     exit;
@@ -62,38 +64,71 @@ if(!$stmt->execute()) {
     exit;
 }
 
-// --- Enviar email de confirmación (opcional) ---
+// Preparar datos del pedido para el template
 $correo_cliente = $p['correo'];
 $nombre_cliente = $p['nombre'];
-
-// Calcular monto final considerando descuento
 $descuento = $p['descuento'] ?? 0;
 $monto_final = $p['monto'];
-$monto_formateado = number_format($monto_final, 0, ',', '.');
 
-$asunto = "Comprobante de pago recibido - Pedido #$id";
+$pedido_data = [
+    'id' => $id,
+    'nombre_cliente' => $nombre_cliente,
+    'correo_cliente' => $correo_cliente,
+    'monto' => $monto_final, // Campo principal
+    'total' => $monto_final, // Para compatibilidad con templates
+    'descuento' => $descuento,
+    'metodo_pago' => $p['metodo_pago'],
+    'archivo_comprobante' => $nombreComprobante,
+    'es_efectivo' => false
+];
 
-// Mensaje del email con desglose si hay descuento
-if ($descuento > 0) {
-    $subtotal = $monto_final + $descuento;
-    $subtotal_formateado = number_format($subtotal, 0, ',', '.');
-    $descuento_formateado = number_format($descuento, 0, ',', '.');
-    
-    $mensaje = "Hola $nombre_cliente,\n\nHemos recibido tu comprobante de pago para el pedido #$id.\n\nDetalle del pago:\nSubtotal: $".$subtotal_formateado."\nDescuento: -$".$descuento_formateado."\nTotal pagado: $".$monto_formateado."\n\nEstamos verificando tu pago y procederemos con el envío de tu pedido.\n\n¡Gracias por tu compra!\nSequoia Speed";
-} else {
-    $mensaje = "Hola $nombre_cliente,\n\nHemos recibido tu comprobante de pago para el pedido #$id por valor de $".$monto_formateado.".\n\nEstamos verificando tu pago y procederemos con el envío de tu pedido.\n\n¡Gracias por tu compra!\nSequoia Speed";
-}
+// Generar email bonito para el cliente usando el template
+$asunto_cliente = "💳 Comprobante recibido - Pedido #$id - Sequoia Speed";
+$html_content_cliente = EmailTemplates::emailComprobanteRecibido($id, $nombre_cliente, $pedido_data);
+
+// Configurar headers para email HTML con adjunto
 $from = "ventas@sequoiaspeed.com.co";
-$headers = "From: Sequoia Speed <$from>\r\n";
-$headers .= "Reply-To: $from\r\n";
-$headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+$boundary = md5(uniqid(time()));
+$headers_cliente = "From: Sequoia Speed <$from>\r\n";
+$headers_cliente .= "Reply-To: $from\r\n";
+$headers_cliente .= "MIME-Version: 1.0\r\n";
+$headers_cliente .= "Content-Type: multipart/mixed; boundary=\"$boundary\"\r\n";
 
-// Enviar email (sin adjunto por seguridad)
-mail($correo_cliente, $asunto, $mensaje, $headers);
+// Crear cuerpo del email HTML para cliente
+$cuerpo_cliente = "--$boundary\r\n";
+$cuerpo_cliente .= "Content-Type: text/html; charset=UTF-8\r\n";
+$cuerpo_cliente .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+$cuerpo_cliente .= $html_content_cliente . "\r\n";
+
+// Adjuntar comprobante al email del cliente
+if(file_exists($rutaArchivo)){
+    $archivo = chunk_split(base64_encode(file_get_contents($rutaArchivo)));
+    $tipoArchivo = mime_content_type($rutaArchivo);
+    $cuerpo_cliente .= "--$boundary\r\n";
+    $cuerpo_cliente .= "Content-Type: $tipoArchivo; name=\"$nombreComprobante\"\r\n";
+    $cuerpo_cliente .= "Content-Disposition: attachment; filename=\"$nombreComprobante\"\r\n";
+    $cuerpo_cliente .= "Content-Transfer-Encoding: base64\r\n\r\n";
+    $cuerpo_cliente .= $archivo . "\r\n";
+}
+$cuerpo_cliente .= "--$boundary--";
+
+// Enviar email bonito al cliente (MANTENER)
+$email_cliente_enviado = mail($correo_cliente, $asunto_cliente, $cuerpo_cliente, $headers_cliente);
+
+// REEMPLAZAR EMAIL A VENTAS CON NOTIFICACIÓN
+$monto_formateado = number_format($monto_final, 0, ',', '.');
+notificarComprobanteSubido($id, 'pago');
+
+// También notificar que el pago fue confirmado
+notificarPagoConfirmado($id, $monto_final, $p['metodo_pago']);
+
+$email_ventas_enviado = true; // Para compatibilidad con el response
 
 echo json_encode([
     'success' => true,
     'message' => 'Comprobante subido correctamente',
-    'archivo' => $nombreComprobante
+    'archivo' => $nombreComprobante,
+    'email_cliente_enviado' => $email_cliente_enviado,
+    'email_ventas_enviado' => $email_ventas_enviado
 ]);
 ?>

@@ -4,6 +4,7 @@ ini_set('display_errors', 1);
 
 include 'conexion.php';
 require_once 'email_templates.php';
+require_once 'notifications/notification_helpers.php';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Detectar tipo de formulario
     $es_pedido_simple = isset($_POST['pedido']); // Formulario simple con textarea (index.php)
@@ -34,10 +35,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Recibe los campos comunes del formulario
-    $monto          = $_POST['monto'];
+    $monto = $_POST['monto'];
+    
+    // Limpiar y convertir monto a número si viene con formato
+    if (is_string($monto)) {
+        $monto = str_replace(['.', ',', '$', ' '], ['', '', '', ''], $monto);
+    }
+    $monto = floatval($monto);
 
     // Debug temporal - agregar log del monto recibido
-    error_log("DEBUG MONTO: Valor recibido en POST['monto']: " . var_export($monto, true));
+    error_log("DEBUG MONTO: Valor recibido en POST['monto']: " . var_export($_POST['monto'], true) . " | Valor procesado: " . $monto);
 
     $nombre         = $_POST['nombre'];
     $direccion      = $_POST['direccion'];
@@ -318,7 +325,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $htmlBody = EmailTemplates::nuevoPedido($pedidoData);
 
     // PREPARAR CORREO CON FORMATO HTML
-    $destinatarios = "ventas@sequoiaspeed.com.co,jorgejosecardozo@gmail.com,joshuagamer95@gmail.com";
+    // REEMPLAZAR DESTINATARIOS INTERNOS CON NOTIFICACIÓN
+    notificarNuevoPedido($ultimo_id, $nombre, $monto);
+    
+    $destinatarios = "$correo"; // Solo enviar al cliente
     $boundary = md5(uniqid(time()));
 
     $headers  = "From: $nombre <ventas@sequoiaspeed.com.co>\r\n";
