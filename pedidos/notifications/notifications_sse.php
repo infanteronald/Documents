@@ -16,7 +16,7 @@ header('Cache-Control: no-cache');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no'); // Para nginx
 
-require_once '../conexion.php';
+require_once dirname(__DIR__) . '/conexion.php';
 
 // Función para enviar evento SSE
 function sendSSE($data) {

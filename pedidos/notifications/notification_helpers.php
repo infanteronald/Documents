@@ -4,7 +4,24 @@
  * Incluir este archivo donde se necesite crear notificaciones
  */
 
-require_once dirname(__FILE__) . '/notifications.php';
+// Solo incluir conexión, no el archivo API completo
+require_once dirname(__DIR__) . '/conexion.php';
+
+/**
+ * Función para crear notificación en base de datos
+ */
+function createNotification($conn, $type, $title, $message, $data = null, $user_id = 'admin') {
+    $query = "INSERT INTO notifications (user_id, type, title, message, data_json) VALUES (?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($query);
+    
+    $data_json = $data ? json_encode($data) : null;
+    $stmt->bind_param("sssss", $user_id, $type, $title, $message, $data_json);
+    
+    if ($stmt->execute()) {
+        return $stmt->insert_id;
+    }
+    return false;
+}
 
 /**
  * Notificar nuevo pedido
