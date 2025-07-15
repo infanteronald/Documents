@@ -54,7 +54,8 @@ class LegacyCompatibilityWrapper {
     this.redirectMap.set('procesar_pago_manual.php', '/public/api/payments/manual.php');
     this.redirectMap.set('bold_webhook_enhanced.php', '/public/api/bold/webhook.php');
     this.redirectMap.set('productos_por_categoria.php', '/public/api/productos/by-category.php');
-    this.redirectMap.set('exportar_excel.php', '/public/api/exports/excel.php');
+    this.redirectMap.set('exportar_excel.php', '/export_handler.php?formato=excel');
+    this.redirectMap.set('exportar_pdf.php', '/export_handler.php?formato=pdf');
   }
 
   setupAutoRedirects() {

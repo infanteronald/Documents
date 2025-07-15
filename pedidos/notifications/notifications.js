@@ -608,6 +608,10 @@ function showNotification(type, title, message, options = {}) {
  * Inicializar sistema al cargar la página
  */
 document.addEventListener('DOMContentLoaded', function() {
+    // SISTEMA DE NOTIFICACIONES COMPLETAMENTE PAUSADO PARA TROUBLESHOOTING
+    console.log('Notification system completely disabled for troubleshooting 503 error');
+    return;
+    
     // No inicializar en páginas excluidas
     if (window.location.pathname.includes('ver_detalle_pedido_cliente.php')) {
         return;

@@ -1,0 +1,21 @@
+[
+    {
+        "key": "cmd+shift+u",
+        "command": "sftp.upload.file",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "cmd+shift+i",
+        "command": "sftp.upload.folder",
+        "when": "explorerViewletFocus"
+    },
+    {
+        "key": "cmd+shift+s",
+        "command": "sftp.sync.localToRemote",
+        "when": "explorerViewletFocus"
+    },
+    {
+        "key": "cmd+shift+ctrl+s",
+        "command": "sftp.upload.activeFolder"
+    }
+]

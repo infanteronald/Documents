@@ -925,7 +925,27 @@ class EmailTemplates {
                 <div class="order-item">
                     <span class="label">Fecha de Envío:</span>
                     <span class="value">' . date('d/m/Y H:i') . '</span>
-                </div>
+                </div>';
+        
+        // Agregar información del monto si está disponible
+        $monto = $pedido['monto'] ?? $pedido['total'] ?? 0;
+        if ($monto > 0) {
+            $content .= '
+                <div class="order-item">
+                    <span class="label">Valor del Pedido:</span>
+                    <span class="value">$' . number_format($monto, 0, ',', '.') . ' COP</span>
+                </div>';
+        }
+        
+        if (isset($pedido['metodo_pago']) && !empty($pedido['metodo_pago'])) {
+            $content .= '
+                <div class="order-item">
+                    <span class="label">Método de Pago:</span>
+                    <span class="value">' . htmlspecialchars($pedido['metodo_pago']) . '</span>
+                </div>';
+        }
+        
+        $content .= '
             </div>
         </div>
 
@@ -952,6 +972,100 @@ class EmailTemplates {
 
         return self::getMainTemplate(
             '📦 Guía de envío - Pedido #' . $pedido_id . ' - Sequoia Speed',
+            $content,
+            '¡Gracias por confiar en Sequoia Speed!'
+        );
+    }
+
+    /**
+     * Email de comprobante de pago recibido
+     */
+    public static function emailComprobanteRecibido($pedido_id, $nombre_cliente, $pedido_data) {
+        $es_efectivo = isset($pedido_data['es_efectivo']) && $pedido_data['es_efectivo'];
+        
+        $content = '
+        <div class="hero">
+            <h1>💳 Comprobante de Pago Recibido</h1>
+            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', hemos recibido tu comprobante de pago</p>
+        </div>
+
+        <div class="section">
+            <h3>📄 Información del Pago</h3>
+            <div class="order-info">
+                <div class="order-item">
+                    <span class="label">Número de Pedido:</span>
+                    <span class="value">#' . $pedido_id . '</span>
+                </div>
+                <div class="order-item">
+                    <span class="label">Estado:</span>
+                    <span class="value status-pending">🔄 En Verificación</span>
+                </div>
+                <div class="order-item">
+                    <span class="label">Fecha de Recepción:</span>
+                    <span class="value">' . date('d/m/Y H:i') . '</span>
+                </div>';
+        
+        if (isset($pedido_data['metodo_pago'])) {
+            $content .= '
+                <div class="order-item">
+                    <span class="label">Método de Pago:</span>
+                    <span class="value">' . htmlspecialchars($pedido_data['metodo_pago']) . '</span>
+                </div>';
+        }
+        
+        $monto = $pedido_data['monto'] ?? $pedido_data['total'] ?? 0;
+        if ($monto > 0) {
+            $content .= '
+                <div class="order-item">
+                    <span class="label">Monto:</span>
+                    <span class="value">$' . number_format($monto, 0, ',', '.') . ' COP</span>
+                </div>';
+        }
+        
+        $content .= '
+            </div>
+        </div>';
+
+        if (!$es_efectivo) {
+            $content .= '
+            <div class="section">
+                <h3>📎 Comprobante Adjunto</h3>
+                <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                    Hemos recibido tu comprobante de pago y lo estamos verificando.
+                    En breve confirmaremos el pago y procederemos con el procesamiento de tu pedido.
+                </p>
+                <div style="background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                    <p style="color: #58a6ff !important; font-weight: 600; margin: 0;">
+                        📎 Archivo adjunto: comprobante_pedido_' . $pedido_id . '.pdf
+                    </p>
+                </div>
+            </div>';
+        } else {
+            $content .= '
+            <div class="section">
+                <h3>💵 Pago en Efectivo</h3>
+                <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                    Has confirmado que realizarás el pago en efectivo.
+                    Nuestro equipo se pondrá en contacto contigo para coordinar la entrega y el pago.
+                </p>
+            </div>';
+        }
+
+        $content .= '
+        <div class="section">
+            <h3>⏱️ Próximos Pasos</h3>
+            <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">
+                1. <strong>Verificación:</strong> Nuestro equipo verificará tu comprobante de pago<br>
+                2. <strong>Confirmación:</strong> Te enviaremos una confirmación una vez aprobado el pago<br>
+                3. <strong>Procesamiento:</strong> Procederemos con la preparación y envío de tu pedido
+            </p>
+            <p style="color: #8b949e !important; font-size: 14px; margin-top: 16px;">
+                Este proceso puede tomar entre 1-2 horas hábiles. Te mantendremos informado.
+            </p>
+        </div>';
+
+        return self::getMainTemplate(
+            '💳 Comprobante recibido - Pedido #' . $pedido_id . ' - Sequoia Speed',
             $content,
             '¡Gracias por confiar en Sequoia Speed!'
         );

@@ -1,0 +1,75 @@
+{
+    // === OPTIMIZACIÓN DE RENDIMIENTO ===
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/uploads/**": true,
+        "**/comprobantes/**": true,
+        "**/guias/**": true,
+        "**/desarrollo/temp/**": true,
+        "**/desarrollo/obsolete/**": true,
+        "**/.git/**": true,
+        "**/vendor/**": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/uploads": true,
+        "**/comprobantes": true,
+        "**/guias": true,
+        "**/desarrollo/temp": true,
+        "**/desarrollo/obsolete": true,
+        "**/vendor": true
+    },
+    "files.exclude": {
+        "**/desarrollo/temp": true,
+        "**/desarrollo/obsolete": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true
+    },
+    // === CONFIGURACIÓN PHP ===
+    "php.validate.enable": true,
+    "php.validate.run": "onType",
+    "php.suggest.basic": false,
+    // === CONFIGURACIÓN DE ARCHIVOS ===
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 3000,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    // === CONFIGURACIÓN SFTP ===
+    "sftp.printDebugLog": true,
+    "sftp.downloadOnOpen": false,
+    "sftp.autoSave": true,
+    "sftp.showStatusBarItem": true,
+    "sftp.enableTransferProgress": true,
+    // === OPTIMIZACIÓN DE INTERFAZ ===
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.enablePreviewFromQuickOpen": false,
+    "editor.minimap.enabled": false,
+    "explorer.incrementalNaming": "smart",
+    // === CONFIGURACIÓN GIT ===
+    "git.autoRefresh": false,
+    "git.autoRepositoryDetection": false,
+    // === CONFIGURACIÓN DE FORMATO ===
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false,
+    // === CONFIGURACIÓN DE BÚSQUEDA ===
+    "search.smartCase": true,
+    // === CONFIGURACIÓN DE EXTENSIONES ===
+    "extensions.autoUpdate": false,
+    "extensions.autoCheckUpdates": false,
+    // === CONFIGURACIÓN DE TERMINAL ===
+    "terminal.integrated.enablePersistentSessions": false,
+    // === DESHABILITAR COPILOT ===
+    "github.copilot.enable": {
+        "*": false,
+        "php": false,
+        "javascript": false,
+        "typescript": false,
+        "css": false,
+        "html": false
+    },
+    "github.copilot.advanced": {
+        "debug.overrideEngine": "none"
+    },
+    "github.copilot.editor.enableAutoCompletions": false
+}

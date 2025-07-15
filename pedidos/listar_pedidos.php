@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 include 'conexion.php';
 require_once 'filters.php';
 require_once 'ui-helpers.php';
-require_once 'notifications/notification_helpers.php';
+// require_once 'notifications/notification_helpers.php'; // PAUSADO PARA TROUBLESHOOTING
 
 // Inicializar filtros usando la nueva clase
 try {
@@ -52,8 +52,8 @@ try {
     <meta name="theme-color" content="#0d1117">
     <link rel="stylesheet" href="listar_pedidos.css">
     
-    <!-- Sistema de Notificaciones -->
-    <link rel="stylesheet" href="notifications/notifications.css">
+    <!-- Sistema de Notificaciones - PAUSADO PARA TROUBLESHOOTING -->
+    <!-- <link rel="stylesheet" href="notifications/notifications.css"> -->
 </head>
 <body>
 <div class="sticky-bar">
@@ -2817,7 +2817,7 @@ function formatNumber(num) {
 </script>
 
 <!-- Sistema de Notificaciones -->
-<script src="notifications/notifications.js"></script>
+<!-- <script src="notifications/notifications.js"></script> -->
 
 </body>
 </html>

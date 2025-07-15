@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GymTracker Design Replica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #f9fafb;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .navbar {
+            background-color: #1f2937;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .navbar .logo {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            gap: 1.5rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar li a {
+            color: #d1d5db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .navbar li a:hover,
+        .navbar li a.active {
+            color: #f9fafb;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .card {
+            background-color: #1f2937;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p {
+            font-size: 13px;
+            color: #d1d5db;
+            margin-bottom: 0.75rem;
+        }
+
+        .tag {
+            font-size: 12px;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            display: inline-block;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tag-principiante {
+            background-color: #064e3b;
+            color: #86efac;
+        }
+
+        .tag-intermedio {
+            background-color: #7c2d12;
+            color: #fdba74;
+        }
+
+        .tag-avanzado {
+            background-color: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .tag-muscle {
+            background-color: #374151;
+            color: #9ca3af;
+            font-size: 12px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .tag-muscle.pecho { background-color: #92400e; color: #fde68a; }
+        .tag-muscle.triceps { background-color: #92400e; color: #fde68a; }
+        .tag-muscle.deltoides { background-color: #92400e; color: #fde68a; }
+        .tag-muscle.espalda { background-color: #1d4ed8; color: #bfdbfe; }
+        .tag-muscle.trapecios { background-color: #1d4ed8; color: #bfdbfe; }
+        .tag-muscle.core { background-color: #1d4ed8; color: #bfdbfe; }
+
+        .duration {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+        }
+
+        .exercises-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .button-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+            border: none;
+        }
+
+        .button-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .button-secondary {
+            background-color: transparent;
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+        }
+
+        .button-secondary:hover {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .welcome h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome p {
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+
+        .user-dot {
+            background-color: #ec4899;
+            color: #ffffff;
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .modal {
+            background-color: #1f2937;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            width: 400px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 13px;
+            color: #d1d5db;
+            margin-bottom: 0.25rem;
+        }
+
+        .modal input,
+        .modal select {
+            width: 100%;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #f9fafb;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal textarea {
+            width: 100%;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #f9fafb;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            height: 80px;
+            margin-bottom: 1rem;
+        }
+
+        .icon-speaker {
+            color: #9ca3af;
+            font-size: 20px;
+        }
+
+        /* Toggle for showing different sections */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-nav {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .section-nav button {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #d1d5db;
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        .section-nav button.active {
+            background-color: #3b82f6;
+            color: #ffffff;
+            border-color: #3b82f6;
+        }
+
+        /* Hide modal by default */
+        .modal-overlay {
+            display: none;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .navbar ul {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar (common to all screens) -->
+    <nav class="navbar">
+        <div class="logo">GymTracker</div>
+        <ul>
+            <li><a href="#" onclick="showSection('home')">Inicio</a></li>
+            <li><a href="#" onclick="showSection('exercises')">Ejercicios</a></li>
+            <li><a href="#" onclick="showSection('templates')" class="active">Plantillas</a></li>
+            <li><a href="#" onclick="showSection('habits')">Hábitos</a></li>
+            <li><a href="#" onclick="showSection('objectives')">Objetivos</a></li>
+            <li><a href="#" onclick="showSection('analytics')">Analytics</a></li>
+            <li><a href="#" onclick="showSection('calculators')">Calculadoras</a></li>
+            <li><a href="#" onclick="showSection('social')">Social</a></li>
+            <li><a href="#">Ana <span class="icon-speaker">🔊</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- Section Navigation -->
+    <div class="section-nav">
+        <button onclick="showSection('home')" id="nav-home">Inicio</button>
+        <button onclick="showSection('templates')" id="nav-templates" class="active">Plantillas</button>
+        <button onclick="showSection('exercises')" id="nav-exercises">Ejercicios</button>
+        <button onclick="showModal()">Crear Objetivo</button>
+    </div>
+
+    <!-- Screen 1: Home Dashboard -->
+    <section class="container section" id="home">
+        <div class="welcome">
+            <h1>¡Hola, Ana!</h1>
+            <p>Tu compañero completo de fitness con entrenamiento, análisis, objetivos, logros y más.</p>
+            <span class="user-dot">Ana</span>
+            <br><br>
+            <button class="button button-primary">Comenzar Entrenamiento</button>
+            <p>Registra tu entrenamiento de hoy con timer de descanso integrado</p>
+        </div>
+        <div class="grid">
+            <div class="card">
+                <h3>Biblioteca de Ejercicios</h3>
+                <p>Explora ejercicios con instrucciones detalladas y consejos</p>
+                <button class="button button-secondary" onclick="showSection('exercises')">Explorar</button>
+            </div>
+            <div class="card">
+                <h3>Plantillas de Entrenamiento</h3>
+                <p>Usa rutinas predefinidas o crea las tuyas propias</p>
+                <button class="button button-secondary" onclick="showSection('templates')">Ver Plantillas</button>
+            </div>
+            <div class="card">
+                <h3>Objetivos</h3>
+                <p>Define y regula tu meta de fitness</p>
+                <span class="icon-speaker">🔊</span>
+                <br><br>
+                <button class="button button-secondary" onclick="showModal()">Crear Objetivo</button>
+            </div>
+            <div class="card">
+                <h3>Hábitos</h3>
+                <p>Construye rutinas saludables consistentes</p>
+                <button class="button button-secondary">Ver Hábitos</button>
+            </div>
+            <div class="card">
+                <h3>Analytics</h3>
+                <p>Analiza tu progreso y rendimiento</p>
+                <button class="button button-secondary">Ver Estadísticas</button>
+            </div>
+            <div class="card">
+                <h3>Calculadoras</h3>
+                <p>Herramientas para planificar entrenamientos</p>
+                <button class="button button-secondary">Usar Calculadora</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screen 2: Plantillas de Entrenamiento -->
+    <section class="container section active" id="templates">
+        <h2>Plantillas de Entrenamiento</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Core Destroyer</h3>
+                <p>Rutina intensa abdominales y core</p>
+                <div class="duration">20 min</div>
+                <span class="tag tag-intermedio">Intermedio</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle pecho">Pecho</li>
+                    <li class="tag-muscle triceps">Tríceps</li>
+                    <li class="tag-muscle deltoides">Deltoides</li>
+                </ul>
+                <button class="button button-secondary">Ver Detalles</button>
+                <button class="button button-primary">Iniciar</button>
+            </div>
+            <div class="card">
+                <h3>Yoga Flow Básico</h3>
+                <p>Secuencia de yoga para flexibilidad y relajación</p>
+                <div class="duration">30 min</div>
+                <span class="tag tag-principiante">Principiante</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle">Flexibilidad</li>
+                    <li class="tag-muscle">Relajación</li>
+                    <li class="tag-muscle">Público</li>
+                </ul>
+                <button class="button button-secondary">Ver Detalles</button>
+                <button class="button button-primary">Iniciar</button>
+            </div>
+            <div class="card">
+                <h3>HIIT Cardio Blast</h3>
+                <p>Entrenamiento cardiovascular de alta intensidad</p>
+                <div class="duration">25 min</div>
+                <span class="tag tag-principiante">Principiante</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle">Cardio</li>
+                    <li class="tag-muscle">Público</li>
+                </ul>
+                <button class="button button-secondary">Ver Detalles</button>
+                <button class="button button-primary">Iniciar</button>
+            </div>
+            <div class="card">
+                <h3>Upper Body Power</h3>
+                <p>Rutina intensa para parte superior</p>
+                <div class="duration">60 min</div>
+                <span class="tag tag-intermedio">Intermedio</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle">Fuerza</li>
+                    <li class="tag-muscle">Intermedio</li>
+                    <li class="tag-muscle">Público</li>
+                </ul>
+                <button class="button button-secondary">Ver Detalles</button>
+                <button class="button button-primary">Iniciar</button>
+            </div>
+            <div class="card">
+                <h3>Lower Body Burn</h3>
+                <p>Entrenamiento completo de piernas y glúteos</p>
+                <div class="duration">45 min</div>
+                <span class="tag tag-avanzado">Avanzado</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle">Piernas</li>
+                    <li class="tag-muscle">Glúteos</li>
+                    <li class="tag-muscle core">Core</li>
+                </ul>
+                <button class="button button-secondary">Ver Detalles</button>
+                <button class="button button-primary">Iniciar</button>
+            </div>
+            <div class="card">
+                <h3>Leg Day Killer</h3>
+                <p>Sesión intensiva de entrenamiento de piernas</p>
+                <div class="duration">55 min</div>
+                <span class="tag tag-avanzado">Avanzado</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle">Cuádriceps</li>
+                    <li class="tag-muscle">Isquiotibiales</li>
+                    <li class="tag-muscle">Pantorrillas</li>
+                </ul>
+                <button class="button button-secondary">Ver Detalles</button>
+                <button class="button button-primary">Iniciar</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screen 3: Exercise details -->
+    <section class="container section" id="exercises">
+        <h2>Biblioteca de Ejercicios</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Peso Muerto</h3>
+                <p>Ejercicio compuesto fundamental para desarrollar fuerza</p>
+                <div class="duration">4-6 series × 6-8 reps</div>
+                <span class="tag tag-avanzado">Avanzado</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle espalda">Espalda</li>
+                    <li class="tag-muscle trapecios">Trapecios</li>
+                    <li class="tag-muscle">Piernas</li>
+                </ul>
+                <button class="button button-secondary">Ver Técnica</button>
+                <button class="button button-primary">Agregar a Rutina</button>
+            </div>
+            <div class="card">
+                <h3>Sentadillas</h3>
+                <p>El rey de los ejercicios para piernas y glúteos</p>
+                <div class="duration">3-4 series × 8-12 reps</div>
+                <span class="tag tag-intermedio">Intermedio</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle">Cuádriceps</li>
+                    <li class="tag-muscle">Glúteos</li>
+                    <li class="tag-muscle core">Core</li>
+                </ul>
+                <button class="button button-secondary">Ver Técnica</button>
+                <button class="button button-primary">Agregar a Rutina</button>
+            </div>
+            <div class="card">
+                <h3>Press de Banca</h3>
+                <p>Ejercicio básico para desarrollo del pecho</p>
+                <div class="duration">3-4 series × 8-10 reps</div>
+                <span class="tag tag-intermedio">Intermedio</span>
+                <ul class="exercises-list">
+                    <li class="tag-muscle pecho">Pecho</li>
+                    <li class="tag-muscle triceps">Tríceps</li>
+                    <li class="tag-muscle deltoides">Deltoides</li>
+                </ul>
+                <button class="button button-secondary">Ver Técnica</button>
+                <button class="button button-primary">Agregar a Rutina</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal: Create New Objective -->
+    <div class="modal-overlay" id="objectiveModal">
+        <div class="modal">
+            <h2>Crear Nuevo Objetivo</h2>
+            <label>Título</label>
+            <input type="text" placeholder="Levantar 100kg en press de banca" id="objectiveTitle">
+            <label>Tipo</label>
+            <select id="objectiveType">
+                <option>Peso máximo</option>
+                <option>Flexiones</option>
+                <option>Sentadillas</option>
+                <option>Elevaciones Laterales</option>
+                <option>Abdominales</option>
+            </select>
+            <label>Descripción (opcional)</label>
+            <textarea placeholder="Detalles adicionales sobre tu objetivo..." id="objectiveDescription"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button class="button button-secondary" onclick="hideModal()">Cancelar</button>
+                <button class="button button-primary" onclick="createObjective()">Crear Objetivo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Hide all nav buttons active state
+            const navButtons = document.querySelectorAll('.section-nav button');
+            navButtons.forEach(button => button.classList.remove('active'));
+            
+            // Show the selected section
+            const targetSection = document.getElementById(sectionName);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Set active nav button
+            const activeButton = document.getElementById('nav-' + sectionName);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+            
+            // Update navbar active link
+            const navLinks = document.querySelectorAll('.navbar a');
+            navLinks.forEach(link => link.classList.remove('active'));
+        }
+
+        function showModal() {
+            document.getElementById('objectiveModal').classList.add('show');
+        }
+
+        function hideModal() {
+            document.getElementById('objectiveModal').classList.remove('show');
+        }
+
+        function createObjective() {
+            const title = document.getElementById('objectiveTitle').value;
+            const type = document.getElementById('objectiveType').value;
+            const description = document.getElementById('objectiveDescription').value;
+            
+            if (title.trim() === '') {
+                alert('Por favor ingresa un título para el objetivo');
+                return;
+            }
+            
+            // Here you would normally save the objective
+            alert(`Objetivo creado: ${title}`);
+            
+            // Clear form and hide modal
+            document.getElementById('objectiveTitle').value = '';
+            document.getElementById('objectiveDescription').value = '';
+            hideModal();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('objectiveModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideModal();
+            }
+        });
+    </script>
+
+</body>
+</html>

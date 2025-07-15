@@ -1,0 +1,60 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "SFTP: Sync to Server",
+			"type": "shell",
+			"command": "echo",
+			"args": [
+				"Sincronizando con servidor..."
+			],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": [],
+			"detail": "Comando rápido para sincronizar archivos con el servidor SFTP"
+		},
+		{
+			"label": "Limpiar Archivos Temporales",
+			"type": "shell",
+			"command": "./clean-temp-files.sh",
+			"args": [],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"problemMatcher": [],
+			"detail": "Ejecuta limpieza completa de archivos temporales del proyecto"
+		},
+		{
+			"label": "Limpiar (Simulación)",
+			"type": "shell",
+			"command": "./clean-temp-files.sh",
+			"args": [
+				"--dry-run"
+			],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"problemMatcher": [],
+			"detail": "Simula limpieza de archivos temporales sin borrar nada"
+		}
+	]
+}

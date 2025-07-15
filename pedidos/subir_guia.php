@@ -6,7 +6,7 @@
 
 include 'conexion.php';
 include 'email_templates.php';
-require_once 'notifications/notification_helpers.php';
+// require_once 'notifications/notification_helpers.php'; // PAUSADO PARA TROUBLESHOOTING
 
 header('Content-Type: application/json');
 error_reporting(E_ALL);
@@ -224,12 +224,12 @@ if(file_exists($rutaArchivo)){
 }
 $cuerpo_ventas .= "--$boundary--";
 
-// REEMPLAZAR EMAIL A VENTAS CON NOTIFICACIÓN
-notificarGuiaAdjuntada($id, $nombreGuia);
+// REEMPLAZAR EMAIL A VENTAS CON NOTIFICACIÓN - PAUSADO PARA TROUBLESHOOTING
+// notificarGuiaAdjuntada($id, $nombreGuia);
 
 // Si se marcó como enviado, también notificar ese cambio
 if ($marcar_enviado === 'true') {
-    notificarCambioEstado($id, 'pendiente', 'enviado');
+    // notificarCambioEstado($id, 'pendiente', 'enviado');
 }
 
 $email_ventas_enviado = true; // Para compatibilidad con el response
