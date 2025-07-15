@@ -185,6 +185,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             break;
             
+        case 'delete_all':
+            $query = "DELETE FROM notifications WHERE user_id = 'admin'";
+            
+            if ($conn->query($query)) {
+                jsonResponse(true, ['affected' => $conn->affected_rows]);
+            } else {
+                jsonResponse(false, [], 'Failed to delete all notifications');
+            }
+            break;
+            
         case 'delete':
             $notification_id = (int)($input['notification_id'] ?? 0);
             

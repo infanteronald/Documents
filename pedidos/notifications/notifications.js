@@ -65,8 +65,8 @@ class NotificationSystem {
                 <div class="notification-dropdown-header">
                     <h3 class="notification-dropdown-title">Notificaciones</h3>
                     <div class="notification-dropdown-actions">
-                        <button class="notification-dropdown-btn" onclick="notificationSystem.markAllAsRead()">
-                            Marcar todas
+                        <button class="notification-dropdown-btn" onclick="notificationSystem.clearAllNotifications()">
+                            Limpiar
                         </button>
                     </div>
                 </div>
@@ -247,6 +247,32 @@ class NotificationSystem {
             
         } catch (error) {
             console.error('Error marking all as read:', error);
+        }
+    }
+
+    /**
+     * Limpiar todas las notificaciones (eliminar del listado)
+     */
+    async clearAllNotifications() {
+        try {
+            await fetch('notifications/notifications.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'delete_all'
+                })
+            });
+            
+            // Actualizar contador a 0
+            this.updateBadgeCount(0);
+            
+            // Mostrar listado vacío inmediatamente
+            this.renderDropdownNotifications([]);
+            
+        } catch (error) {
+            console.error('Error clearing all notifications:', error);
         }
     }
 
