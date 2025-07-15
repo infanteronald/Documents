@@ -295,6 +295,10 @@ class NotificationSystem {
      * Conectar con Server-Sent Events
      */
     connectSSE() {
+        // PAUSADO TEMPORALMENTE PARA TROUBLESHOOTING
+        console.log('SSE connections paused for troubleshooting');
+        return;
+        
         if (this.eventSource) {
             this.eventSource.close();
         }
