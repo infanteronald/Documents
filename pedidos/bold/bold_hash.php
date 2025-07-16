@@ -21,10 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Configuración Bold - LLAVES DE PRODUCCIÓN
-// IMPORTANTE: Estas son las llaves reales de Bold para Sequoia Speed
-const BOLD_API_KEY = '0yRP5iNsgcqoOGTaNLrzKNBLHbAaEOxhJPmLJpMevCg'; // Llave de identidad (pública)
-const BOLD_SECRET_KEY = '9BhbT6HQPb7QnKmrMheJkQ';                    // Llave secreta (privada) - NUNCA exponer al frontend
+// Cargar configuración segura
+require_once '../config_secure.php';
+
+// Configuración Bold desde variables de entorno
+$bold_api_key = env_required('BOLD_API_KEY');
+$bold_secret_key = env_required('BOLD_SECRET_KEY');
 
 // Obtener datos del POST
 $input = json_decode(file_get_contents('php://input'), true);
@@ -65,7 +67,7 @@ if (!in_array($currency, ['COP', 'USD'])) {
 
 // Generar hash de integridad según documentación Bold
 // Formato: {Identificador}{Monto}{Divisa}{LlaveSecreta}
-$hash_string = $order_id . $amount . $currency . BOLD_SECRET_KEY;
+$hash_string = $order_id . $amount . $currency . $bold_secret_key;
 $integrity_hash = hash('sha256', $hash_string);
 
 // Respuesta
@@ -76,7 +78,7 @@ $response = [
         'amount' => $amount,
         'currency' => $currency,
         'integrity_signature' => $integrity_hash,
-        'api_key' => BOLD_API_KEY
+        'api_key' => $bold_api_key
     ]
 ];
 

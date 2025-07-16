@@ -11,7 +11,7 @@ class ProductoService
     
     public function __construct() 
     {
-        require_once __DIR__ . "/../../conexion.php";
+        require_once __DIR__ . "/../../config_secure.php";
         global $conn;
         $this->producto = new Producto($conn);
     }

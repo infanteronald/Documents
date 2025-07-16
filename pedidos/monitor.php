@@ -13,7 +13,7 @@ header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: 0');
 
-require_once 'conexion.php';
+require_once 'config_secure.php';
 require_once 'php82_helpers.php';
 
 // Configuración simplificada

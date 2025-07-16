@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     exit;
 }
 
-require_once "conexion.php";
+require_once '../config_secure.php';
 require_once "bold_unified_logger.php";
 
 try {

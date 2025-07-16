@@ -9,7 +9,7 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 header('Content-Type: application/json');
-require_once "conexion.php";
+require_once 'config_secure.php';
 
 // Log para debugging
 error_log("=== INICIO ACTUALIZAR_PEDIDO_BOLD === " . date('Y-m-d H:i:s'));

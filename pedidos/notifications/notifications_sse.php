@@ -16,7 +16,7 @@ header('Cache-Control: no-cache');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no'); // Para nginx
 
-require_once dirname(__DIR__) . '/conexion.php';
+require_once dirname(__DIR__) . '/config_secure.php';
 require_once __DIR__ . '/sse_manager.php';
 
 // Verificar si las notificaciones SSE están deshabilitadas

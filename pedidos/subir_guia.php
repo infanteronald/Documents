@@ -4,7 +4,7 @@
  * Sequoia Speed - Gestión de guías de envío
  */
 
-include 'conexion.php';
+require_once 'config_secure.php';
 include 'email_templates.php';
 require_once 'notifications/notification_helpers.php';
 require_once 'php82_helpers.php';

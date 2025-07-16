@@ -135,6 +135,9 @@ private_key.pem
 public_key.pem
 jwt_private.key
 jwt_public.key
+push_config.json
+.vscode/sftp.json
+conf/vscode/project/sftp.json
 
 # ==============================================================================
 # ARCHIVOS ESPECÍFICOS DEL PROYECTO A IGNORAR

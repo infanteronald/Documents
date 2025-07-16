@@ -1,6 +1,6 @@
 <?php
 // Bold Status Check - Endpoint para verificar estado de pagos Bold V6
-require_once '../conexion.php';
+require_once '../config_secure.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');

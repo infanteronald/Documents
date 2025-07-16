@@ -13,7 +13,7 @@ class PedidoService
     
     public function __construct() 
     {
-        require_once __DIR__ . "/../../conexion.php";
+        require_once __DIR__ . "/../../config_secure.php";
         global $conn;
         $this->conn = $conn;
         $this->pedido = new Pedido($conn);

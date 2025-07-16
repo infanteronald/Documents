@@ -190,7 +190,7 @@ require_once __DIR__ . '/../php82_helpers.php';
 
         // Si tenemos bold_order_id, buscar en la base de datos el estado real
         if ($bold_order_id) {
-            require_once "conexion.php";
+            require_once "../config_secure.php";
             $stmt = $conn->prepare("SELECT pedido, estado_pago FROM pedidos_detal WHERE bold_order_id = ?");
             $stmt->bind_param("s", $bold_order_id);
             $stmt->execute();
@@ -305,8 +305,8 @@ require_once __DIR__ . '/../php82_helpers.php';
     </div>
 
     <?php
-    // Conexión a la base de datos (ajustar según sea necesario)
-    $conn = new mysqli('localhost', 'usuario', 'contraseña', 'base_de_datos');
+    // Usar conexión segura
+    require_once '../config_secure.php';
 
     // Verificar conexión
     if ($conn->connect_error) {

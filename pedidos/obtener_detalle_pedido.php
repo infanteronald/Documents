@@ -7,13 +7,13 @@ header('Content-Type: application/json');
 
 // Intentar incluir conexión con manejo de errores
 try {
-    if (!file_exists('conexion.php')) {
+    if (!file_exists('config_secure.php')) {
         throw new Exception('Archivo de conexión no encontrado');
     }
     
     // Capturar cualquier output antes de incluir
     ob_start();
-    include 'conexion.php';
+    require_once 'config_secure.php';
     $output = ob_get_clean();
     
     // Si hay output o error en la conexión

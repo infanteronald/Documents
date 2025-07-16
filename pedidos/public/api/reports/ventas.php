@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     // Incluir configuración
-    require_once '../../../conexion.php';
+    require_once '../../../config_secure.php';
     
     // Parámetros de consulta
     $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-01'); // Primer día del mes actual

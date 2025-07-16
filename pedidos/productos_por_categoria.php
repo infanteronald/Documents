@@ -1,7 +1,7 @@
 <?php
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-require_once "conexion.php";
+require_once 'config_secure.php';
 header('Content-Type: application/json; charset=UTF-8');
 
 $cat = isset($_GET['cat']) ? trim($_GET['cat']) : '';

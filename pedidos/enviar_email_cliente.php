@@ -5,7 +5,7 @@
  */
 
 header('Content-Type: application/json');
-include 'conexion.php';
+require_once 'config_secure.php';
 include 'email_templates.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

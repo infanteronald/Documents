@@ -5,7 +5,7 @@
  */
 
 // Solo incluir conexión, no el archivo API completo
-require_once dirname(__DIR__) . '/conexion.php';
+require_once dirname(__DIR__) . '/config_secure.php';
 
 // Incluir push_sender.php solo si existe y composer está instalado
 if (file_exists('push_sender.php') && file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {

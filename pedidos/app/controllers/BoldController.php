@@ -18,7 +18,7 @@ class BoldController
     {
         $this->boldService = new BoldWebhookService();
         require_once dirname(dirname(__DIR__)) . "/app/models/Pedido.php";
-        require_once dirname(dirname(__DIR__)) . "/conexion.php";
+        require_once dirname(dirname(__DIR__)) . "/config_secure.php";
         global $conn;
         $this->pedidoModel = new \Pedido($conn);
     }

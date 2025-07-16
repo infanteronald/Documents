@@ -1,6 +1,6 @@
 <?php
 // Bold Unified Logger - Sistema unificado de logging para Bold
-require_once 'conexion.php';
+require_once '../config_secure.php';
 
 class BoldUnifiedLogger
 {

@@ -19,7 +19,7 @@ if (!$id_pedido || !isset($_FILES['comprobante'])) {
 
 try {
     // Incluir la configuración de la base de datos
-    require_once 'conexion.php';
+    require_once 'config_secure.php';
 
     // Buscar datos del pedido
     $stmt = $pdo->prepare("SELECT id, cliente_email, cliente_nombre, total, estado FROM pedidos WHERE id = ? LIMIT 1");

@@ -56,21 +56,8 @@ $payment_method = trim($data['payment_method'] ?? 'PSE Bold');
 error_log("Bold Status Update - Order: $order_id, Status: $status");
 
 try {
-    // Configuración de base de datos
-    $db_config = [
-        'host' => 'localhost',
-        'username' => 'motodota_pedidos',
-        'password' => 'Blink.182...',
-        'database' => 'motodota_pedidos'
-    ];
-
-    // Conectar a la base de datos
-    $conn = new mysqli(
-        $db_config['host'],
-        $db_config['username'],
-        $db_config['password'],
-        $db_config['database']
-    );
+    // Usar conexión segura
+    require_once '../config_secure.php';
 
     if ($conn->connect_error) {
         throw new Exception('Error de conexión: ' . $conn->connect_error);

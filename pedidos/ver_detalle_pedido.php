@@ -10,7 +10,7 @@ ini_set('display_errors', 1);
 ini_set('memory_limit', '256M');
 
 // Incluir conexión a base de datos
-include 'conexion.php';
+require_once 'config_secure.php';
 require_once 'notifications/notification_helpers.php';
 require_once 'php82_helpers.php';
 

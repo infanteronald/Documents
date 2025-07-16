@@ -44,13 +44,8 @@ if ($id_pedido <= 0) {
 }
 
 try {
-    // Conexión manual para evitar problemas
-    $servername = "68.66.226.124";
-    $username = "motodota_facturacion";
-    $password = "Blink.182...";
-    $dbname = "motodota_factura_electronica";
-
-    $conn = new mysqli($servername, $username, $password, $dbname);
+    // Usar conexión segura
+    require_once 'config_secure.php';
 
     // Verificar conexión
     if ($conn->connect_error) {

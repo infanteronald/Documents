@@ -4,7 +4,7 @@
  * Para procesar manualmente pagos cuando el webhook no funciona
  */
 
-require_once "conexion.php";
+require_once 'config_secure.php';
 
 if (!isset($_GET['order_id']) || !isset($_GET['status'])) {
     die("❌ Faltan parámetros: order_id y status son requeridos");

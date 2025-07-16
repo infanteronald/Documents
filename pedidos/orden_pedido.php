@@ -1,5 +1,5 @@
 <?php
-require_once "conexion.php";
+require_once 'config_secure.php';
 require_once 'php82_helpers.php';
 
 // Obtener categorías

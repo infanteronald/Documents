@@ -4,7 +4,7 @@
  * Integración con el sistema de pagos existente
  */
 
-require_once "conexion.php";
+require_once '../config_secure.php';
 
 class BoldNotificationSystem {
     private $conn;

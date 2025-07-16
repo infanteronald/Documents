@@ -6,7 +6,7 @@ ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/debug.log');
 
 header('Content-Type: application/json'); // Asegurar que la respuesta sea JSON
-require_once "conexion.php";
+require_once 'config_secure.php';
 
 // Log para debugging
 error_log("=== INICIO GUARDAR_PEDIDO === " . date('Y-m-d H:i:s'));

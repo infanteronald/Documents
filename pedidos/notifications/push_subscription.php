@@ -7,7 +7,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once dirname(__DIR__) . '/conexion.php';
+require_once dirname(__DIR__) . '/config_secure.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');

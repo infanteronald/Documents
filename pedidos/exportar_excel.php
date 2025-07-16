@@ -1,5 +1,5 @@
 <?php
-include 'conexion.php';
+require_once 'config_secure.php';
 
 // Filtros
 $filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'hoy';

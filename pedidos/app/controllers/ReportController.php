@@ -24,7 +24,7 @@ class ReportController
             }
             
             // Conectar a BD y obtener métricas
-            require_once __DIR__ . "/../../conexion.php";
+            require_once __DIR__ . "/../../config_secure.php";
             
             $today = date("Y-m-d");
             $thisMonth = date("Y-m");

@@ -1,6 +1,6 @@
 <?php
 // ver_guia.php
-require_once "conexion.php";
+require_once 'config_secure.php';
 require_once 'php82_helpers.php';
 
 // Obtener ID de pedido

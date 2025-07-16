@@ -5,7 +5,7 @@
  */
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
-require_once dirname(__DIR__) . '/conexion.php';
+require_once dirname(__DIR__) . '/config_secure.php';
 
 use Minishlink\WebPush\WebPush;
 use Minishlink\WebPush\Subscription;

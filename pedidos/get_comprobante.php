@@ -20,7 +20,7 @@ $id_pedido = intval($_GET['id_pedido']);
 
 try {
     // Incluir la configuración de la base de datos
-    require_once 'conexion.php';
+    require_once 'config_secure.php';
 
     // Consultar información del comprobante del pedido
     $stmt = $pdo->prepare("

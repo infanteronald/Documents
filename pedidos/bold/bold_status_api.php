@@ -45,7 +45,7 @@ try {
     error_log("Bold Status API - Directorio actual: " . __DIR__);
 
     // Usar archivo de conexión existente
-    require_once __DIR__ . '/../conexion.php';
+    require_once __DIR__ . '/../config_secure.php';
 
     if (!isset($conn) || !$conn) {
         throw new Exception('Error: conexión a base de datos no disponible');
