@@ -131,8 +131,6 @@ class NotificationSystem {
             
             if (data.success && data.data.notifications) {
                 this.renderDropdownNotifications(data.data.notifications);
-            } else {
-                console.log('No notifications found or error:', data);
             }
         } catch (error) {
             console.error('Error loading dropdown notifications:', error);
@@ -144,8 +142,6 @@ class NotificationSystem {
      */
     renderDropdownNotifications(notifications) {
         const list = document.getElementById('notification-dropdown-list');
-        
-        console.log('Renderizando notificaciones:', notifications);
         
         if (!notifications || notifications.length === 0) {
             list.innerHTML = `
@@ -295,10 +291,6 @@ class NotificationSystem {
      * Conectar con Server-Sent Events
      */
     connectSSE() {
-        // PAUSADO TEMPORALMENTE PARA TROUBLESHOOTING
-        console.log('SSE connections paused for troubleshooting');
-        return;
-        
         if (this.eventSource) {
             this.eventSource.close();
         }
@@ -608,10 +600,6 @@ function showNotification(type, title, message, options = {}) {
  * Inicializar sistema al cargar la página
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // SISTEMA DE NOTIFICACIONES COMPLETAMENTE PAUSADO PARA TROUBLESHOOTING
-    console.log('Notification system completely disabled for troubleshooting 503 error');
-    return;
-    
     // No inicializar en páginas excluidas
     if (window.location.pathname.includes('ver_detalle_pedido_cliente.php')) {
         return;
