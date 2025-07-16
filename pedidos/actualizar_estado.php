@@ -9,6 +9,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 include 'conexion.php';
+require_once 'notifications/notification_helpers.php';
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     try {
@@ -21,7 +22,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         // Obtener datos del pedido para las notificaciones
-        $query = "SELECT nombre, correo, telefono, ciudad, barrio, monto, descuento FROM pedidos_detal WHERE id = ? LIMIT 1";
+        $query = "SELECT nombre, correo, telefono, ciudad, barrio, monto, descuento, enviado, archivado, anulado, pagado FROM pedidos_detal WHERE id = ? LIMIT 1";
         $stmt = $conn->prepare($query);
         if (!$stmt) {
             echo json_encode(['success' => false, 'error' => 'Error en preparación de consulta: ' . $conn->error]);
@@ -34,7 +35,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             exit;
         }
 
-        $stmt->bind_result($nombre_cliente, $correo_cliente, $telefono_cliente, $ciudad_cliente, $barrio_cliente, $monto, $descuento);
+        $stmt->bind_result($nombre_cliente, $correo_cliente, $telefono_cliente, $ciudad_cliente, $barrio_cliente, $monto, $descuento, $enviado_anterior, $archivado_anterior, $anulado_anterior, $pagado_anterior);
         if (!$stmt->fetch()) {
             echo json_encode(['success' => false, 'error' => 'Pedido no encontrado']);
             exit;
@@ -85,6 +86,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $stmt->bind_param("i", $id);
                     $updated = $stmt->execute();
                     $stmt->close();
+                    
+                    // Agregar notificación
+                    if ($updated) {
+                        notificarPagoConfirmado($id, $monto, 'Manual');
+                    }
                 }
                 $estado_texto = 'Pago Confirmado';
                 break;
@@ -94,6 +100,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $stmt->bind_param("i", $id);
                     $updated = $stmt->execute();
                     $stmt->close();
+                    
+                    // Agregar notificación
+                    if ($updated) {
+                        notificarCambioEstado($id, 'pendiente', 'enviado');
+                    }
                 }
                 $estado_texto = 'Enviado';
                 break;
@@ -104,6 +115,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $stmt->bind_param("i", $id);
                     $updated = $stmt->execute();
                     $stmt->close();
+                    
+                    // Agregar notificación
+                    if ($updated) {
+                        notificarPedidoAnulado($id);
+                    }
                 }
                 $estado_texto = 'Cancelado';
                 break;
@@ -113,6 +129,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $stmt->bind_param("i", $id);
                     $updated = $stmt->execute();
                     $stmt->close();
+                    
+                    // Agregar notificación
+                    if ($updated) {
+                        notificarCambioEstado($id, 'pendiente', 'archivado');
+                    }
                 }
                 $estado_texto = 'Archivado';
                 break;

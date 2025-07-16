@@ -11,6 +11,7 @@ ini_set('memory_limit', '256M');
 
 // Incluir conexión a base de datos
 include 'conexion.php';
+require_once 'notifications/notification_helpers.php';
 
 // Función para escape HTML seguro
 function h($txt) {
@@ -455,6 +456,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
     <meta name="theme-color" content="#0d1117">
     <title><?php echo $pedido_encontrado ? 'Pedido #' . h($p['id']) : 'Error'; ?> - Sequoia Speed</title>
     <link rel="stylesheet" href="ver_detalle_pedido_optimized.css">
+    <!-- Sistema de Notificaciones -->
+    <link rel="stylesheet" href="notifications/notifications.css">
     <!-- All CSS has been moved to external file -->
 </head>
 <body>
@@ -2467,5 +2470,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
         console.log('✅ Optimizaciones para móvil aplicadas');
     }
     </script>
+    
+    <!-- Sistema de Notificaciones -->
+    <script src="notifications/notifications.js"></script>
 </body>
 </html>

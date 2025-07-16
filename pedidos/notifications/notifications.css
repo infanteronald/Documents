@@ -380,6 +380,27 @@
     color: #d1d5db;
 }
 
+.notification-dropdown-close {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    font-size: 20px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-left: 8px;
+}
+
+.notification-dropdown-close:hover {
+    background: #374151;
+    color: #f9fafb;
+}
+
 /* Lista de notificaciones */
 .notification-dropdown-list {
     max-height: 400px;

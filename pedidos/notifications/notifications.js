@@ -68,6 +68,9 @@ class NotificationSystem {
                         <button class="notification-dropdown-btn" onclick="notificationSystem.clearAllNotifications()">
                             Limpiar
                         </button>
+                        <button class="notification-dropdown-close" onclick="notificationSystem.closeDropdown()" title="Cerrar">
+                            ×
+                        </button>
                     </div>
                 </div>
                 <div class="notification-dropdown-list" id="notification-dropdown-list">
