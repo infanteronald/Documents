@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../php82_helpers.php';
 /**
  * Handler para pagos pendientes de Bold
  * Este archivo maneja las redirecciones de pagos pendientes de Bold
@@ -87,12 +88,12 @@ $status = $_GET['status'] ?? 'pending';
         <div class="details">
             <div class="detail-row">
                 <span><strong>Orden:</strong></span>
-                <span><?= htmlspecialchars($order_id) ?></span>
+                <span><?= h($order_id) ?></span>
             </div>
             <?php if ($transaction_id): ?>
             <div class="detail-row">
                 <span><strong>Transacción:</strong></span>
-                <span><?= htmlspecialchars($transaction_id) ?></span>
+                <span><?= h($transaction_id) ?></span>
             </div>
             <?php endif; ?>
             <div class="detail-row">
@@ -117,8 +118,8 @@ $status = $_GET['status'] ?? 'pending';
 
         // Datos del pago pendiente
         const pendingData = {
-            orderId: '<?= htmlspecialchars($order_id) ?>',
-            transactionId: '<?= htmlspecialchars($transaction_id) ?>',
+            orderId: '<?= h($order_id) ?>',
+            transactionId: '<?= h($transaction_id) ?>',
             status: 'pending'
         };
 

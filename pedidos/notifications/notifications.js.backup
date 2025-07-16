@@ -1,7 +1,7 @@
 /**
- * Enhanced Notification System with Push Notifications
+ * Sistema de Notificaciones en Tiempo Real
  * @author Claude Assistant
- * @version 2.0.0
+ * @version 1.0.0
  */
 
 class NotificationSystem {
@@ -16,14 +16,9 @@ class NotificationSystem {
         this.preferences = {
             sound_enabled: true,
             auto_dismiss_seconds: 10,
-            position: 'top-right',
-            push_enabled: false
+            position: 'top-right'
         };
         this.audioContext = null;
-        this.pushSupported = false;
-        this.pushPermission = 'default';
-        this.pushSubscription = null;
-        this.vapidPublicKey = 'BKkHNNyupL6icILj3eUek5Aq-fwrQ967-fhdzKTzG3uzhH8PlhUYGhjKRnvBVYIx9vmYKM-JObcOT3LfdXgBShY';
         this.init();
     }
 
@@ -51,309 +46,6 @@ class NotificationSystem {
         
         // Cargar notificaciones no leídas
         this.loadUnreadNotifications();
-        
-        // Inicializar push notifications
-        this.initializePushNotifications();
-    }
-
-    /**
-     * Inicializar push notifications
-     */
-    async initializePushNotifications() {
-        // Verificar soporte para push notifications
-        this.pushSupported = this.checkPushSupport();
-        
-        if (!this.pushSupported) {
-            console.log('[Push] Push notifications not supported');
-            return;
-        }
-
-        // Verificar permisos
-        this.pushPermission = await this.checkNotificationPermission();
-        
-        // Registrar service worker
-        await this.registerServiceWorker();
-        
-        // Si tenemos permisos, verificar/obtener suscripción
-        if (this.pushPermission === 'granted') {
-            await this.checkExistingSubscription();
-        }
-        
-        // Agregar botón de configuración push al dropdown
-        this.addPushSettingsToDropdown();
-    }
-
-    /**
-     * Verificar soporte para push notifications
-     */
-    checkPushSupport() {
-        return 'serviceWorker' in navigator && 
-               'PushManager' in window && 
-               'Notification' in window;
-    }
-
-    /**
-     * Verificar permisos de notificación
-     */
-    async checkNotificationPermission() {
-        if (!('Notification' in window)) {
-            return 'unsupported';
-        }
-        
-        return Notification.permission;
-    }
-
-    /**
-     * Registrar service worker
-     */
-    async registerServiceWorker() {
-        if (!('serviceWorker' in navigator)) {
-            return null;
-        }
-
-        try {
-            const registration = await navigator.serviceWorker.register('/push-service-worker.js');
-            console.log('[Push] Service worker registered:', registration);
-            return registration;
-        } catch (error) {
-            console.error('[Push] Service worker registration failed:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Solicitar permisos de notificación
-     */
-    async requestNotificationPermission() {
-        if (!('Notification' in window)) {
-            return 'unsupported';
-        }
-
-        const permission = await Notification.requestPermission();
-        this.pushPermission = permission;
-        
-        if (permission === 'granted') {
-            await this.subscribeToPushNotifications();
-        }
-        
-        return permission;
-    }
-
-    /**
-     * Suscribirse a push notifications
-     */
-    async subscribeToPushNotifications() {
-        if (!this.pushSupported || this.pushPermission !== 'granted') {
-            return null;
-        }
-
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
-            });
-
-            this.pushSubscription = subscription;
-            
-            // Enviar suscripción al servidor
-            await this.sendSubscriptionToServer(subscription);
-            
-            console.log('[Push] Successfully subscribed to push notifications');
-            return subscription;
-        } catch (error) {
-            console.error('[Push] Failed to subscribe to push notifications:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Verificar suscripción existente
-     */
-    async checkExistingSubscription() {
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.getSubscription();
-            
-            if (subscription) {
-                this.pushSubscription = subscription;
-                console.log('[Push] Existing subscription found');
-                
-                // Verificar si la suscripción sigue siendo válida
-                await this.sendSubscriptionToServer(subscription);
-            }
-            
-            return subscription;
-        } catch (error) {
-            console.error('[Push] Error checking existing subscription:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Enviar suscripción al servidor
-     */
-    async sendSubscriptionToServer(subscription) {
-        try {
-            const response = await fetch('notifications/push_subscription.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'subscribe',
-                    subscription: subscription.toJSON(),
-                    userAgent: navigator.userAgent
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                console.log('[Push] Subscription sent to server successfully');
-            } else {
-                console.error('[Push] Failed to send subscription to server:', data.error);
-            }
-        } catch (error) {
-            console.error('[Push] Error sending subscription to server:', error);
-        }
-    }
-
-    /**
-     * Desuscribirse de push notifications
-     */
-    async unsubscribeFromPushNotifications() {
-        if (!this.pushSubscription) {
-            return true;
-        }
-
-        try {
-            // Desuscribir del navegador
-            await this.pushSubscription.unsubscribe();
-            
-            // Notificar al servidor
-            await fetch('notifications/push_subscription.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'unsubscribe',
-                    endpoint: this.pushSubscription.endpoint
-                })
-            });
-
-            this.pushSubscription = null;
-            console.log('[Push] Successfully unsubscribed from push notifications');
-            return true;
-        } catch (error) {
-            console.error('[Push] Error unsubscribing from push notifications:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Agregar configuración push al dropdown
-     */
-    addPushSettingsToDropdown() {
-        const header = this.bell.querySelector('.notification-dropdown-header');
-        const actions = header.querySelector('.notification-dropdown-actions');
-        
-        if (!this.pushSupported) {
-            return;
-        }
-
-        // Crear botón de configuración push
-        const pushButton = document.createElement('button');
-        pushButton.className = 'notification-dropdown-btn push-settings-btn';
-        pushButton.title = 'Configurar notificaciones push';
-        pushButton.innerHTML = this.pushPermission === 'granted' ? '🔔' : '🔕';
-        pushButton.onclick = () => this.togglePushSettings();
-        
-        // Insertar antes del botón de cerrar
-        const closeButton = actions.querySelector('.notification-dropdown-close');
-        actions.insertBefore(pushButton, closeButton);
-    }
-
-    /**
-     * Toggle configuración push
-     */
-    async togglePushSettings() {
-        if (this.pushPermission === 'granted') {
-            // Mostrar opciones de configuración
-            this.showPushSettingsModal();
-        } else {
-            // Solicitar permisos
-            const permission = await this.requestNotificationPermission();
-            
-            if (permission === 'granted') {
-                // Actualizar botón
-                const pushButton = this.bell.querySelector('.push-settings-btn');
-                if (pushButton) {
-                    pushButton.innerHTML = '🔔';
-                    pushButton.title = 'Notificaciones push activadas';
-                }
-                
-                // Mostrar confirmación
-                this.showNotification({
-                    id: 'push-enabled-' + Date.now(),
-                    type: 'success',
-                    title: 'Push Notifications Activadas',
-                    message: 'Ahora recibirás notificaciones incluso cuando cierres la pestaña'
-                });
-            } else {
-                this.showNotification({
-                    id: 'push-denied-' + Date.now(),
-                    type: 'warning',
-                    title: 'Permisos Requeridos',
-                    message: 'Para recibir notificaciones push, permite las notificaciones del navegador'
-                });
-            }
-        }
-    }
-
-    /**
-     * Mostrar modal de configuración push
-     */
-    showPushSettingsModal() {
-        const modal = document.createElement('div');
-        modal.className = 'push-settings-modal';
-        modal.innerHTML = `
-            <div class="push-settings-overlay" onclick="this.parentElement.remove()"></div>
-            <div class="push-settings-content">
-                <h3>Configuración Push Notifications</h3>
-                <div class="push-settings-options">
-                    <label>
-                        <input type="checkbox" id="push-enabled" ${this.pushSubscription ? 'checked' : ''}>
-                        Activar notificaciones push
-                    </label>
-                    <small>Recibe notificaciones incluso cuando cierres la pestaña</small>
-                </div>
-                <div class="push-settings-actions">
-                    <button onclick="this.closest('.push-settings-modal').remove()">Cancelar</button>
-                    <button onclick="notificationSystem.savePushSettings()" class="primary">Guardar</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
-
-    /**
-     * Guardar configuración push
-     */
-    async savePushSettings() {
-        const modal = document.querySelector('.push-settings-modal');
-        const enabled = modal.querySelector('#push-enabled').checked;
-        
-        if (enabled && !this.pushSubscription) {
-            await this.subscribeToPushNotifications();
-        } else if (!enabled && this.pushSubscription) {
-            await this.unsubscribeFromPushNotifications();
-        }
-        
-        modal.remove();
     }
 
     /**
@@ -402,27 +94,6 @@ class NotificationSystem {
         });
     }
 
-    /**
-     * Utility function para convertir VAPID key
-     */
-    urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding)
-            .replace(/\-/g, '+')
-            .replace(/_/g, '/');
-
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-
-        return outputArray;
-    }
-
-    // [Continue with the rest of the original methods...]
-    
     /**
      * Toggle del dropdown
      */
@@ -886,9 +557,6 @@ class NotificationSystem {
         }
         if (this.container) {
             this.container.remove();
-        }
-        if (this.pushSubscription) {
-            this.unsubscribeFromPushNotifications();
         }
     }
 }

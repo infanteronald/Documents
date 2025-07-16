@@ -4,6 +4,9 @@
  * Separa las funciones de presentación del archivo principal
  */
 
+// Incluir helpers de compatibilidad PHP 8.2
+require_once __DIR__ . '/php82_helpers.php';
+
 /**
  * Genera pills de estado para los pedidos
  */
@@ -121,13 +124,13 @@ function clean_phone_for_whatsapp($phone) {
  * Genera el HTML para información del cliente
  */
 function generate_customer_info($pedido) {
-    $phone_clean = clean_phone_for_whatsapp($pedido['telefono']);
+    $phone_clean = clean_phone_for_whatsapp($pedido['telefono'] ?? '');
     
     return [
-        'nombre' => htmlspecialchars($pedido['nombre']),
-        'telefono_display' => htmlspecialchars($pedido['telefono']),
+        'nombre' => safe_text($pedido['nombre']),
+        'telefono_display' => safe_phone($pedido['telefono']),
         'telefono_whatsapp' => $phone_clean,
-        'ciudad' => htmlspecialchars($pedido['ciudad'])
+        'ciudad' => safe_text($pedido['ciudad'])
     ];
 }
 
@@ -138,8 +141,8 @@ function generate_filter_options($items, $selected_value, $placeholder, $icon = 
     $html = "<option value=\"\">$icon $placeholder</option>";
     foreach($items as $item) {
         $selected = ($selected_value == $item) ? 'selected' : '';
-        $html .= "<option value=\"" . htmlspecialchars($item) . "\" $selected>";
-        $html .= htmlspecialchars($item);
+        $html .= "<option value=\"" . safe_attr($item) . "\" $selected>";
+        $html .= safe_text($item);
         $html .= "</option>";
     }
     return $html;
@@ -182,10 +185,10 @@ function generate_mobile_card($pedido) {
     
     // Estados
     $html .= '<div class="mobile-estados">';
-    $html .= generate_mobile_estado_item('💳', 'Pagado', $pedido['pagado'], 'toggleEstadoPago(' . $pedido['id'] . ', ' . $pedido['pagado'] . ', \'' . htmlspecialchars($pedido['comprobante']) . '\', \'' . $pedido['tiene_comprobante'] . '\', \'' . htmlspecialchars($pedido['metodo_pago']) . '\')');
+    $html .= generate_mobile_estado_item('💳', 'Pagado', $pedido['pagado'], 'toggleEstadoPago(' . $pedido['id'] . ', ' . $pedido['pagado'] . ', \'' . safe_attr($pedido['comprobante']) . '\', \'' . $pedido['tiene_comprobante'] . '\', \'' . safe_attr($pedido['metodo_pago']) . '\')');
     $html .= generate_mobile_estado_item('🚚', 'Enviado', $pedido['enviado']);
-    $html .= generate_mobile_estado_item('📄', 'Comprobante', $pedido['tiene_comprobante'], 'abrirModalComprobante(' . $pedido['id'] . ', \'' . htmlspecialchars($pedido['comprobante']) . '\', \'' . $pedido['tiene_comprobante'] . '\', \'' . htmlspecialchars($pedido['metodo_pago']) . '\')');
-    $html .= generate_mobile_estado_item('📦', 'Guía', $pedido['tiene_guia'], 'abrirModalGuia(' . $pedido['id'] . ', \'' . htmlspecialchars($pedido['guia']) . '\', \'' . $pedido['tiene_guia'] . '\', \'' . $pedido['enviado'] . '\')');
+    $html .= generate_mobile_estado_item('📄', 'Comprobante', $pedido['tiene_comprobante'], 'abrirModalComprobante(' . $pedido['id'] . ', \'' . safe_attr($pedido['comprobante']) . '\', \'' . $pedido['tiene_comprobante'] . '\', \'' . safe_attr($pedido['metodo_pago']) . '\')');
+    $html .= generate_mobile_estado_item('📦', 'Guía', $pedido['tiene_guia'], 'abrirModalGuia(' . $pedido['id'] . ', \'' . safe_attr($pedido['guia']) . '\', \'' . $pedido['tiene_guia'] . '\', \'' . $pedido['enviado'] . '\')');
     $html .= '</div>';
     
     // Acciones

@@ -12,11 +12,9 @@ ini_set('memory_limit', '256M');
 // Incluir conexión a base de datos
 include 'conexion.php';
 require_once 'notifications/notification_helpers.php';
+require_once 'php82_helpers.php';
 
-// Función para escape HTML seguro
-function h($txt) {
-    return htmlspecialchars($txt ?? '', ENT_QUOTES, 'UTF-8');
-}
+// Función para escape HTML seguro ya incluida en php82_helpers.php
 
 // Función para obtener campo de array de manera segura
 function getField($array, $field, $default = 'No disponible') {
@@ -458,6 +456,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
     <link rel="stylesheet" href="ver_detalle_pedido_optimized.css">
     <!-- Sistema de Notificaciones -->
     <link rel="stylesheet" href="notifications/notifications.css">
+    <link rel="stylesheet" href="notifications/push_notifications.css">
     <!-- All CSS has been moved to external file -->
 </head>
 <body>

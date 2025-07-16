@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../php82_helpers.php';
 /**
  * Página de Confirmación de Pago Bold
  * Se ejecuta después de un pago exitoso para comunicar resultado a ventana padre
@@ -102,12 +103,12 @@ if (empty($order_id) && !empty($_GET['orden'])) {
 
         <?php if (!empty($order_id)): ?>
         <div class="order-info">
-            <p><strong>Orden:</strong> <?= htmlspecialchars($order_id) ?></p>
+            <p><strong>Orden:</strong> <?= h($order_id) ?></p>
             <?php if ($amount > 0): ?>
             <p><strong>Monto:</strong> $<?= number_format($amount, 0, ',', '.') ?> COP</p>
             <?php endif; ?>
             <?php if (!empty($transaction_id)): ?>
-            <p><strong>Transacción:</strong> <?= htmlspecialchars($transaction_id) ?></p>
+            <p><strong>Transacción:</strong> <?= h($transaction_id) ?></p>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -127,9 +128,9 @@ if (empty($order_id) && !empty($_GET['orden'])) {
 
         // Datos del pago
         const paymentData = {
-            orderId: '<?= htmlspecialchars($order_id) ?>',
-            status: '<?= htmlspecialchars($status) ?>',
-            transactionId: '<?= htmlspecialchars($transaction_id) ?>',
+            orderId: '<?= h($order_id) ?>',
+            status: '<?= h($status) ?>',
+            transactionId: '<?= h($transaction_id) ?>',
             amount: <?= intval($amount) ?>
         };
 

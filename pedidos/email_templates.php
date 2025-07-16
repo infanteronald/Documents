@@ -4,6 +4,8 @@
  * Sistema de emails con diseño moderno y responsivo
  */
 
+require_once __DIR__ . '/php82_helpers.php';
+
 class EmailTemplates {
 
     /**
@@ -16,7 +18,7 @@ class EmailTemplates {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>' . htmlspecialchars($title) . '</title>
+    <title>' . h($title) . '</title>
     <style>
         /* Reset y base */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -314,7 +316,7 @@ class EmailTemplates {
         <div class="header">
             <img src="https://sequoiaspeed.com.co/pedidos/logo.png" alt="Sequoia Speed" class="logo" />
             <div class="header-content">
-                <h1>' . htmlspecialchars($title) . '</h1>
+                <h1>' . h($title) . '</h1>
                 <div class="subtitle">Sistema de Pedidos Sequoia Speed</div>
             </div>
         </div>
@@ -327,7 +329,7 @@ class EmailTemplates {
             <div class="company-info">Sequoia Speed</div>
             <p>Sistema automatizado de gestión de pedidos</p>
             <p>© ' . date('Y') . ' Sequoia Speed. Todos los derechos reservados.</p>
-            ' . ($footerText ? '<p>' . htmlspecialchars($footerText) . '</p>' : '') . '
+            ' . ($footerText ? '<p>' . h($footerText) . '</p>' : '') . '
         </div>
     </div>
 </body>
@@ -348,7 +350,7 @@ class EmailTemplates {
             <h3>Información del Pedido</h3>
             <div class="info-row">
                 <span class="info-label">Número de Pedido:</span>
-                <span class="info-value">#' . htmlspecialchars($pedidoData['numero_pedido']) . '</span>
+                <span class="info-value">#' . h($pedidoData['numero_pedido']) . '</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Fecha:</span>
@@ -360,7 +362,7 @@ class EmailTemplates {
             </div>
             <div class="info-row">
                 <span class="info-label">Método de Pago:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['metodo_pago']) . '</span>
+                <span class="info-value">' . h($pedidoData['metodo_pago']) . '</span>
             </div>
             ' . (isset($pedidoData['descuento']) && $pedidoData['descuento'] > 0 ? '
             <div class="info-row">
@@ -385,27 +387,27 @@ class EmailTemplates {
             <h3>Información del Cliente</h3>
             <div class="info-row">
                 <span class="info-label">Nombre:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['nombre']) . '</span>
+                <span class="info-value">' . h($pedidoData['nombre']) . '</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Email:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['correo']) . '</span>
+                <span class="info-value">' . h($pedidoData['correo']) . '</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Teléfono:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['telefono']) . '</span>
+                <span class="info-value">' . h($pedidoData['telefono']) . '</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Dirección:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['direccion']) . '</span>
+                <span class="info-value">' . h($pedidoData['direccion']) . '</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Ciudad:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['ciudad']) . '</span>
+                <span class="info-value">' . h($pedidoData['ciudad']) . '</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Barrio:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['barrio']) . '</span>
+                <span class="info-value">' . h($pedidoData['barrio']) . '</span>
             </div>
         </div>';
 
@@ -428,7 +430,7 @@ class EmailTemplates {
             foreach ($pedidoData['detalles'] as $item) {
                 $content .= '
                         <tr>
-                            <td>' . htmlspecialchars($item['nombre']) . '</td>
+                            <td>' . h($item['nombre']) . '</td>
                             <td>' . intval($item['cantidad']) . '</td>
                             <td class="price">$' . number_format($item['precio'], 0, ',', '.') . '</td>
                             <td class="price">$' . number_format($item['precio'] * $item['cantidad'], 0, ',', '.') . '</td>
@@ -466,7 +468,7 @@ class EmailTemplates {
             $content .= '
             <div class="info-card">
                 <h3>Descripción del Pedido</h3>
-                <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">' . nl2br(htmlspecialchars($pedidoData['pedido_texto'] ?? 'No especificado')) . '</p>
+                <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">' . nl2br(h($pedidoData['pedido_texto'] ?? 'No especificado')) . '</p>
             </div>';
         }
 
@@ -477,14 +479,14 @@ class EmailTemplates {
                 <h3>💳 Información de Pago Bold</h3>
                 <div class="info-row">
                     <span class="info-label">ID de Orden Bold:</span>
-                    <span class="info-value">' . htmlspecialchars($pedidoData['bold_order_id']) . '</span>
+                    <span class="info-value">' . h($pedidoData['bold_order_id']) . '</span>
                 </div>';
 
             if (isset($pedidoData['bold_transaction_id'])) {
                 $content .= '
                 <div class="info-row">
                     <span class="info-label">ID de Transacción:</span>
-                    <span class="info-value">' . htmlspecialchars($pedidoData['bold_transaction_id']) . '</span>
+                    <span class="info-value">' . h($pedidoData['bold_transaction_id']) . '</span>
                 </div>';
             }
 
@@ -514,7 +516,7 @@ class EmailTemplates {
             $content .= '
             <div class="info-card">
                 <h3>📝 Comentarios Adicionales</h3>
-                <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">' . nl2br(htmlspecialchars($pedidoData['comentario'])) . '</p>
+                <p style="color: #f0f6fc !important; font-size: 15px; line-height: 1.6;">' . nl2br(h($pedidoData['comentario'])) . '</p>
             </div>';
         }
 
@@ -546,7 +548,7 @@ class EmailTemplates {
             <h3>Información del Pago</h3>
             <div class="info-row">
                 <span class="info-label">Pedido:</span>
-                <span class="info-value">#' . htmlspecialchars($pedidoData['numero_pedido']) . '</span>
+                <span class="info-value">#' . h($pedidoData['numero_pedido']) . '</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Monto Pagado:</span>
@@ -554,7 +556,7 @@ class EmailTemplates {
             </div>
             <div class="info-row">
                 <span class="info-label">Método:</span>
-                <span class="info-value">' . htmlspecialchars($pedidoData['metodo_pago']) . '</span>
+                <span class="info-value">' . h($pedidoData['metodo_pago']) . '</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Estado:</span>
@@ -568,7 +570,7 @@ class EmailTemplates {
                 <h3>Comprobante de Transacción</h3>
                 <div class="info-row">
                     <span class="info-label">ID Transacción:</span>
-                    <span class="info-value">' . htmlspecialchars($pedidoData['bold_transaction_id']) . '</span>
+                    <span class="info-value">' . h($pedidoData['bold_transaction_id']) . '</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Fecha:</span>
@@ -592,7 +594,7 @@ class EmailTemplates {
         <div class="section">
             <h2>💬 Nuevo Comentario de Cliente</h2>
             <p style="color: #f0f6fc !important; font-size: 16px; margin-bottom: 24px;">
-                El cliente <strong>' . htmlspecialchars($data['nombre_cliente']) . '</strong> ha agregado un comentario al pedido <strong>#' . $data['numero_pedido'] . '</strong>
+                El cliente <strong>' . h($data['nombre_cliente']) . '</strong> ha agregado un comentario al pedido <strong>#' . $data['numero_pedido'] . '</strong>
             </p>
         </div>
 
@@ -600,13 +602,13 @@ class EmailTemplates {
             <h3>📝 Comentario del Cliente</h3>
             <div style="background: #21262d !important; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0;">
                 <p style="color: #e6edf3 !important; font-size: 15px; line-height: 1.6; margin: 0; font-style: italic;">
-                    "' . nl2br(htmlspecialchars($data['comentario'])) . '"
+                    "' . nl2br(h($data['comentario'])) . '"
                 </p>
             </div>
             <p style="color: #8b949e !important; font-size: 14px; margin-top: 12px;">
                 📅 Fecha: ' . $data['timestamp'] . '<br>
-                👤 Cliente: ' . htmlspecialchars($data['nombre_cliente']) . '<br>
-                📧 Email: ' . htmlspecialchars($data['correo_cliente']) . '
+                👤 Cliente: ' . h($data['nombre_cliente']) . '<br>
+                📧 Email: ' . h($data['correo_cliente']) . '
             </p>
         </div>
 
@@ -631,7 +633,7 @@ class EmailTemplates {
         <div class="section">
             <h2>✅ Comentario Recibido</h2>
             <p style="color: #f0f6fc !important; font-size: 16px; margin-bottom: 24px;">
-                Hola <strong>' . htmlspecialchars($data['nombre_cliente']) . '</strong>,<br><br>
+                Hola <strong>' . h($data['nombre_cliente']) . '</strong>,<br><br>
                 Hemos recibido tu comentario sobre el pedido <strong>#' . $data['numero_pedido'] . '</strong>.
                 Nuestro equipo lo revisará y te responderemos a la brevedad.
             </p>
@@ -641,7 +643,7 @@ class EmailTemplates {
             <h3>💬 Tu Comentario</h3>
             <div style="background: #21262d !important; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0;">
                 <p style="color: #e6edf3 !important; font-size: 15px; line-height: 1.6; margin: 0;">
-                    ' . nl2br(htmlspecialchars($data['comentario'])) . '
+                    ' . nl2br(h($data['comentario'])) . '
                 </p>
             </div>
             <p style="color: #8b949e !important; font-size: 14px; margin-top: 12px;">
@@ -682,7 +684,7 @@ class EmailTemplates {
         <div class="section">
             <h2>🔄 Estado de Pedido Actualizado</h2>
             <p style="color: #f0f6fc !important; font-size: 16px; margin-bottom: 24px;">
-                El pedido <strong>#' . $data['numero_pedido'] . '</strong> ha cambiado su estado a <strong>' . htmlspecialchars($data['nuevo_estado']) . '</strong>
+                El pedido <strong>#' . $data['numero_pedido'] . '</strong> ha cambiado su estado a <strong>' . h($data['nuevo_estado']) . '</strong>
             </p>
         </div>
 
@@ -690,13 +692,13 @@ class EmailTemplates {
             <h3>📋 Información del Pedido</h3>
             <div style="background: #21262d !important; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0;">
                 <p style="color: #e6edf3 !important; font-size: 15px; line-height: 1.6; margin: 0;">
-                    <strong>Cliente:</strong> ' . htmlspecialchars($data['nombre_cliente']) . '<br>
-                    <strong>Email:</strong> ' . htmlspecialchars($data['correo_cliente']) . '<br>
-                    <strong>Teléfono:</strong> ' . htmlspecialchars($data['telefono_cliente']) . '<br>
-                    <strong>Ciudad:</strong> ' . htmlspecialchars($data['ciudad_cliente']) . '<br>
-                    <strong>Barrio:</strong> ' . htmlspecialchars($data['barrio_cliente']) . '<br>
+                    <strong>Cliente:</strong> ' . h($data['nombre_cliente']) . '<br>
+                    <strong>Email:</strong> ' . h($data['correo_cliente']) . '<br>
+                    <strong>Teléfono:</strong> ' . h($data['telefono_cliente']) . '<br>
+                    <strong>Ciudad:</strong> ' . h($data['ciudad_cliente']) . '<br>
+                    <strong>Barrio:</strong> ' . h($data['barrio_cliente']) . '<br>
                     <strong>Monto:</strong> $' . number_format($data['monto'], 0, ',', '.') . '<br>
-                    <strong>Nuevo Estado:</strong> <span style="color: #3fb950 !important; font-weight: bold;">' . htmlspecialchars($data['nuevo_estado']) . '</span>
+                    <strong>Nuevo Estado:</strong> <span style="color: #3fb950 !important; font-weight: bold;">' . h($data['nuevo_estado']) . '</span>
                 </p>
             </div>
             <p style="color: #8b949e !important; font-size: 14px; margin-top: 12px;">
@@ -725,7 +727,7 @@ class EmailTemplates {
         <div class="section">
             <h2>📦 Tu Pedido ha sido Actualizado</h2>
             <p style="color: #f0f6fc !important; font-size: 16px; margin-bottom: 24px;">
-                Hola <strong>' . htmlspecialchars($data['nombre_cliente']) . '</strong>,<br><br>
+                Hola <strong>' . h($data['nombre_cliente']) . '</strong>,<br><br>
                 Te informamos que tu pedido <strong>#' . $data['numero_pedido'] . '</strong> ha sido actualizado.
             </p>
         </div>
@@ -734,7 +736,7 @@ class EmailTemplates {
             <h3>🔄 Nuevo Estado</h3>
             <div style="background: #21262d !important; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0; text-align: center;">
                 <p style="color: #3fb950 !important; font-size: 24px; font-weight: bold; margin: 0;">
-                    ' . htmlspecialchars($data['nuevo_estado']) . '
+                    ' . h($data['nuevo_estado']) . '
                 </p>
             </div>
             <p style="color: #8b949e !important; font-size: 14px; margin-top: 12px;">
@@ -774,7 +776,7 @@ class EmailTemplates {
         $content = '
         <div class="hero">
             <h1>📢 Actualización de tu Pedido</h1>
-            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', tenemos novedades sobre tu pedido</p>
+            <p class="hero-subtitle">Hola ' . h($nombre_cliente) . ', tenemos novedades sobre tu pedido</p>
         </div>
 
         <div class="section">
@@ -825,7 +827,7 @@ class EmailTemplates {
         $content = '
         <div class="hero">
             <h1>🔍 Solicitud de Seguimiento</h1>
-            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', nos gustaría conocer tu experiencia</p>
+            <p class="hero-subtitle">Hola ' . h($nombre_cliente) . ', nos gustaría conocer tu experiencia</p>
         </div>
 
         <div class="section">
@@ -862,7 +864,7 @@ class EmailTemplates {
         $content = '
         <div class="hero">
             <h1>✅ Entrega Confirmada</h1>
-            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', tu pedido ha sido entregado</p>
+            <p class="hero-subtitle">Hola ' . h($nombre_cliente) . ', tu pedido ha sido entregado</p>
         </div>
 
         <div class="section">
@@ -908,7 +910,7 @@ class EmailTemplates {
         $content = '
         <div class="hero">
             <h1>📦 Tu Pedido Está en Camino</h1>
-            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', tu pedido ya fue enviado</p>
+            <p class="hero-subtitle">Hola ' . h($nombre_cliente) . ', tu pedido ya fue enviado</p>
         </div>
 
         <div class="section">
@@ -941,7 +943,7 @@ class EmailTemplates {
             $content .= '
                 <div class="order-item">
                     <span class="label">Método de Pago:</span>
-                    <span class="value">' . htmlspecialchars($pedido['metodo_pago']) . '</span>
+                    <span class="value">' . h($pedido['metodo_pago']) . '</span>
                 </div>';
         }
         
@@ -986,7 +988,7 @@ class EmailTemplates {
         $content = '
         <div class="hero">
             <h1>💳 Comprobante de Pago Recibido</h1>
-            <p class="hero-subtitle">Hola ' . htmlspecialchars($nombre_cliente) . ', hemos recibido tu comprobante de pago</p>
+            <p class="hero-subtitle">Hola ' . h($nombre_cliente) . ', hemos recibido tu comprobante de pago</p>
         </div>
 
         <div class="section">
@@ -1009,7 +1011,7 @@ class EmailTemplates {
             $content .= '
                 <div class="order-item">
                     <span class="label">Método de Pago:</span>
-                    <span class="value">' . htmlspecialchars($pedido_data['metodo_pago']) . '</span>
+                    <span class="value">' . h($pedido_data['metodo_pago']) . '</span>
                 </div>';
         }
         

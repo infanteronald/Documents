@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/../php82_helpers.php';
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -242,11 +245,11 @@
 
         <div class="order-info">
             <?php if ($orden_id): ?>
-                <p><strong>Número de Orden:</strong> #<?php echo htmlspecialchars($orden_id); ?></p>
+                <p><strong>Número de Orden:</strong> #<?php echo h($orden_id); ?></p>
             <?php endif; ?>
 
             <?php if ($bold_order_id): ?>
-                <p><strong>ID Transacción Bold:</strong> <?php echo htmlspecialchars($bold_order_id); ?></p>
+                <p><strong>ID Transacción Bold:</strong> <?php echo h($bold_order_id); ?></p>
             <?php endif; ?>
 
             <p><strong>Método de Pago:</strong> PSE Bold</p>
@@ -337,8 +340,8 @@
         } else {
             echo "<p><strong>Monto:</strong> $" . number_format($monto, 0, ',', '.') . "</p>";
         }
-        echo "<p><strong>Nombre:</strong> " . htmlspecialchars($nombre) . "</p>";
-        echo "<p><strong>Método de Pago:</strong> " . htmlspecialchars($pedido['metodo_pago']) . "</p>";
+        echo "<p><strong>Nombre:</strong> " . h($nombre) . "</p>";
+        echo "<p><strong>Método de Pago:</strong> " . h($pedido['metodo_pago']) . "</p>";
 
         if ($pedido['estado_pago'] === 'pagado') {
             echo "<div style='color: green; font-weight: bold; margin: 20px 0;'>";
@@ -352,7 +355,7 @@
 
     } else {
         echo "<h2>Pedido no encontrado</h2>";
-        echo "<p>No se pudo encontrar el pedido con ID: " . htmlspecialchars($order_id) . "</p>";
+        echo "<p>No se pudo encontrar el pedido con ID: " . h($order_id) . "</p>";
     }
 
     $stmt->close();

@@ -1,5 +1,6 @@
 <?php
 require_once "conexion.php";
+require_once 'php82_helpers.php';
 
 // Obtener categorías
 $categorias = [];
@@ -1245,7 +1246,7 @@ while ($row = $res_cat->fetch_assoc()) {
             <select id="categoria">
                 <option value="">Selecciona una categoría</option>
                 <?php foreach ($categorias as $cat): ?>
-                    <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></option>
+                    <option value="<?= h($cat) ?>"><?= h($cat) ?></option>
                 <?php endforeach; ?>
             </select>
             <input type="text" id="busqueda" placeholder="Escribe el nombre del producto">

@@ -1,6 +1,7 @@
 <?php
 // ver_guia.php
 require_once "conexion.php";
+require_once 'php82_helpers.php';
 
 // Obtener ID de pedido
 $id_pedido = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -65,7 +66,7 @@ $stmt->close();
         <h2>Guía del Pedido #<?= $id_pedido ?></h2>
 
         <?php if ($url_imagen_guia): ?>
-            <img src="<?= htmlspecialchars($url_imagen_guia) ?>" alt="Imagen de la guía" class="guia-img">
+            <img src="<?= h($url_imagen_guia) ?>" alt="Imagen de la guía" class="guia-img">
         <?php endif; ?>
 
         <div style="margin-bottom: 10px;">
@@ -73,7 +74,7 @@ $stmt->close();
             <input 
                 type="text"
                 id="numeroGuia"
-                value="<?= htmlspecialchars($numero_guia) ?>"
+                value="<?= h($numero_guia) ?>"
                 readonly
                 style="width: 200px; text-align: center; border-radius: 7px; padding: 6px; border: 1px solid #ccc; background: #f5f5f7; font-size:18px; font-weight: 600;"
             >

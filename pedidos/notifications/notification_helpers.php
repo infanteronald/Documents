@@ -7,6 +7,11 @@
 // Solo incluir conexión, no el archivo API completo
 require_once dirname(__DIR__) . '/conexion.php';
 
+// Incluir push_sender.php solo si existe y composer está instalado
+if (file_exists('push_sender.php') && file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
+    require_once 'push_sender.php';
+}
+
 /**
  * Función para crear notificación en base de datos
  */
@@ -18,9 +23,51 @@ function createNotification($conn, $type, $title, $message, $data = null, $user_
     $stmt->bind_param("sssss", $user_id, $type, $title, $message, $data_json);
     
     if ($stmt->execute()) {
-        return $stmt->insert_id;
+        $notification_id = $stmt->insert_id;
+        
+        // Also send push notification
+        $pushData = $data ? $data : [];
+        $pushData['notification_id'] = $notification_id;
+        
+        // Map notification types to push types
+        $pushType = mapNotificationTypeToPushType($type, $data);
+        
+        // Solo enviar push notification si la función existe
+        if (function_exists('sendPushNotification')) {
+            sendPushNotification($title, $message, $pushData, $user_id, $pushType);
+        }
+        
+        return $notification_id;
     }
     return false;
+}
+
+/**
+ * Map notification types to push notification types
+ */
+function mapNotificationTypeToPushType($type, $data) {
+    // Check data to determine more specific type
+    if (isset($data['pedido_id'])) {
+        if (strpos(strtolower($data['actions'][0]['label'] ?? ''), 'pedido') !== false) {
+            return 'new_order';
+        }
+        if (strpos(strtolower($data['actions'][0]['label'] ?? ''), 'pago') !== false) {
+            return 'payment';
+        }
+        if (strpos(strtolower($data['actions'][0]['label'] ?? ''), 'guía') !== false) {
+            return 'shipment';
+        }
+    }
+    
+    // Default mapping
+    $typeMap = [
+        'info' => 'status_change',
+        'success' => 'status_change',
+        'error' => 'error',
+        'warning' => 'warning'
+    ];
+    
+    return $typeMap[$type] ?? 'status_change';
 }
 
 /**

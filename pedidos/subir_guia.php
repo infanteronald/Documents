@@ -7,6 +7,7 @@
 include 'conexion.php';
 include 'email_templates.php';
 require_once 'notifications/notification_helpers.php';
+require_once 'php82_helpers.php';
 
 header('Content-Type: application/json');
 error_reporting(E_ALL);
@@ -172,11 +173,11 @@ $html_content_ventas = EmailTemplates::getMainTemplate(
         </div>
         <div class="info-row">
             <span class="info-label">Cliente:</span>
-            <span class="info-value">' . htmlspecialchars($nombre_cliente) . '</span>
+            <span class="info-value">' . h($nombre_cliente) . '</span>
         </div>
         <div class="info-row">
             <span class="info-label">Email:</span>
-            <span class="info-value">' . htmlspecialchars($correo_cliente) . '</span>
+            <span class="info-value">' . h($correo_cliente) . '</span>
         </div>
         <div class="info-row">
             <span class="info-label">Estado:</span>
@@ -184,7 +185,7 @@ $html_content_ventas = EmailTemplates::getMainTemplate(
         </div>
         <div class="info-row">
             <span class="info-label">Archivo:</span>
-            <span class="info-value">' . htmlspecialchars($nombreGuia) . '</span>
+            <span class="info-value">' . h($nombreGuia) . '</span>
         </div>
         <div class="info-row">
             <span class="info-label">Fecha:</span>

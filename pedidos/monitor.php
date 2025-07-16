@@ -14,6 +14,7 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 require_once 'conexion.php';
+require_once 'php82_helpers.php';
 
 // Configuración simplificada
 $limite_pedidos = 25; // Más pedidos con filas compactas
@@ -412,11 +413,11 @@ $fecha_actual = date('d/m/Y');
                                 #<?php echo $pedido['id']; ?>
                             </td>
                             <td class="col-cliente">
-                                <?php echo htmlspecialchars($pedido['nombre']); ?>
+                                <?php echo h($pedido['nombre']); ?>
                             </td>
                             <td class="col-contacto">
-                                📱 <?php echo htmlspecialchars($pedido['telefono']); ?><br>
-                                📍 <?php echo htmlspecialchars($pedido['ciudad']); ?>
+                                📱 <?php echo h($pedido['telefono']); ?><br>
+                                📍 <?php echo h($pedido['ciudad']); ?>
                             </td>
                             <td class="col-tiempo">
                                 <span class="tiempo-<?php echo strtolower($pedido['prioridad']); ?>">

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../php82_helpers.php';
 // Integración con sistema de migración - FASE 2
 // Legacy bridge comentado temporalmente
 
@@ -174,18 +175,18 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
         <h1>Pago Seguro</h1>
 
         <div class="payment-info">
-            <h3><?= htmlspecialchars($method) ?></h3>
-            <p><strong>Orden:</strong> <?= htmlspecialchars($order_id) ?></p>
+            <h3><?= h($method) ?></h3>
+            <p><strong>Orden:</strong> <?= h($order_id) ?></p>
             <?php if ($amount > 0): ?>
                 <p class="amount"><strong>Monto:</strong> $<?= number_format($amount, 0, ',', '.') ?> COP</p>
             <?php else: ?>
                 <p class="amount"><strong>Monto:</strong> A definir por el cliente</p>
             <?php endif; ?>
             <?php if (!empty($customer['fullName'])): ?>
-                <p><strong>Cliente:</strong> <?= htmlspecialchars($customer['fullName']) ?></p>
+                <p><strong>Cliente:</strong> <?= h($customer['fullName']) ?></p>
             <?php endif; ?>
             <?php if (!empty($customer['email'])): ?>
-                <p><strong>Email:</strong> <?= htmlspecialchars($customer['email']) ?></p>
+                <p><strong>Email:</strong> <?= h($customer['email']) ?></p>
             <?php endif; ?>
         </div>
 
@@ -199,9 +200,9 @@ $billing = json_decode(urldecode($billing_address), true) ?: [];
     </div>    <script>
         // Variables globales
         const orderData = {
-            orderId: '<?= htmlspecialchars($order_id) ?>',
+            orderId: '<?= h($order_id) ?>',
             amount: <?= intval($amount) ?>,
-            method: '<?= htmlspecialchars($method) ?>',
+            method: '<?= h($method) ?>',
             customer: <?= json_encode($customer) ?>,
             billing: <?= json_encode($billing) ?>
         };

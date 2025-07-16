@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../php82_helpers.php';
 /**
  * Handler para pagos exitosos de Bold
  * Este archivo maneja las redirecciones de éxito de Bold
@@ -83,12 +84,12 @@ $status = $_GET['status'] ?? 'success';
         <div class="details">
             <div class="detail-row">
                 <span><strong>Orden:</strong></span>
-                <span><?= htmlspecialchars($order_id) ?></span>
+                <span><?= h($order_id) ?></span>
             </div>
             <?php if ($transaction_id): ?>
             <div class="detail-row">
                 <span><strong>Transacción:</strong></span>
-                <span><?= htmlspecialchars($transaction_id) ?></span>
+                <span><?= h($transaction_id) ?></span>
             </div>
             <?php endif; ?>
             <?php if ($amount): ?>
@@ -115,8 +116,8 @@ $status = $_GET['status'] ?? 'success';
 
         // Datos del pago
         const paymentData = {
-            orderId: '<?= htmlspecialchars($order_id) ?>',
-            transactionId: '<?= htmlspecialchars($transaction_id) ?>',
+            orderId: '<?= h($order_id) ?>',
+            transactionId: '<?= h($transaction_id) ?>',
             amount: <?= intval($amount) ?>,
             status: 'success'
         };

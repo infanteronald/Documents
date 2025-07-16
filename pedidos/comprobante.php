@@ -1,5 +1,6 @@
 <?php
 require_once "conexion.php";
+require_once 'php82_helpers.php';
 
 // Activar manejo de errores
 error_reporting(E_ALL);
@@ -278,15 +279,15 @@ echo "<!-- DEBUG MONTOS: Total calculado: $total_calculado, Monto original: " . 
 
         <div class="seccion">
             <div class="seccion-titulo">DATOS DEL CLIENTE</div>
-            <div><strong>Nombre:</strong> <?= htmlspecialchars($orden['nombre'] ?? 'N/A') ?></div>
-            <div><strong>Teléfono:</strong> <?= htmlspecialchars($orden['telefono'] ?? 'N/A') ?></div>
-            <div><strong>Email:</strong> <?= htmlspecialchars($orden['correo'] ?? 'N/A') ?></div>
+            <div><strong>Nombre:</strong> <?= h($orden['nombre'] ?? 'N/A') ?></div>
+            <div><strong>Teléfono:</strong> <?= h($orden['telefono'] ?? 'N/A') ?></div>
+            <div><strong>Email:</strong> <?= h($orden['correo'] ?? 'N/A') ?></div>
         </div>
 
         <div class="seccion">
-            <div class="seccion-titulo">DIRECCIÓN DE ENVÍO</div>            <div><?= htmlspecialchars($orden['direccion'] ?? 'N/A') ?></div>
-            <div><strong>Ciudad:</strong> <?= htmlspecialchars($orden['ciudad'] ?? 'N/A') ?></div>
-            <div><strong>Barrio:</strong> <?= htmlspecialchars($orden['barrio'] ?? 'N/A') ?></div>
+            <div class="seccion-titulo">DIRECCIÓN DE ENVÍO</div>            <div><?= h($orden['direccion'] ?? 'N/A') ?></div>
+            <div><strong>Ciudad:</strong> <?= h($orden['ciudad'] ?? 'N/A') ?></div>
+            <div><strong>Barrio:</strong> <?= h($orden['barrio'] ?? 'N/A') ?></div>
         </div>
 
         <?php if ($detalles): ?>
@@ -304,7 +305,7 @@ echo "<!-- DEBUG MONTOS: Total calculado: $total_calculado, Monto original: " . 
                 <tbody>
                     <?php foreach ($detalles as $item): ?>
                     <tr>
-                        <td><?= htmlspecialchars($item['nombre']) ?></td>
+                        <td><?= h($item['nombre']) ?></td>
                         <td class="cantidad"><?= $item['cantidad'] ?></td>
                         <td class="precio">$<?= number_format($item['precio'], 0, ',', '.') ?></td>
                         <td class="precio">$<?= number_format($item['precio'] * $item['cantidad'], 0, ',', '.') ?></td>
@@ -316,12 +317,12 @@ echo "<!-- DEBUG MONTOS: Total calculado: $total_calculado, Monto original: " . 
         <?php elseif (!empty($orden['pedido'])): ?>
         <div class="seccion">
             <div class="seccion-titulo">PEDIDO</div>
-            <div><?= nl2br(htmlspecialchars($orden['pedido'])) ?></div>
+            <div><?= nl2br(h($orden['pedido'])) ?></div>
         </div>
         <?php endif; ?>
           <div class="seccion">
             <div class="seccion-titulo">PAGO</div>
-            <div><strong>Método:</strong> <?= htmlspecialchars($orden['metodo_pago'] ?? 'N/A') ?></div>
+            <div><strong>Método:</strong> <?= h($orden['metodo_pago'] ?? 'N/A') ?></div>
             
             <?php if ($orden['descuento'] > 0): ?>
                 <?php 
@@ -346,7 +347,7 @@ echo "<!-- DEBUG MONTOS: Total calculado: $total_calculado, Monto original: " . 
         <?php if (!empty($orden['comentario'])): ?>
         <div class="seccion">
             <div class="seccion-titulo">COMENTARIOS</div>
-            <div><?= nl2br(htmlspecialchars($orden['comentario'])) ?></div>
+            <div><?= nl2br(h($orden['comentario'])) ?></div>
         </div>
         <?php endif; ?>
 

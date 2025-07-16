@@ -1,0 +1,229 @@
+/* Push Notifications Settings Modal */
+.push-settings-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10003;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.push-settings-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.push-settings-content {
+    background: #1f2937;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid #374151;
+    position: relative;
+}
+
+.push-settings-content h3 {
+    color: #f9fafb;
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.push-settings-options {
+    margin-bottom: 20px;
+}
+
+.push-settings-options label {
+    display: flex;
+    align-items: center;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 14px;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.push-settings-options input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #3b82f6;
+}
+
+.push-settings-options small {
+    color: #9ca3af;
+    font-size: 12px;
+    display: block;
+    margin-left: 24px;
+}
+
+.push-settings-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.push-settings-actions button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #4b5563;
+    background: transparent;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.push-settings-actions button:hover {
+    background: #374151;
+}
+
+.push-settings-actions button.primary {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+}
+
+.push-settings-actions button.primary:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+/* Push Settings Button in Dropdown */
+.push-settings-btn {
+    font-size: 16px !important;
+    padding: 4px 6px !important;
+    min-width: 24px;
+    border-radius: 4px !important;
+}
+
+.push-settings-btn:hover {
+    background: #4b5563 !important;
+}
+
+/* Push notification permission banner */
+.push-permission-banner {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 16px;
+    max-width: 320px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    z-index: 10001;
+    animation: slideIn 0.3s ease-out;
+}
+
+.push-permission-banner h4 {
+    color: #f9fafb;
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.push-permission-banner p {
+    color: #9ca3af;
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.push-permission-banner-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.push-permission-banner-actions button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #4b5563;
+    background: transparent;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.push-permission-banner-actions button:hover {
+    background: #374151;
+}
+
+.push-permission-banner-actions button.primary {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+}
+
+.push-permission-banner-actions button.primary:hover {
+    background: #2563eb;
+}
+
+/* Push status indicator */
+.push-status-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #1f2937;
+    animation: pulse 2s infinite;
+}
+
+.push-status-indicator.disabled {
+    background: #6b7280;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .push-settings-content {
+        padding: 20px;
+        max-width: none;
+        width: 95%;
+    }
+    
+    .push-permission-banner {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+/* Dark theme overrides */
+@media (prefers-color-scheme: dark) {
+    .push-settings-overlay {
+        background: rgba(0, 0, 0, 0.7);
+    }
+}

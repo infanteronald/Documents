@@ -6,6 +6,7 @@ include 'conexion.php';
 require_once 'filters.php';
 require_once 'ui-helpers.php';
 require_once 'notifications/notification_helpers.php';
+require_once 'php82_helpers.php';
 
 // Inicializar filtros usando la nueva clase
 try {
@@ -54,6 +55,7 @@ try {
     
     <!-- Sistema de Notificaciones -->
     <link rel="stylesheet" href="notifications/notifications.css">
+    <link rel="stylesheet" href="notifications/push_notifications.css">
 </head>
 <body>
 <div class="sticky-bar">
@@ -85,7 +87,7 @@ try {
                     <input type="text"
                            id="busquedaRapida"
                            name="buscar"
-                           value="<?php echo htmlspecialchars($buscar); ?>"
+                           value="<?php echo h($buscar); ?>"
                            placeholder="🔍 Buscar por ID, nombre, email, teléfono, ciudad, monto, fecha, año, mes..."
                            class="input-compacto"
                            onkeyup="busquedaEnTiempoReal(this.value)"

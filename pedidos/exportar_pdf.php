@@ -4,6 +4,7 @@ ini_set('display_errors', 1);
 
 include 'conexion.php';
 require_once 'filters.php';
+require_once 'php82_helpers.php';
 
 // Funci�n para obtener productos de un pedido
 function getProductosPedido($conn, $pedido_id) {
@@ -200,20 +201,20 @@ header('Content-Type: text/html; charset=utf-8');
             <tr>
                 <td class="center"><?php echo $pedido['id']; ?></td>
                 <td class="center"><?php echo date('d/m/Y', strtotime($pedido['fecha'])); ?></td>
-                <td class="text"><?php echo htmlspecialchars(cleanForPDF(substr($pedido['nombre'], 0, 50))); ?></td>
-                <td class="text"><?php echo htmlspecialchars(cleanForPDF(substr($pedido['correo'], 0, 40))); ?></td>
-                <td class="text"><?php echo htmlspecialchars(cleanForPDF($pedido['telefono'])); ?></td>
-                <td class="text"><?php echo htmlspecialchars(cleanForPDF($pedido['ciudad'])); ?></td>
-                <td class="text"><?php echo htmlspecialchars(cleanForPDF(substr($pedido['direccion'], 0, 60))); ?></td>
-                <td class="productos"><?php echo htmlspecialchars(cleanForPDF(substr($pedido['productos'], 0, 100))); ?></td>
+                <td class="text"><?php echo h(cleanForPDF(substr($pedido['nombre'], 0, 50))); ?></td>
+                <td class="text"><?php echo h(cleanForPDF(substr($pedido['correo'], 0, 40))); ?></td>
+                <td class="text"><?php echo h(cleanForPDF($pedido['telefono'])); ?></td>
+                <td class="text"><?php echo h(cleanForPDF($pedido['ciudad'])); ?></td>
+                <td class="text"><?php echo h(cleanForPDF(substr($pedido['direccion'], 0, 60))); ?></td>
+                <td class="productos"><?php echo h(cleanForPDF(substr($pedido['productos'], 0, 100))); ?></td>
                 <td class="number">$<?php echo number_format($pedido['descuento'] ?? 0, 0, ',', '.'); ?></td>
                 <td class="number">$<?php echo number_format($pedido['monto'], 0, ',', '.'); ?></td>
-                <td class="text"><?php echo htmlspecialchars(substr($pedido['metodo_pago'], 0, 15)); ?></td>
+                <td class="text"><?php echo h(substr($pedido['metodo_pago'], 0, 15)); ?></td>
                 <td class="text"><?php echo getEstadoTexto($pedido); ?></td>
                 <td class="center"><?php echo ($pedido['pagado'] == '1' ? 'S�' : 'No'); ?></td>
                 <td class="center"><?php echo ($pedido['enviado'] == '1' ? 'S�' : 'No'); ?></td>
-                <td class="text"><?php echo htmlspecialchars(cleanForPDF(substr($pedido['guia'] ?: 'N/A', 0, 20))); ?></td>
-                <td class="text"><?php echo htmlspecialchars(cleanForPDF(substr($pedido['nota_interna'] ?: '', 0, 50))); ?></td>
+                <td class="text"><?php echo h(cleanForPDF(substr($pedido['guia'] ?: 'N/A', 0, 20))); ?></td>
+                <td class="text"><?php echo h(cleanForPDF(substr($pedido['nota_interna'] ?: '', 0, 50))); ?></td>
             </tr>
         <?php endforeach; ?>
         

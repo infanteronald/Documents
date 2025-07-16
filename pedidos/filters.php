@@ -24,7 +24,7 @@ class PedidosFilter {
             'fecha_desde' => isset($_GET['fecha_desde']) ? $_GET['fecha_desde'] : '',
             'fecha_hasta' => isset($_GET['fecha_hasta']) ? $_GET['fecha_hasta'] : '',
             'page' => isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1,
-            'limite' => 20
+            'limite' => 100
         ];
     }
     

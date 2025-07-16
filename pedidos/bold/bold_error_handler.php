@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../php82_helpers.php';
 /**
  * Handler para errores de pago de Bold
  * Este archivo maneja las redirecciones de error de Bold
@@ -86,17 +87,17 @@ $status = $_GET['status'] ?? 'error';
         <div class="details">
             <div class="detail-row">
                 <span><strong>Orden:</strong></span>
-                <span><?= htmlspecialchars($order_id) ?></span>
+                <span><?= h($order_id) ?></span>
             </div>
             <?php if ($error_code): ?>
             <div class="detail-row">
                 <span><strong>Código de Error:</strong></span>
-                <span><?= htmlspecialchars($error_code) ?></span>
+                <span><?= h($error_code) ?></span>
             </div>
             <?php endif; ?>
             <div class="detail-row">
                 <span><strong>Descripción:</strong></span>
-                <span><?= htmlspecialchars($error_message) ?></span>
+                <span><?= h($error_message) ?></span>
             </div>
             <div class="detail-row">
                 <span><strong>Fecha:</strong></span>
@@ -117,9 +118,9 @@ $status = $_GET['status'] ?? 'error';
 
         // Datos del error
         const errorData = {
-            orderId: '<?= htmlspecialchars($order_id) ?>',
-            errorCode: '<?= htmlspecialchars($error_code) ?>',
-            errorMessage: '<?= htmlspecialchars($error_message) ?>',
+            orderId: '<?= h($order_id) ?>',
+            errorCode: '<?= h($error_code) ?>',
+            errorMessage: '<?= h($error_message) ?>',
             status: 'error'
         };
 

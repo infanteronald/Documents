@@ -1,0 +1,7 @@
+{
+    "vapid": {
+        "subject": "mailto:admin@sequoiaspeed.com",
+        "publicKey": "BKkHNNyupL6icILj3eUek5Aq-fwrQ967-fhdzKTzG3uzhH8PlhUYGhjKRnvBVYIx9vmYKM-JObcOT3LfdXgBShY",
+        "privateKey": "w3wegSyYcTCYm0OmO8lwVQ2zCLho-yo1mwpBjTq5wUk"
+    }
+}

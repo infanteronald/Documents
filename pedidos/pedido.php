@@ -1,5 +1,6 @@
 <?php
 require_once "conexion.php";
+require_once 'php82_helpers.php';
 $pedido_id = isset($_GET['pedido']) ? intval($_GET['pedido']) : 0;
 $detalles = [];
 $monto = 0;
@@ -364,7 +365,7 @@ if ($pedido_id) {
               <tbody>
                 <?php foreach ($detalles as $item): ?>
                   <tr>
-                    <td><?= htmlspecialchars($item['nombre']) ?> <?php if ($item['talla'] && $item['talla'] != 'N/A'): ?>(Talla: <?= htmlspecialchars($item['talla']) ?>)<?php endif; ?></td>
+                    <td><?= h($item['nombre']) ?> <?php if ($item['talla'] && $item['talla'] != 'N/A'): ?>(Talla: <?= h($item['talla']) ?>)<?php endif; ?></td>
                     <td style="text-align:center;"><?= $item['cantidad'] ?></td>
                     <td style="text-align:right;">$<?= number_format($item['precio'], 0, ',', '.') ?></td>
                     <td style="text-align:right;">$<?= number_format($item['precio'] * $item['cantidad'], 0, ',', '.') ?></td>
