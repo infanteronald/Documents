@@ -611,6 +611,42 @@
     
     <!-- Sistema de Notificaciones -->
     <script src="notifications/notifications.js"></script>
+    
+    <!-- Script para probar notificaciones -->
+    <script>
+        // Función para probar notificaciones
+        function testNotification() {
+            if (typeof showNotification === 'function') {
+                showNotification('success', 'Prueba Exitosa', 'El sistema de notificaciones está funcionando correctamente');
+            } else {
+                console.error('Sistema de notificaciones no disponible');
+            }
+        }
+        
+        // Agregar botón de prueba en desarrollo
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            if (container) {
+                const testButton = document.createElement('button');
+                testButton.textContent = '🔔 Probar Notificaciones';
+                testButton.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    left: 20px;
+                    background: #007aff;
+                    color: white;
+                    border: none;
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    z-index: 1000;
+                    font-size: 14px;
+                `;
+                testButton.onclick = testNotification;
+                document.body.appendChild(testButton);
+            }
+        });
+    </script>
 </body>
 
 </html>
