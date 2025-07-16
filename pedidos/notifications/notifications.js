@@ -129,14 +129,39 @@ class NotificationSystem {
             return 'unsupported';
         }
 
-        const permission = await Notification.requestPermission();
-        this.pushPermission = permission;
-        
-        if (permission === 'granted') {
-            await this.subscribeToPushNotifications();
+        try {
+            // Primero verificar si ya tenemos permisos
+            if (Notification.permission === 'granted') {
+                this.pushPermission = 'granted';
+                return 'granted';
+            }
+
+            // Solicitar permisos usando la API moderna
+            let permission;
+            if (Notification.requestPermission) {
+                if (typeof Notification.requestPermission === 'function') {
+                    // API moderna (Promise-based)
+                    permission = await Notification.requestPermission();
+                } else {
+                    // API antigua (callback-based) - Safari antiguo
+                    permission = await new Promise((resolve) => {
+                        Notification.requestPermission(resolve);
+                    });
+                }
+            } else {
+                return 'unsupported';
+            }
+
+            this.pushPermission = permission;
+            
+            console.log('[Push] Permission result:', permission);
+            
+            return permission;
+        } catch (error) {
+            console.error('[Push] Error requesting permission:', error);
+            this.pushPermission = 'denied';
+            return 'denied';
         }
-        
-        return permission;
     }
 
     /**
@@ -260,16 +285,23 @@ class NotificationSystem {
         const header = this.bell.querySelector('.notification-dropdown-header');
         const actions = header.querySelector('.notification-dropdown-actions');
         
-        if (!this.pushSupported) {
-            return;
-        }
-
+        // Siempre mostrar el botón, incluso si no hay soporte
         // Crear botón de configuración push
         const pushButton = document.createElement('button');
         pushButton.className = 'notification-dropdown-btn push-settings-btn';
-        pushButton.title = 'Configurar notificaciones push';
-        pushButton.innerHTML = this.pushPermission === 'granted' ? '🔔' : '🔕';
-        pushButton.onclick = () => this.togglePushSettings();
+        
+        if (!this.pushSupported) {
+            pushButton.title = 'Push notifications no soportadas en este navegador';
+            pushButton.innerHTML = '🔕';
+            pushButton.style.opacity = '0.5';
+            pushButton.onclick = () => {
+                alert('Las notificaciones push no están soportadas en este navegador. Usa Chrome, Firefox o Safari.');
+            };
+        } else {
+            pushButton.title = 'Configurar notificaciones push';
+            pushButton.innerHTML = this.pushPermission === 'granted' ? '🔔' : '🔕';
+            pushButton.onclick = () => this.togglePushSettings();
+        }
         
         // Insertar antes del botón de cerrar
         const closeButton = actions.querySelector('.notification-dropdown-close');
@@ -345,12 +377,85 @@ class NotificationSystem {
      */
     async savePushSettings() {
         const modal = document.querySelector('.push-settings-modal');
+        if (!modal) return;
+        
         const enabled = modal.querySelector('#push-enabled').checked;
         
-        if (enabled && !this.pushSubscription) {
-            await this.subscribeToPushNotifications();
-        } else if (!enabled && this.pushSubscription) {
-            await this.unsubscribeFromPushNotifications();
+        try {
+            if (enabled && !this.pushSubscription) {
+                // Si no tenemos permisos, solicitarlos primero
+                if (this.pushPermission !== 'granted') {
+                    const permission = await this.requestNotificationPermission();
+                    if (permission !== 'granted') {
+                        this.showNotification({
+                            id: 'push-permission-denied-' + Date.now(),
+                            type: 'error',
+                            title: 'Permisos Denegados',
+                            message: 'No se pueden activar las notificaciones push sin permisos del navegador'
+                        });
+                        modal.remove();
+                        return;
+                    }
+                }
+                
+                // Suscribirse a push notifications
+                const subscription = await this.subscribeToPushNotifications();
+                if (subscription) {
+                    // Actualizar botón en el dropdown
+                    const pushButton = this.bell.querySelector('.push-settings-btn');
+                    if (pushButton) {
+                        pushButton.innerHTML = '🔔';
+                        pushButton.title = 'Notificaciones push activadas';
+                    }
+                    
+                    this.showNotification({
+                        id: 'push-enabled-' + Date.now(),
+                        type: 'success',
+                        title: 'Push Notifications Activadas',
+                        message: 'Ahora recibirás notificaciones incluso cuando cierres la pestaña'
+                    });
+                } else {
+                    this.showNotification({
+                        id: 'push-error-' + Date.now(),
+                        type: 'error',
+                        title: 'Error al Activar Push',
+                        message: 'No se pudo activar las notificaciones push. Intenta de nuevo.'
+                    });
+                }
+            } else if (!enabled && this.pushSubscription) {
+                // Desuscribirse de push notifications
+                const success = await this.unsubscribeFromPushNotifications();
+                if (success) {
+                    // Actualizar botón en el dropdown
+                    const pushButton = this.bell.querySelector('.push-settings-btn');
+                    if (pushButton) {
+                        pushButton.innerHTML = '🔕';
+                        pushButton.title = 'Configurar notificaciones push';
+                    }
+                    
+                    this.showNotification({
+                        id: 'push-disabled-' + Date.now(),
+                        type: 'info',
+                        title: 'Push Notifications Desactivadas',
+                        message: 'Ya no recibirás notificaciones push'
+                    });
+                } else {
+                    this.showNotification({
+                        id: 'push-error-' + Date.now(),
+                        type: 'error',
+                        title: 'Error al Desactivar Push',
+                        message: 'No se pudo desactivar las notificaciones push. Intenta de nuevo.'
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error saving push settings:', error);
+            this.showNotification({
+                id: 'push-error-' + Date.now(),
+                type: 'error',
+                title: 'Error en Configuración',
+                message: 'Error al guardar configuración push: ' + error.message
+            });
         }
         
         modal.remove();

@@ -105,16 +105,36 @@ guias/*
 !guias/.gitkeep
 
 # ==============================================================================
-# ARCHIVOS DE CONFIGURACIÓN Y PRODUCCIÓN
+# ARCHIVOS DE CONFIGURACIÓN Y PRODUCCIÓN - SEGURIDAD CRÍTICA
 # ==============================================================================
 .env
 .env.local
 .env.development
 .env.production
+.env.staging
+.env.testing
+.env.backup
 .production-files
 pedidos-development/
 config.local.php
 conexion_local.php
+config_secure.php.backup
+conexion.php.backup
+
+# ==============================================================================
+# ARCHIVOS DE CREDENCIALES Y KEYS - NUNCA COMMITEAR
+# ==============================================================================
+*.key
+*.pem
+*.p12
+*.keystore
+secrets.json
+credentials.json
+service-account.json
+private_key.pem
+public_key.pem
+jwt_private.key
+jwt_public.key
 
 # ==============================================================================
 # ARCHIVOS ESPECÍFICOS DEL PROYECTO A IGNORAR

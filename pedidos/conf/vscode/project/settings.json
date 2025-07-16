@@ -27,17 +27,17 @@
     },
     // === CONFIGURACIÓN PHP ===
     "php.validate.enable": true,
-    "php.validate.run": "onType",
+    "php.validate.run": "onSave",
     "php.suggest.basic": false,
     // === CONFIGURACIÓN DE ARCHIVOS ===
-    "files.autoSave": "afterDelay",
-    "files.autoSaveDelay": 3000,
+    "files.autoSave": "onFocusChange",
+    "files.autoSaveDelay": 10000,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     // === CONFIGURACIÓN SFTP ===
-    "sftp.printDebugLog": true,
+    "sftp.printDebugLog": false,
     "sftp.downloadOnOpen": false,
-    "sftp.autoSave": true,
+    "sftp.autoSave": false,
     "sftp.showStatusBarItem": true,
     "sftp.enableTransferProgress": true,
     // === OPTIMIZACIÓN DE INTERFAZ ===
@@ -49,7 +49,7 @@
     "git.autoRefresh": false,
     "git.autoRepositoryDetection": false,
     // === CONFIGURACIÓN DE FORMATO ===
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "editor.formatOnPaste": false,
     "editor.formatOnType": false,
     // === CONFIGURACIÓN DE BÚSQUEDA ===

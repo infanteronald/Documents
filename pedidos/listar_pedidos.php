@@ -283,24 +283,24 @@ try {
                                 </td>
 
                                 <!-- Status: Pagado -->
-                                <td class="col-pagado" onclick="toggleEstadoPago(<?php echo $p['id']; ?>, <?php echo $p['pagado']; ?>, '<?php echo htmlspecialchars($p['comprobante']); ?>', '<?php echo $p['tiene_comprobante']; ?>', '<?php echo htmlspecialchars($p['metodo_pago']); ?>')" style="cursor: pointer;" title="<?php echo $p['pagado'] == '1' ? 'Click para marcar como NO pagado' : 'Click para subir comprobante'; ?>">
+                                <td class="col-pagado" onclick="toggleEstadoPago(<?php echo $p['id']; ?>, <?php echo $p['pagado']; ?>, '<?php echo h($p['comprobante']); ?>', '<?php echo $p['tiene_comprobante']; ?>', '<?php echo h($p['metodo_pago']); ?>')" style="cursor: pointer;" title="<?php echo $p['pagado'] == '1' ? 'Click para marcar como NO pagado' : 'Click para subir comprobante'; ?>">
                                     <span class="badge-status <?php echo $p['pagado'] == '1' ? 'status-si' : 'status-no'; ?>">
                                         <?php echo $p['pagado'] == '1' ? '✅ Sí' : '⏳ No'; ?>
                                     </span>
                                 </td>
 
                                 <!-- Status: Enviado -->
-                                <td class="col-enviado" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>', '<?php echo isset($p['tienda']) ? $p['tienda'] : '0'; ?>')" style="cursor: pointer;" title="Click para ver estado del envío">
+                                <td class="col-enviado" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo h($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>', '<?php echo isset($p['tienda']) ? $p['tienda'] : '0'; ?>')" style="cursor: pointer;" title="Click para ver estado del envío">
                                     <?php echo generate_status_badge($p['enviado'], 'enviado'); ?>
                                 </td>
 
                                 <!-- Status: Comprobante -->
-                                <td class="col-comprobante" onclick="abrirModalComprobante(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['comprobante']); ?>', '<?php echo $p['tiene_comprobante']; ?>', '<?php echo htmlspecialchars($p['metodo_pago']); ?>')" style="cursor: pointer;" title="Click para ver/subir comprobante">
+                                <td class="col-comprobante" onclick="abrirModalComprobante(<?php echo $p['id']; ?>, '<?php echo h($p['comprobante']); ?>', '<?php echo $p['tiene_comprobante']; ?>', '<?php echo h($p['metodo_pago']); ?>')" style="cursor: pointer;" title="Click para ver/subir comprobante">
                                     <?php echo generate_status_badge($p['tiene_comprobante'], 'comprobante'); ?>
                                 </td>
 
                                 <!-- Status: Guía -->
-                                <td class="col-guia" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>', '<?php echo $p['tienda']; ?>')" style="cursor: pointer;" title="Click para ver/subir guía">
+                                <td class="col-guia" onclick="abrirModalGuia(<?php echo $p['id']; ?>, '<?php echo h($p['guia']); ?>', '<?php echo $p['tiene_guia']; ?>', '<?php echo $p['enviado']; ?>', '<?php echo $p['tienda']; ?>')" style="cursor: pointer;" title="Click para ver/subir guía">
                                     <?php echo generate_status_badge($p['tiene_guia'], 'guia'); ?>
                                 </td>
 
@@ -315,7 +315,7 @@ try {
                                 </td>
 
                                 <!-- Status: Anulado -->
-                                <td class="col-anulado" onclick="abrirModalAnular(<?php echo $p['id']; ?>, '<?php echo $p['anulado']; ?>', '<?php echo htmlspecialchars($p['nombre']); ?>')" style="cursor: pointer;" title="Click para anular/restaurar pedido">
+                                <td class="col-anulado" onclick="abrirModalAnular(<?php echo $p['id']; ?>, '<?php echo $p['anulado']; ?>', '<?php echo h($p['nombre']); ?>')" style="cursor: pointer;" title="Click para anular/restaurar pedido">
                                     <?php echo generate_status_badge($p['anulado'], 'anulado'); ?>
                                 </td>
 
