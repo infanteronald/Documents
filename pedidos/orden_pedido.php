@@ -1397,6 +1397,7 @@ while ($row = $res_cat->fetch_assoc()) {
         <input type="text" id="pedido-link" readonly style="width:80%;padding:8px;">
         <div style="margin-top:12px;">
             <button class="btn" onclick="copiarLink()">Copiar</button>
+            <button class="btn" onclick="irAlPedido()" style="margin-left:8px; background: var(--apple-orange);" id="btn-ir-pedido">Ir al Pedido</button>
             <button class="btn btn-success" onclick="nuevoPedido()" style="margin-left:8px;">Nuevo Pedido</button>
         </div>
     </div>
@@ -1894,6 +1895,18 @@ function copiarLink() {
     } catch (err) {
         console.error('Error al copiar:', err);
         mostrarMensaje('Error al copiar el enlace', 'error');
+    }
+}
+
+function irAlPedido() {
+    // Obtener la URL del pedido del input
+    const pedidoUrl = document.getElementById('pedido-link').value;
+    
+    if (pedidoUrl) {
+        // Abrir la URL en una nueva pestaña
+        window.open(pedidoUrl, '_blank');
+    } else {
+        mostrarMensaje('Error: No se pudo obtener la URL del pedido', 'error');
     }
 }
 

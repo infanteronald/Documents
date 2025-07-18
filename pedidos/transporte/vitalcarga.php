@@ -1127,7 +1127,7 @@ function calculate_priority_and_time($pedido) {
         <div id="info-pedido-vital" style="background:#21262d;padding:10px;border-radius:6px;margin-bottom:15px;text-align:left;">
             <!-- Información del pedido se cargará aquí -->
         </div>
-        <form id="formGuiaVital" enctype="multipart/form-data" method="POST" action="../subir_guia_debug.php" autocomplete="off">
+        <form id="formGuiaVital" enctype="multipart/form-data" method="POST" action="../subir_guia.php" autocomplete="off">
             <input type="hidden" name="id_pedido" id="guia_vital_id_pedido">
 
             <div style="margin-bottom:15px;">
@@ -1547,7 +1547,7 @@ document.getElementById('formGuiaVital').addEventListener('submit', function(e) 
     console.log('Enviando guía para pedido:', formData.get('id_pedido'));
     console.log('Archivo seleccionado:', archivoGuia.name, 'Tamaño:', archivoGuia.size);
 
-    fetch('../subir_guia_debug.php', {
+    fetch('../subir_guia.php', {
         method: 'POST',
         body: formData
     })

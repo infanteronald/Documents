@@ -29,14 +29,18 @@ if ($producto_id <= 0) {
 }
 
 try {
-    // Obtener datos del producto
+    // Obtener datos del producto con información de almacén
     $query = "SELECT 
-                id, nombre, descripcion, categoria, precio, 
-                stock_actual, stock_minimo, stock_maximo, 
-                almacen, activo, sku, imagen, 
-                fecha_creacion, fecha_actualizacion
-              FROM productos 
-              WHERE id = ? 
+                p.id, p.nombre, p.descripcion, p.categoria, p.precio, 
+                p.activo, p.sku, p.imagen, 
+                p.fecha_creacion, p.fecha_actualizacion,
+                ia.stock_actual, ia.stock_minimo, ia.stock_maximo,
+                a.id as almacen_id, a.nombre as almacen_nombre,
+                a.codigo as almacen_codigo
+              FROM productos p
+              LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id
+              LEFT JOIN almacenes a ON ia.almacen_id = a.id
+              WHERE p.id = ? 
               LIMIT 1";
     
     $stmt = $conn->prepare($query);
@@ -57,10 +61,12 @@ try {
         'descripcion' => $producto['descripcion'],
         'categoria' => $producto['categoria'],
         'precio' => intval($producto['precio']),
-        'stock_actual' => intval($producto['stock_actual']),
-        'stock_minimo' => intval($producto['stock_minimo']),
-        'stock_maximo' => intval($producto['stock_maximo']),
-        'almacen' => $producto['almacen'],
+        'stock_actual' => intval($producto['stock_actual'] ?? 0),
+        'stock_minimo' => intval($producto['stock_minimo'] ?? 5),
+        'stock_maximo' => intval($producto['stock_maximo'] ?? 100),
+        'almacen_id' => $producto['almacen_id'],
+        'almacen_nombre' => $producto['almacen_nombre'],
+        'almacen_codigo' => $producto['almacen_codigo'],
         'activo' => $producto['activo'],
         'sku' => $producto['sku'],
         'imagen' => $producto['imagen'],

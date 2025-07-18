@@ -42,6 +42,10 @@ defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 require_once '../config_secure.php';
 require_once '../notifications/notification_helpers.php';
 require_once '../php82_helpers.php';
+require_once 'config_almacenes.php';
+
+// Configurar conexión para AlmacenesConfig
+AlmacenesConfig::setConnection($conn);
 
 // Función para generar token CSRF si no existe
 if (!function_exists('generateCSRFToken')) {
@@ -62,9 +66,15 @@ if ($producto_id <= 0) {
     exit;
 }
 
-// Obtener datos del producto
+// Obtener datos del producto con información de inventario
 try {
-    $query = "SELECT * FROM productos WHERE id = ? LIMIT 1";
+    $query = "SELECT p.*, 
+                     ia.almacen_id, ia.stock_actual, ia.stock_minimo, ia.stock_maximo,
+                     ia.ubicacion_fisica, a.nombre as almacen_nombre
+              FROM productos p
+              LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id
+              LEFT JOIN almacenes a ON ia.almacen_id = a.id
+              WHERE p.id = ? LIMIT 1";
     $stmt = $conn->prepare($query);
     if (!$stmt) {
         throw new Exception('Error preparando consulta: ' . $conn->error);
@@ -103,12 +113,8 @@ try {
         $categorias = $categorias_result->fetch_all(MYSQLI_ASSOC);
     }
 
-    // Almacenes
-    $almacenes_query = "SELECT DISTINCT almacen FROM productos WHERE almacen IS NOT NULL AND almacen != '' ORDER BY almacen";
-    $almacenes_result = $conn->query($almacenes_query);
-    if ($almacenes_result) {
-        $almacenes = $almacenes_result->fetch_all(MYSQLI_ASSOC);
-    }
+    // Almacenes usando la nueva configuración
+    $almacenes = AlmacenesConfig::getAlmacenes();
 
 } catch (Exception $e) {
     error_log('Error obteniendo categorías/almacenes: ' . $e->getMessage());
@@ -1046,13 +1052,13 @@ unset($_SESSION['mensaje_exito']);
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="almacen">🏪 Almacén *</label>
-                                    <select id="almacen" name="almacen" required>
+                                    <label for="almacen_id">🏪 Almacén *</label>
+                                    <select id="almacen_id" name="almacen_id" required>
                                         <option value="">Seleccionar almacén...</option>
-                                        <?php foreach ($almacenes as $alm): ?>
-                                            <option value="<?php echo htmlspecialchars($alm['almacen']); ?>" 
-                                                    <?php echo ($producto['almacen'] === $alm['almacen']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($alm['almacen']); ?>
+                                        <?php foreach ($almacenes as $almacen): ?>
+                                            <option value="<?php echo $almacen['id']; ?>" 
+                                                    <?php echo ($producto['almacen_id'] == $almacen['id']) ? 'selected' : ''; ?>>
+                                                <?php echo AlmacenesConfig::getIconoAlmacen($almacen) . ' ' . htmlspecialchars($almacen['nombre']); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -1151,7 +1157,7 @@ unset($_SESSION['mensaje_exito']);
             stock_actual: <?php echo $producto['stock_actual']; ?>,
             stock_minimo: <?php echo $producto['stock_minimo']; ?>,
             stock_maximo: <?php echo $producto['stock_maximo']; ?>,
-            almacen: <?php echo json_encode($producto['almacen']); ?>,
+            almacen_id: <?php echo json_encode($producto['almacen_id'] ?? ''); ?>,
             activo: <?php echo $producto['activo']; ?>
         };
 

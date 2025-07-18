@@ -222,7 +222,7 @@ function mostrarModalDetalles(producto) {
                     
                     <div class="detalle-item">
                         <strong>🏪 Almacén:</strong>
-                        <span class="badge-almacen">${producto.almacen}</span>
+                        <span class="badge-almacen">${producto.almacen_nombre || 'Sin asignar'}</span>
                     </div>
                     
                     <div class="detalle-item">

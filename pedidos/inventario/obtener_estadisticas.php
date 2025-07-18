@@ -37,28 +37,38 @@ try {
     // Productos inactivos
     $estadisticas['inactivos'] = $estadisticas['total_productos'] - $estadisticas['activos'];
     
-    // Productos con stock bajo (stock_actual <= stock_minimo)
-    $query = "SELECT COUNT(*) as total FROM productos WHERE stock_actual <= stock_minimo AND activo = 1";
+    // Productos con stock bajo (usando inventario_almacen)
+    $query = "SELECT COUNT(DISTINCT ia.producto_id) as total 
+              FROM inventario_almacen ia 
+              INNER JOIN productos p ON ia.producto_id = p.id 
+              WHERE ia.stock_actual <= ia.stock_minimo AND p.activo = 1";
     $result = $conn->query($query);
     $estadisticas['stock_bajo'] = $result->fetch_assoc()['total'];
     
-    // Productos con stock medio (stock_actual > stock_minimo pero <= 30% del rango)
-    $query = "SELECT COUNT(*) as total FROM productos 
-              WHERE stock_actual > stock_minimo 
-              AND stock_actual <= (stock_minimo + (stock_maximo - stock_minimo) * 0.3)
-              AND activo = 1";
+    // Productos con stock medio
+    $query = "SELECT COUNT(DISTINCT ia.producto_id) as total 
+              FROM inventario_almacen ia 
+              INNER JOIN productos p ON ia.producto_id = p.id 
+              WHERE ia.stock_actual > ia.stock_minimo 
+              AND ia.stock_actual <= (ia.stock_minimo + (ia.stock_maximo - ia.stock_minimo) * 0.3)
+              AND p.activo = 1";
     $result = $conn->query($query);
     $estadisticas['stock_medio'] = $result->fetch_assoc()['total'];
     
     // Productos con stock alto
-    $query = "SELECT COUNT(*) as total FROM productos 
-              WHERE stock_actual > (stock_minimo + (stock_maximo - stock_minimo) * 0.3)
-              AND activo = 1";
+    $query = "SELECT COUNT(DISTINCT ia.producto_id) as total 
+              FROM inventario_almacen ia 
+              INNER JOIN productos p ON ia.producto_id = p.id 
+              WHERE ia.stock_actual > (ia.stock_minimo + (ia.stock_maximo - ia.stock_minimo) * 0.3)
+              AND p.activo = 1";
     $result = $conn->query($query);
     $estadisticas['stock_alto'] = $result->fetch_assoc()['total'];
     
     // Valor total del inventario
-    $query = "SELECT SUM(precio * stock_actual) as valor_total FROM productos WHERE activo = 1";
+    $query = "SELECT SUM(p.precio * ia.stock_actual) as valor_total 
+              FROM inventario_almacen ia 
+              INNER JOIN productos p ON ia.producto_id = p.id 
+              WHERE p.activo = 1";
     $result = $conn->query($query);
     $estadisticas['valor_total'] = intval($result->fetch_assoc()['valor_total'] ?? 0);
     
@@ -72,11 +82,13 @@ try {
     $result = $conn->query($query);
     $estadisticas['categorias_top'] = $result->fetch_all(MYSQLI_ASSOC);
     
-    // Almacenes con más productos
-    $query = "SELECT almacen, COUNT(*) as total 
-              FROM productos 
-              WHERE activo = 1 
-              GROUP BY almacen 
+    // Almacenes con más productos (usando nueva estructura)
+    $query = "SELECT a.nombre as almacen, COUNT(DISTINCT ia.producto_id) as total 
+              FROM almacenes a
+              INNER JOIN inventario_almacen ia ON a.id = ia.almacen_id
+              INNER JOIN productos p ON ia.producto_id = p.id
+              WHERE p.activo = 1 AND a.activo = 1
+              GROUP BY a.id, a.nombre 
               ORDER BY total DESC 
               LIMIT 5";
     $result = $conn->query($query);

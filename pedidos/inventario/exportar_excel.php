@@ -21,17 +21,20 @@ try {
     // Obtener parámetros de filtrado
     $buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
     $categoria = isset($_GET['categoria']) ? trim($_GET['categoria']) : '';
-    $almacen = isset($_GET['almacen']) ? trim($_GET['almacen']) : '';
+    $almacen_id = isset($_GET['almacen']) ? intval($_GET['almacen']) : 0;
     $stock_nivel = isset($_GET['stock_nivel']) ? $_GET['stock_nivel'] : '';
     $activo = isset($_GET['activo']) ? $_GET['activo'] : '';
     
-    // Construir query base
+    // Construir query base con joins para almacenes
     $query = "SELECT 
-                id, nombre, descripcion, categoria, precio, 
-                stock_actual, stock_minimo, stock_maximo, 
-                almacen, activo, sku, 
-                fecha_creacion, fecha_actualizacion
-              FROM productos 
+                p.id, p.nombre, p.descripcion, p.categoria, p.precio, 
+                ia.stock_actual, ia.stock_minimo, ia.stock_maximo, 
+                p.activo, p.sku, 
+                p.fecha_creacion, p.fecha_actualizacion,
+                a.nombre as almacen_nombre, a.codigo as almacen_codigo
+              FROM productos p
+              LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id
+              LEFT JOIN almacenes a ON ia.almacen_id = a.id
               WHERE 1=1";
     
     $params = [];
@@ -53,10 +56,10 @@ try {
         $types .= 's';
     }
     
-    if (!empty($almacen)) {
-        $query .= " AND almacen = ?";
-        $params[] = $almacen;
-        $types .= 's';
+    if ($almacen_id > 0) {
+        $query .= " AND ia.almacen_id = ?";
+        $params[] = $almacen_id;
+        $types .= 'i';
     }
     
     if ($activo !== '') {
@@ -69,13 +72,13 @@ try {
     if (!empty($stock_nivel)) {
         switch ($stock_nivel) {
             case 'bajo':
-                $query .= " AND stock_actual <= stock_minimo";
+                $query .= " AND ia.stock_actual <= ia.stock_minimo";
                 break;
             case 'medio':
-                $query .= " AND stock_actual > stock_minimo AND stock_actual <= (stock_minimo + (stock_maximo - stock_minimo) * 0.3)";
+                $query .= " AND ia.stock_actual > ia.stock_minimo AND ia.stock_actual <= (ia.stock_minimo + (ia.stock_maximo - ia.stock_minimo) * 0.3)";
                 break;
             case 'alto':
-                $query .= " AND stock_actual > (stock_minimo + (stock_maximo - stock_minimo) * 0.3)";
+                $query .= " AND ia.stock_actual > (ia.stock_minimo + (ia.stock_maximo - ia.stock_minimo) * 0.3)";
                 break;
         }
     }
@@ -135,7 +138,7 @@ try {
             $producto['stock_actual'],
             $producto['stock_minimo'],
             $producto['stock_maximo'],
-            $producto['almacen'],
+            $producto['almacen_nombre'] ?? 'Sin asignar',
             $producto['activo'] == '1' ? 'Activo' : 'Inactivo',
             $producto['sku'],
             date('d/m/Y H:i', strtotime($producto['fecha_creacion'])),

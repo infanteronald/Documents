@@ -2,6 +2,7 @@
 /**
  * Sistema de Gestión de Productos - Listado Principal
  * Sequoia Speed - Módulo de Inventario
+ * ACTUALIZADO: Integración con sistema unificado de almacenes
  */
 
 // Definir constante requerida por config_secure.php
@@ -10,6 +11,10 @@ defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 require_once '../config_secure.php';
 require_once '../notifications/notification_helpers.php';
 require_once '../php82_helpers.php';
+require_once 'config_almacenes.php';
+
+// Configurar conexión para AlmacenesConfig
+AlmacenesConfig::setConnection($conn);
 
 // Configuración de paginación
 $limite = 20;
@@ -21,35 +26,25 @@ $buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
 $categoria = isset($_GET['categoria']) ? trim($_GET['categoria']) : '';
 $estado = isset($_GET['estado']) ? trim($_GET['estado']) : '';
 $stock_filter = isset($_GET['stock_filter']) ? trim($_GET['stock_filter']) : '';
-$almacen_seleccionado = isset($_GET['almacen']) ? trim($_GET['almacen']) : 'TIENDA_BOG';
+$almacen_id = isset($_GET['almacen']) ? intval($_GET['almacen']) : 0;
 
-// Obtener información del almacén seleccionado
-$query_almacen = "SELECT * FROM almacenes WHERE codigo = ? AND activo = 1 LIMIT 1";
-$stmt_almacen = $conn->prepare($query_almacen);
-$stmt_almacen->bind_param('s', $almacen_seleccionado);
-$stmt_almacen->execute();
-$almacen_actual = $stmt_almacen->get_result()->fetch_assoc();
+// Obtener información del almacén seleccionado usando la nueva configuración
+if ($almacen_id > 0) {
+    $almacen_actual = AlmacenesConfig::getAlmacenPorId($almacen_id);
+} else {
+    $almacen_actual = AlmacenesConfig::getAlmacenPorDefecto();
+}
 
-// Si no se encuentra el almacén, usar Tienda Bogotá por defecto
+// Si no se encuentra el almacén, usar el por defecto
 if (!$almacen_actual) {
-    $almacen_seleccionado = 'TIENDA_BOG';
-    $stmt_almacen->bind_param('s', $almacen_seleccionado);
-    $stmt_almacen->execute();
-    $almacen_actual = $stmt_almacen->get_result()->fetch_assoc();
+    $almacen_actual = AlmacenesConfig::getAlmacenPorDefecto();
 }
 
 // Obtener lista de almacenes para el selector
-$query_almacenes = "SELECT * FROM almacenes WHERE activo = 1 ORDER BY 
-    CASE codigo 
-        WHEN 'TIENDA_BOG' THEN 1 
-        WHEN 'TIENDA_MED' THEN 2 
-        WHEN 'FABRICA' THEN 3 
-        ELSE 4 
-    END, nombre";
-$almacenes = $conn->query($query_almacenes)->fetch_all(MYSQLI_ASSOC);
+$almacenes = AlmacenesConfig::getAlmacenesPorPrioridad();
 
 // Construir consulta con filtros para inventario por almacén
-$where_conditions = ["a.id = ?"];
+$where_conditions = ["ia.almacen_id = ?"];
 $params = [$almacen_actual['id']];
 $types = 'i';
 
@@ -91,7 +86,7 @@ if (!empty($stock_filter)) {
 // Construir WHERE clause
 $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
 
-// Consulta principal con paginación usando la vista de inventario completo
+// Consulta principal con paginación usando el nuevo sistema
 $query = "SELECT 
     p.id,
     p.nombre,
@@ -107,14 +102,19 @@ $query = "SELECT
     ia.stock_minimo,
     ia.stock_maximo,
     ia.ubicacion_fisica,
+    a.id as almacen_id,
+    a.nombre as almacen_nombre,
+    a.icono as almacen_icono,
     CASE 
-        WHEN ia.stock_actual <= ia.stock_minimo THEN 'bajo'
-        WHEN ia.stock_actual <= (ia.stock_minimo + (ia.stock_maximo - ia.stock_minimo) * 0.3) THEN 'medio'
-        ELSE 'alto'
+        WHEN ia.stock_actual = 0 THEN 'sin_stock'
+        WHEN ia.stock_actual <= ia.stock_minimo THEN 'critico'
+        WHEN ia.stock_actual <= (ia.stock_minimo * 1.5) THEN 'bajo'
+        ELSE 'ok'
     END as nivel_stock,
     CASE 
+        WHEN ia.stock_actual = 0 THEN '🔴'
         WHEN ia.stock_actual <= ia.stock_minimo THEN '🔴'
-        WHEN ia.stock_actual <= (ia.stock_minimo + (ia.stock_maximo - ia.stock_minimo) * 0.3) THEN '🟡'
+        WHEN ia.stock_actual <= (ia.stock_minimo * 1.5) THEN '🟡'
         ELSE '🟢'
     END as icono_stock
 FROM productos p
@@ -204,7 +204,7 @@ function generar_badge_stock($stock_actual, $stock_minimo, $nivel_stock, $icono_
                     </div>
                 </div>
                 <div class="header-actions">
-                    <a href="crear_producto.php?almacen=<?php echo $almacen_seleccionado; ?>" class="btn btn-primary">
+                    <a href="crear_producto.php?almacen_id=<?php echo $almacen_actual['id']; ?>" class="btn btn-primary">
                         ➕ Nuevo Producto
                     </a>
                     <button onclick="exportarExcel()" class="btn btn-secondary">
@@ -222,25 +222,15 @@ function generar_badge_stock($stock_actual, $stock_minimo, $nivel_stock, $icono_
             </div>
             <div class="almacen-selector-grid">
                 <?php foreach ($almacenes as $almacen): ?>
-                    <a href="?almacen=<?php echo $almacen['codigo']; ?>" 
-                       class="almacen-card <?php echo $almacen['codigo'] === $almacen_seleccionado ? 'active' : ''; ?>">
+                    <a href="?almacen=<?php echo $almacen['id']; ?>" 
+                       class="almacen-card <?php echo $almacen['id'] == $almacen_actual['id'] ? 'active' : ''; ?>">
                         <div class="almacen-icon">
-                            <?php 
-                            $iconos = [
-                                'FABRICA' => '🏭',
-                                'TIENDA_BOG' => '🏬',
-                                'TIENDA_MED' => '🏪',
-                                'BODEGA_1' => '📦',
-                                'BODEGA_2' => '📦',
-                                'BODEGA_3' => '📦'
-                            ];
-                            echo $iconos[$almacen['codigo']] ?? '🏪';
-                            ?>
+                            <?php echo AlmacenesConfig::getIconoAlmacen($almacen); ?>
                         </div>
                         <div class="almacen-info">
                             <h4><?php echo htmlspecialchars($almacen['nombre']); ?></h4>
-                            <p><?php echo htmlspecialchars($almacen['encargado']); ?></p>
-                            <?php if ($almacen['codigo'] === $almacen_seleccionado): ?>
+                            <p><?php echo htmlspecialchars($almacen['encargado'] ?? $almacen['descripcion'] ?? ''); ?></p>
+                            <?php if ($almacen['id'] == $almacen_actual['id']): ?>
                                 <span class="almacen-badge">✓ Seleccionado</span>
                             <?php endif; ?>
                         </div>
@@ -252,7 +242,7 @@ function generar_badge_stock($stock_actual, $stock_minimo, $nivel_stock, $icono_
         <!-- Filtros -->
         <div class="filters-section">
             <form method="GET" class="filters-form">
-                <input type="hidden" name="almacen" value="<?php echo $almacen_seleccionado; ?>">
+                <input type="hidden" name="almacen" value="<?php echo $almacen_actual['id']; ?>">
                 <div class="filters-row">
                     <div class="filter-group">
                         <input type="text" 
@@ -314,7 +304,7 @@ function generar_badge_stock($stock_actual, $stock_minimo, $nivel_stock, $icono_
                 <div class="stat-content">
                     <div class="stat-number">
                         <?php 
-                        $stock_bajo = $conn->query("SELECT COUNT(*) as total FROM productos WHERE stock_actual <= stock_minimo AND activo = '1'")->fetch_assoc()['total'];
+                        $stock_bajo = $conn->query("SELECT COUNT(*) as total FROM inventario_almacen ia INNER JOIN productos p ON ia.producto_id = p.id WHERE ia.stock_actual <= ia.stock_minimo AND p.activo = '1'")->fetch_assoc()['total'];
                         echo $stock_bajo;
                         ?>
                     </div>
@@ -405,7 +395,7 @@ function generar_badge_stock($stock_actual, $stock_minimo, $nivel_stock, $icono_
                                     </td>
                                     
                                     <td class="almacen-cell">
-                                        <span class="badge-almacen">🏪 <?php echo htmlspecialchars($producto['almacen']); ?></span>
+                                        <span class="badge-almacen">🏪 <?php echo htmlspecialchars($producto['almacen_nombre']); ?></span>
                                     </td>
                                     
                                     <td class="fecha-cell">

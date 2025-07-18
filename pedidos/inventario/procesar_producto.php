@@ -10,6 +10,10 @@ defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 require_once '../config_secure.php';
 require_once '../notifications/notification_helpers.php';
 require_once '../php82_helpers.php';
+require_once 'config_almacenes.php';
+
+// Configurar conexión para AlmacenesConfig
+AlmacenesConfig::setConnection($conn);
 
 // Iniciar sesión para mensajes
 if (session_status() == PHP_SESSION_NONE) {
@@ -42,7 +46,7 @@ $campos_requeridos = [
     'stock_actual' => 'El stock actual es requerido',
     'stock_minimo' => 'El stock mínimo es requerido',
     'stock_maximo' => 'El stock máximo es requerido',
-    'almacen' => 'El almacén es requerido'
+    'almacen_id' => 'El almacén es requerido'
 ];
 
 foreach ($campos_requeridos as $campo => $mensaje) {
@@ -101,8 +105,7 @@ if (!empty($_POST['sku'])) {
 $longitudes = [
     'nombre' => 255,
     'categoria' => 50,
-    'sku' => 40,
-    'almacen' => 100
+    'sku' => 40
 ];
 
 foreach ($longitudes as $campo => $max_length) {
@@ -148,29 +151,30 @@ $datos = [
     'stock_actual' => (int)$_POST['stock_actual'],
     'stock_minimo' => (int)$_POST['stock_minimo'],
     'stock_maximo' => (int)$_POST['stock_maximo'],
-    'almacen' => trim($_POST['almacen']),
+    'almacen_id' => (int)$_POST['almacen_id'],
     'activo' => $_POST['activo'] === '1' ? 1 : 0,
     'sku' => !empty($_POST['sku']) ? trim($_POST['sku']) : null
 ];
+
+// Validar que el almacén exista
+if (!AlmacenesConfig::existeAlmacen($datos['almacen_id'])) {
+    $errores[] = 'El almacén seleccionado no existe';
+}
 
 try {
     $conn->begin_transaction();
     
     if ($accion === 'crear') {
-        // Crear producto
-        $query = "INSERT INTO productos (nombre, descripcion, categoria, precio, stock_actual, stock_minimo, stock_maximo, almacen, activo, sku, imagen) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Crear producto (sin campos de almacén/stock en tabla principal)
+        $query = "INSERT INTO productos (nombre, descripcion, categoria, precio, activo, sku, imagen) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $conn->prepare($query);
-        $stmt->bind_param('sssiiiiisss', 
+        $stmt->bind_param('sssiiis', 
             $datos['nombre'],
             $datos['descripcion'],
             $datos['categoria'],
             $datos['precio'],
-            $datos['stock_actual'],
-            $datos['stock_minimo'],
-            $datos['stock_maximo'],
-            $datos['almacen'],
             $datos['activo'],
             $datos['sku'],
             $nombre_imagen
@@ -178,11 +182,28 @@ try {
         
         if ($stmt->execute()) {
             $producto_id = $conn->insert_id;
-            $mensaje = "Producto creado exitosamente";
             
-            // Notificar si el stock está bajo
-            if ($datos['stock_actual'] <= $datos['stock_minimo']) {
-                $mensaje .= " ⚠️ Advertencia: El stock actual está por debajo del mínimo permitido";
+            // Crear registro en inventario_almacen
+            $query_inventario = "INSERT INTO inventario_almacen (producto_id, almacen_id, stock_actual, stock_minimo, stock_maximo) 
+                                VALUES (?, ?, ?, ?, ?)";
+            $stmt_inventario = $conn->prepare($query_inventario);
+            $stmt_inventario->bind_param('iiiii', 
+                $producto_id,
+                $datos['almacen_id'],
+                $datos['stock_actual'],
+                $datos['stock_minimo'],
+                $datos['stock_maximo']
+            );
+            
+            if ($stmt_inventario->execute()) {
+                $mensaje = "Producto creado exitosamente";
+                
+                // Notificar si el stock está bajo
+                if ($datos['stock_actual'] <= $datos['stock_minimo']) {
+                    $mensaje .= " ⚠️ Advertencia: El stock actual está por debajo del mínimo permitido";
+                }
+            } else {
+                throw new Exception('Error al crear el inventario: ' . $stmt_inventario->error);
             }
             
         } else {
@@ -226,23 +247,18 @@ try {
             $imagen_final = null;
         }
         
-        // Actualizar producto
+        // Actualizar producto (sin campos stock)
         $query = "UPDATE productos SET 
                   nombre = ?, descripcion = ?, categoria = ?, precio = ?, 
-                  stock_actual = ?, stock_minimo = ?, stock_maximo = ?, 
-                  almacen = ?, activo = ?, sku = ?, imagen = ?
+                  activo = ?, sku = ?, imagen = ?
                   WHERE id = ?";
         
         $stmt = $conn->prepare($query);
-        $stmt->bind_param('sssiiiiisssi', 
+        $stmt->bind_param('sssissi', 
             $datos['nombre'],
             $datos['descripcion'],
             $datos['categoria'],
             $datos['precio'],
-            $datos['stock_actual'],
-            $datos['stock_minimo'],
-            $datos['stock_maximo'],
-            $datos['almacen'],
             $datos['activo'],
             $datos['sku'],
             $imagen_final,
@@ -250,6 +266,24 @@ try {
         );
         
         if ($stmt->execute()) {
+            // Actualizar inventario en almacén
+            $inventario_query = "UPDATE inventario_almacen SET 
+                                stock_actual = ?, stock_minimo = ?, stock_maximo = ?,
+                                almacen_id = ?, fecha_actualizacion = CURRENT_TIMESTAMP
+                                WHERE producto_id = ?";
+            $inventario_stmt = $conn->prepare($inventario_query);
+            $inventario_stmt->bind_param('iiiii', 
+                $datos['stock_actual'],
+                $datos['stock_minimo'],
+                $datos['stock_maximo'],
+                $datos['almacen_id'],
+                $producto_id
+            );
+            
+            if (!$inventario_stmt->execute()) {
+                throw new Exception('Error al actualizar el inventario: ' . $inventario_stmt->error);
+            }
+            
             $mensaje = "Producto actualizado exitosamente";
             
             // Notificar si el stock está bajo

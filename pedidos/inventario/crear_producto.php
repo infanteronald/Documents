@@ -2,6 +2,7 @@
 /**
  * Formulario para Crear Nuevo Producto
  * Sequoia Speed - Módulo de Inventario
+ * ACTUALIZADO: Integración con sistema unificado de almacenes
  */
 
 // Definir constante requerida por config_secure.php
@@ -10,16 +11,31 @@ defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 require_once '../config_secure.php';
 require_once '../notifications/notification_helpers.php';
 require_once '../php82_helpers.php';
+require_once 'config_almacenes.php';
+
+// Configurar conexión para AlmacenesConfig
+AlmacenesConfig::setConnection($conn);
 
 // Obtener categorías existentes para el selector
 $categorias_query = "SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != '' ORDER BY categoria";
 $categorias_result = $conn->query($categorias_query);
 $categorias = $categorias_result->fetch_all(MYSQLI_ASSOC);
 
-// Obtener almacenes existentes
-$almacenes_query = "SELECT DISTINCT almacen FROM productos WHERE almacen IS NOT NULL AND almacen != '' ORDER BY almacen";
-$almacenes_result = $conn->query($almacenes_query);
-$almacenes = $almacenes_result->fetch_all(MYSQLI_ASSOC);
+// Obtener almacenes usando la nueva configuración
+$almacenes = AlmacenesConfig::getAlmacenes();
+
+// Obtener almacén preseleccionado desde URL
+$almacen_preseleccionado = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : null;
+if ($almacen_preseleccionado) {
+    $almacen_data = AlmacenesConfig::getAlmacenPorId($almacen_preseleccionado);
+    if ($almacen_data) {
+        $almacen_por_defecto = $almacen_preseleccionado;
+    } else {
+        $almacen_por_defecto = AlmacenesConfig::getAlmacenPorDefecto()['id'] ?? null;
+    }
+} else {
+    $almacen_por_defecto = AlmacenesConfig::getAlmacenPorDefecto()['id'] ?? null;
+}
 
 // Valores por defecto
 $valores_defecto = [
@@ -30,7 +46,7 @@ $valores_defecto = [
     'stock_actual' => '0',
     'stock_minimo' => '5',
     'stock_maximo' => '100',
-    'almacen' => 'Principal',
+    'almacen_id' => $almacen_por_defecto,
     'activo' => '1',
     'sku' => ''
 ];
@@ -271,25 +287,18 @@ unset($_SESSION['mensaje_exito']);
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="almacen" class="form-label">
+                                    <label for="almacen_id" class="form-label">
                                         🏪 Almacén <span class="required">*</span>
                                     </label>
-                                    <div class="input-with-suggestions">
-                                        <input type="text" 
-                                               id="almacen" 
-                                               name="almacen" 
-                                               value="<?php echo htmlspecialchars($valores_defecto['almacen']); ?>"
-                                               class="form-input" 
-                                               required 
-                                               maxlength="100"
-                                               placeholder="Principal"
-                                               list="almacenes-list">
-                                        <datalist id="almacenes-list">
-                                            <?php foreach ($almacenes as $alm): ?>
-                                                <option value="<?php echo htmlspecialchars($alm['almacen']); ?>">
-                                            <?php endforeach; ?>
-                                        </datalist>
-                                    </div>
+                                    <select id="almacen_id" name="almacen_id" class="form-select" required>
+                                        <option value="">Seleccionar almacén...</option>
+                                        <?php foreach ($almacenes as $almacen): ?>
+                                            <option value="<?php echo $almacen['id']; ?>" 
+                                                    <?php echo ($valores_defecto['almacen_id'] == $almacen['id']) ? 'selected' : ''; ?>>
+                                                <?php echo AlmacenesConfig::getIconoAlmacen($almacen) . ' ' . htmlspecialchars($almacen['nombre']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
                                 
                                 <div class="form-group">
