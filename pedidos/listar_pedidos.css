@@ -2584,6 +2584,67 @@ h1 {
     display: none;
 }
 
+/* Botón de Transporte */
+.btn-transporte {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    padding: var(--space-sm) var(--space-md);
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    border: 1px solid #3b82f6;
+    transition: all 0.15s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.btn-transporte:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    color: white;
+}
+
+.btn-transporte:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Botón de Inventario */
+.btn-inventario {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    padding: var(--space-sm) var(--space-md);
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    border: 1px solid #a855f7;
+    transition: all 0.15s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+    margin-right: var(--space-sm);
+}
+
+.btn-inventario:hover {
+    background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    color: white;
+}
+
+.btn-inventario:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(168, 85, 247, 0.2);
+}
+
 /* Móvil: Ocultar botones de escritorio, mostrar botones móviles */
 @media (max-width: 768px) {
     .desktop-only {

@@ -8,6 +8,12 @@
  * - Todos los pedidos no enviados sin límite de tiempo
  */
 
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de lectura en ventas
+$current_user = auth_require('ventas', 'leer');
+
 // Headers anti-cache
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');

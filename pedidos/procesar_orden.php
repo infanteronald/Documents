@@ -5,6 +5,12 @@ ini_set('display_errors', 1);
 require_once 'config_secure.php';
 require_once 'email_templates.php';
 require_once 'notifications/notification_helpers.php';
+
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de creación en ventas
+$current_user = auth_require('ventas', 'crear');
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Detectar tipo de formulario
     $es_pedido_simple = isset($_POST['pedido']); // Formulario simple con textarea (index.php)
@@ -188,24 +194,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // INSERTAR nuevo pedido
         if ($es_pago_bold && $bold_order_id) {
             // Insertar pedido Bold con campos específicos
-            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante, bold_order_id, estado_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')");
+            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, usuario_id, datos_pago, comprobante, bold_order_id, estado_pago) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')");
 
             if (!$stmt) {
                 die("Error al preparar la consulta de inserción Bold: " . $conn->error);
             }
 
             $datos_pago = "Pago en proceso - $metodo_pago";
-            $stmt->bind_param("sddssssssssss", $productos_texto, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo, $bold_order_id);
+            $stmt->bind_param("sddsssssssisss", $productos_texto, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $current_user['id'], $datos_pago, $rutaArchivo, $bold_order_id);
             echo "<!-- Debug: Insertando pedido Bold con Order ID: $bold_order_id -->\n";
         } else {
             // Insertar pedido normal
-            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, datos_pago, comprobante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, usuario_id, datos_pago, comprobante) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             if (!$stmt) {
                 die("Error al preparar la consulta de inserción: " . $conn->error);
             }
 
-            $stmt->bind_param("sddsssssssss", $productos_texto, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $datos_pago, $rutaArchivo);
+            $stmt->bind_param("sddsssssssisss", $productos_texto, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $current_user['id'], $datos_pago, $rutaArchivo);
         }
 
         if (!$stmt->execute()) {
@@ -214,6 +220,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $numero_pedido = $conn->insert_id;
         $stmt->close();
+        
+        // Registrar creación de pedido en auditoría
+        auth_log('create', 'ventas', "Pedido creado: #{$numero_pedido} - Cliente: {$nombre}");
     }
 
     // PROCESAR PRODUCTOS PERSONALIZADOS SI EXISTEN (solo para pedidos nuevos)

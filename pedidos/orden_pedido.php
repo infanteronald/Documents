@@ -2,6 +2,15 @@
 require_once 'config_secure.php';
 require_once 'php82_helpers.php';
 
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de creación en ventas
+$current_user = auth_require('ventas', 'crear');
+
+// Registrar acceso
+auth_log('read', 'ventas', 'Acceso a formulario de creación de pedido');
+
 // Obtener categorías
 $categorias = [];
 $sql_cat = "SELECT DISTINCT categoria FROM productos WHERE activo = 1 ORDER BY categoria ASC";

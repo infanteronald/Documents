@@ -2,8 +2,7 @@
     "recommendations": [
         "ms-vscode.vscode-php-pack",
         "bmewburn.vscode-intelephense-client",
-        "xdebug.php-debug",
-        "bradlc.vscode-tailwindcss"
+        "xdebug.php-debug"
     ],
     "unwantedRecommendations": [
         "ms-vscode.vscode-typescript-next",

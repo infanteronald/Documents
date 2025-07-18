@@ -8,6 +8,12 @@ header('Content-Type: application/json');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de actualización en ventas
+$current_user = auth_require('ventas', 'actualizar');
+
 require_once 'config_secure.php';
 require_once 'notifications/notification_helpers.php';
 

@@ -7,9 +7,17 @@ class PedidosFilter {
     private $conn;
     private $cache_duration = 3600;
     private $cache_file = 'cache/filter_options.json';
+    private $custom_where = '';
     
     public function __construct($connection) {
         $this->conn = $connection;
+    }
+    
+    /**
+     * Establece una condición WHERE personalizada
+     */
+    public function setCustomWhere($where) {
+        $this->custom_where = $where;
     }
     
     /**
@@ -210,11 +218,16 @@ class PedidosFilter {
      * Construye la consulta principal
      */
     public function buildMainQuery($where, $montoFiltro) {
+        // Agregar condición personalizada si existe
+        if (!empty($this->custom_where)) {
+            $where .= " AND " . $this->custom_where;
+        }
+        
         return "
             SELECT 
                 p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.fecha, p.direccion,
                 p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
-                p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda, p.descuento,
+                p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda, p.descuento, p.recaudo,
                 COALESCE(SUM(pd.cantidad * pd.precio), 0) as monto_productos,
                 CASE 
                     WHEN COALESCE(SUM(pd.cantidad * pd.precio), 0) > 0 THEN 
@@ -227,7 +240,7 @@ class PedidosFilter {
             WHERE $where
             GROUP BY p.id, p.nombre, p.telefono, p.ciudad, p.barrio, p.correo, p.fecha, p.direccion,
                      p.metodo_pago, p.datos_pago, p.comprobante, p.guia, p.nota_interna, p.enviado, p.archivado,
-                     p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda, p.descuento, p.monto
+                     p.anulado, p.tiene_guia, p.tiene_comprobante, p.pagado, p.tienda, p.descuento, p.recaudo, p.monto
             $montoFiltro
             ORDER BY p.fecha DESC
         ";
@@ -237,6 +250,11 @@ class PedidosFilter {
      * Construye la consulta de conteo
      */
     public function buildCountQuery($where, $montoFiltro) {
+        // Agregar condición personalizada si existe
+        if (!empty($this->custom_where)) {
+            $where .= " AND " . $this->custom_where;
+        }
+        
         return "
             SELECT COUNT(*) as total, COALESCE(SUM(monto_temp), 0) as monto_total
             FROM (
@@ -250,7 +268,7 @@ class PedidosFilter {
                 FROM pedidos_detal p
                 LEFT JOIN pedido_detalle pd ON p.id = pd.pedido_id
                 WHERE $where
-                GROUP BY p.id, p.monto, p.descuento
+                GROUP BY p.id, p.monto, p.descuento, p.recaudo
                 $montoFiltro
             ) as subquery
         ";

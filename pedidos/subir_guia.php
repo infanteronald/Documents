@@ -4,20 +4,48 @@
  * Sequoia Speed - Gestión de guías de envío
  */
 
+// Definir constante requerida por config_secure.php
+defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
+
 require_once 'config_secure.php';
 include 'email_templates.php';
 require_once 'notifications/notification_helpers.php';
 require_once 'php82_helpers.php';
 
-header('Content-Type: application/json');
+// Configurar manejo de errores
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
-$id = isset($_POST['pedido_id']) ? intval($_POST['pedido_id']) : 0;
-$marcar_enviado = isset($_POST['marcar_enviado']) ? $_POST['marcar_enviado'] === 'true' : false;
+// Registrar manejador de errores personalizado
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    error_log("Error en subir_guia.php: [$errno] $errstr en $errfile:$errline");
+    return true;
+});
+
+// Log para debug
+error_log("subir_guia.php iniciado - POST: " . json_encode($_POST));
+error_log("subir_guia.php - FILES: " . json_encode($_FILES));
+
+// Establecer cabecera JSON desde el inicio
+header('Content-Type: application/json');
+
+try {
+    // Verificar que existe conexión a base de datos
+    if (!isset($conn)) {
+        throw new Exception('Error de configuración del sistema - $conn no definida');
+    }
+
+    if ($conn->connect_error) {
+        throw new Exception('Error de conexión al servidor: ' . $conn->connect_error);
+    }
+
+$id = isset($_POST['id_pedido']) ? intval($_POST['id_pedido']) : (isset($_POST['pedido_id']) ? intval($_POST['pedido_id']) : 0);
+$marcar_enviado = isset($_POST['marcar_enviado']) ? ($_POST['marcar_enviado'] === 'true' || $_POST['marcar_enviado'] === '1') : true;
+$numero_guia = isset($_POST['numero_guia']) ? trim($_POST['numero_guia']) : 'VitalCarga-' . $id;
+$transportadora = isset($_POST['transportadora']) ? trim($_POST['transportadora']) : 'VitalCarga';
 
 if(!$id || !isset($_FILES['guia'])) {
-    echo json_encode(['success'=>false,'error'=>'Faltan datos o archivo']);
+    echo json_encode(['success'=>false,'error'=>'Faltan datos requeridos: ID del pedido y archivo de guía']);
     exit;
 }
 
@@ -65,14 +93,12 @@ if ($marcar_enviado) {
 }
 
 if (!$stmt) {
-    echo json_encode(['success'=>false,'error'=>'Error en actualización: ' . $conn->error]);
-    exit;
+    throw new Exception('Error en actualización: ' . $conn->error);
 }
 
 $stmt->bind_param("si", $nombreGuia, $id);
 if (!$stmt->execute()) {
-    echo json_encode(['success'=>false,'error'=>'Error al actualizar pedido: ' . $stmt->error]);
-    exit;
+    throw new Exception('Error al actualizar pedido: ' . $stmt->error);
 }
 $stmt->close();
 
@@ -242,4 +268,18 @@ echo json_encode([
     'email_ventas_enviado' => $email_ventas_enviado,
     'marcar_enviado' => $marcar_enviado
 ]);
+
+} catch (Exception $e) {
+    error_log("ERROR en subir_guia.php: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
+    
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage(),
+        'debug' => [
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]
+    ]);
+}
 ?>

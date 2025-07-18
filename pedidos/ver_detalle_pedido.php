@@ -9,6 +9,12 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('memory_limit', '256M');
 
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de lectura en ventas
+$current_user = auth_require('ventas', 'leer');
+
 // Incluir conexión a base de datos
 require_once 'config_secure.php';
 require_once 'notifications/notification_helpers.php';

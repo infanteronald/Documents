@@ -1,6 +1,12 @@
 <?php
 require_once 'config_secure.php';
 
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de lectura en reportes
+$current_user = auth_require('reportes', 'leer');
+
 // Filtros
 $filtro = isset($_GET['filtro']) ? $_GET['filtro'] : 'hoy';
 $buscar = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';

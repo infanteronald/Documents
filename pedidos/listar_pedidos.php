@@ -8,6 +8,20 @@ require_once 'ui-helpers.php';
 require_once 'notifications/notification_helpers.php';
 require_once 'php82_helpers.php';
 
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de lectura en ventas
+$current_user = auth_require('ventas', 'leer');
+
+// Registrar acceso
+auth_log('read', 'ventas', 'Acceso a lista de pedidos');
+
+// Función para verificar permisos de acceso a módulos
+function canAccess($module) {
+    return auth_can($module, 'leer');
+}
+
 // Inicializar filtros usando la nueva clase
 try {
     $filter = new PedidosFilter($conn);
@@ -114,12 +128,16 @@ try {
                 <button onclick="window.print()" class="mobile-btn" title="Imprimir">🖨️</button>
             </div>
 
-            <!-- Estadísticas en línea -->
+            <!-- Botones de Módulos -->
             <div class="stats-inline">
-                <span class="stat-inline">📦 <?php echo number_format($total_pedidos); ?></span>
-                <span class="stat-inline">💰 $<?php echo number_format($monto_total_real, 0, ',', '.'); ?></span>
-                <span class="stat-inline">⏳ <?php echo count(array_filter($pedidos, function($p) { return $p['pagado'] == '0'; })); ?></span>
-                <span class="stat-inline">✅ <?php echo count(array_filter($pedidos, function($p) { return $p['pagado'] == '1'; })); ?></span>
+                <?php if (canAccess('inventario')): ?>
+                    <a href="inventario/productos.php" class="btn-inventario" title="Ir a módulo de inventario">
+                        📦 Inventario
+                    </a>
+                <?php endif; ?>
+                <a href="transporte/vitalcarga.php" class="btn-transporte" title="Ir a módulo de transporte">
+                    🚚 Transporte
+                </a>
                 <?php if($buscar): ?>
                     <span class="stat-inline" style="background: var(--apple-green); color: white;">
                         🔍 Filtrando: "<?php echo htmlspecialchars($buscar); ?>"

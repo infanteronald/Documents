@@ -3,6 +3,12 @@ require_once 'config_secure.php';
 include 'email_templates.php';
 require_once 'notifications/notification_helpers.php';
 
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de actualización en ventas
+$current_user = auth_require('ventas', 'actualizar');
+
 header('Content-Type: application/json');
 
 $id = isset($_POST['pedido_id']) ? intval($_POST['pedido_id']) : (isset($_POST['id_pedido']) ? intval($_POST['id_pedido']) : 0);

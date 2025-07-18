@@ -8,6 +8,12 @@ ini_set('error_log', __DIR__ . '/debug.log');
 header('Content-Type: application/json'); // Asegurar que la respuesta sea JSON
 require_once 'config_secure.php';
 
+// Requerir autenticación
+require_once 'accesos/auth_helper.php';
+
+// Proteger la página - requiere permisos de creación en ventas
+$current_user = auth_require('ventas', 'crear');
+
 // Log para debugging
 error_log("=== INICIO GUARDAR_PEDIDO === " . date('Y-m-d H:i:s'));
 
@@ -38,20 +44,24 @@ $monto = $data['monto'] ?? 0;
 $descuento = $data['descuento'] ?? 0;
 
 // Extraer información adicional del formulario
-$nombre = $data['nombre'] ?? '';
+$nombre = $data['nombre'] ?? 'Pedido en proceso';
 $correo = $data['correo'] ?? '';
 $telefono = $data['telefono'] ?? '';
 $ciudad = $data['ciudad'] ?? '';
 $barrio = $data['barrio'] ?? '';
 $direccion = $data['direccion'] ?? '';
-$metodo_pago = $data['metodo_pago'] ?? '';
+$metodo_pago = $data['metodo_pago'] ?? 'Por definir';
 $bold_order_id = $data['bold_order_id'] ?? null;
+
+// Detectar si es un pedido borrador (sin datos del cliente)
+$es_pedido_borrador = empty($correo) && empty($telefono) && empty($direccion);
 
 error_log("Carrito recibido: " . print_r($carrito, true));
 error_log("Monto recibido: " . $monto);
 error_log("Descuento recibido: " . $descuento);
 error_log("Método de pago: " . $metodo_pago);
 error_log("Bold Order ID: " . $bold_order_id);
+error_log("Es pedido borrador: " . ($es_pedido_borrador ? 'SÍ' : 'NO'));
 
 // Validar estructura del carrito - EXCEPCIÓN para pedidos Bold
 if (empty($carrito) && empty($bold_order_id)) {
@@ -104,14 +114,14 @@ $nombres = array_map(function ($item) {
 $pedido_str = implode(', ', $nombres);
 
 // Insertar pedido en pedidos_detal con todos los campos necesarios
-$sql = "INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago";
+$sql = "INSERT INTO pedidos_detal (pedido, monto, descuento, nombre, direccion, telefono, ciudad, barrio, correo, metodo_pago, usuario_id";
 
 // Agregar campos de Bold si es un pago Bold
 if ($bold_order_id) {
     $sql .= ", bold_order_id, estado_pago";
 }
 
-$sql .= ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
+$sql .= ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
 
 if ($bold_order_id) {
     $sql .= ", ?, 'pendiente'";
@@ -119,22 +129,46 @@ if ($bold_order_id) {
 
 $sql .= ")";
 
+// LOG DEL SQL PARA DEBUG
+error_log("=== DEBUG SQL ===");
+error_log("SQL Query: " . $sql);
+error_log("Parámetros:");
+error_log("- pedido_str: " . $pedido_str);
+error_log("- monto: " . $monto);
+error_log("- descuento: " . $descuento);
+error_log("- nombre: " . $nombre);
+error_log("- direccion: " . $direccion);
+error_log("- telefono: " . $telefono);
+error_log("- ciudad: " . $ciudad);
+error_log("- barrio: " . $barrio);
+error_log("- correo: " . $correo);
+error_log("- metodo_pago: " . $metodo_pago);
+error_log("- user_id: " . ($current_user['id'] ?? 'NULL'));
+if ($bold_order_id) {
+    error_log("- bold_order_id: " . $bold_order_id);
+}
+error_log("==================");
+
 $stmt_main_pedido = $conn->prepare($sql);
 if ($stmt_main_pedido === false) {
     error_log("Error al preparar la consulta para pedidos_detal: " . $conn->error);
-    echo json_encode(['success' => false, 'error' => 'Error interno del servidor (código PED_PREP_FAIL).']);
+    echo json_encode(['success' => false, 'error' => 'Error interno del servidor (código PED_PREP_FAIL). SQL: ' . $sql]);
     exit;
 }
 
 // Bind parameters según si es Bold o no
 if ($bold_order_id) {
-    $stmt_main_pedido->bind_param("sddssssssss", $pedido_str, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $bold_order_id);
+    $stmt_main_pedido->bind_param("sddssssssiss", $pedido_str, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $current_user['id'], $bold_order_id);
 } else {
-    $stmt_main_pedido->bind_param("sddsssssss", $pedido_str, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago);
+    $stmt_main_pedido->bind_param("sddssssssis", $pedido_str, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $current_user['id']);
 }
 if ($stmt_main_pedido->execute() === false) {
-    error_log("Error al ejecutar la inserción en pedidos_detal: " . $stmt_main_pedido->error);
-    echo json_encode(['success' => false, 'error' => 'Error interno del servidor (código PED_EXEC_FAIL).']);
+    error_log("=== ERROR AL EJECUTAR SQL ===");
+    error_log("Error: " . $stmt_main_pedido->error);
+    error_log("Error number: " . $stmt_main_pedido->errno);
+    error_log("SQL usado: " . $sql);
+    error_log("============================");
+    echo json_encode(['success' => false, 'error' => 'Error interno del servidor (código PED_EXEC_FAIL). Error: ' . $stmt_main_pedido->error]);
     $stmt_main_pedido->close();
     exit;
 }
@@ -251,4 +285,22 @@ foreach ($carrito as $item) {
 }
 $stmt_detalle_pedido->close();
 
-echo json_encode(['success' => true, 'pedido_id' => $pedido_id]);
+// Registrar creación de pedido en auditoría
+auth_log('create', 'ventas', "Pedido guardado: #{$pedido_id} - Cliente: {$nombre}");
+
+// DEBUG: Construir SQL completo para mostrar en respuesta
+$sql_completo = $sql;
+$valores = [$pedido_str, $monto, $descuento, $nombre, $direccion, $telefono, $ciudad, $barrio, $correo, $metodo_pago, $current_user['id']];
+if ($bold_order_id) {
+    $valores[] = $bold_order_id;
+}
+
+$sql_debug = str_replace('?', "'%s'", $sql);
+$sql_debug = vsprintf($sql_debug, $valores);
+
+echo json_encode([
+    'success' => true, 
+    'pedido_id' => $pedido_id,
+    'debug_sql' => $sql_debug,
+    'debug_valores' => $valores
+]);

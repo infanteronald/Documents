@@ -1,6 +1,14 @@
 <?php
+// Incluir configuración de la base de datos
 require_once 'config_secure.php';
-require_once 'php82_helpers.php';
+
+// Función helper para escapar HTML (definida localmente si no existe)
+if (!function_exists('h')) {
+    function h($str) {
+        return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+    }
+}
+
 $pedido_id = isset($_GET['pedido']) ? intval($_GET['pedido']) : 0;
 $detalles = [];
 $monto = 0;
@@ -17,7 +25,7 @@ if ($pedido_id) {
     $descuento = $descuento_db ?? 0;
   }
   $stmt_desc->close();
-  
+
   // Obtener detalles del pedido
   $res = $conn->query("SELECT * FROM pedido_detalle WHERE pedido_id = $pedido_id");
   while ($row = $res->fetch_assoc()) {
@@ -347,7 +355,7 @@ if ($pedido_id) {
   <div class="container">
     <img src="logo.png" class="logo" alt="Sequoia Speed">
     <h1>Orden de Pedido Manual</h1>
-    <form id="formPedido" method="POST" enctype="multipart/form-data" action="procesar_orden.php">
+    <form id="formPedido" method="POST" enctype="multipart/form-data" action="procesar_orden_publico.php">
       <?php if ($pedido_id && $detalles): ?>
         <!-- Pedido guardado desde orden_pedido.php -->
         <div style="margin-bottom:8px; background:rgba(0, 122, 255, 0.1); padding:12px; border-radius:8px; border:1px solid var(--apple-blue);">
@@ -392,7 +400,7 @@ if ($pedido_id) {
 
         <!-- Campo oculto con el ID del pedido -->
         <input type="hidden" name="pedido_id" value="<?= $pedido_id ?>">
-        
+
         <!-- Campo oculto con el descuento aplicado -->
         <input type="hidden" name="descuento" value="<?= $descuento ?>">
 
@@ -409,7 +417,7 @@ if ($pedido_id) {
           No se encontraron detalles para este pedido.
         </div>
         <input type="hidden" name="pedido_id" value="<?= $pedido_id ?>">
-        
+
         <!-- Campo oculto con el descuento aplicado -->
         <input type="hidden" name="descuento" value="<?= $descuento ?>">
 

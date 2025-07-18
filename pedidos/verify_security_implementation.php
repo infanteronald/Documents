@@ -104,7 +104,7 @@ if (count($backup_files) > 0) {
 echo "\n[5/7] Verificando conexión a base de datos...\n";
 try {
     // Definir constante requerida
-    define('SEQUOIA_SPEED_SYSTEM', true);
+    defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
     
     // Intentar incluir config_secure.php
     ob_start();
