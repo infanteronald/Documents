@@ -31,13 +31,14 @@ if ($producto_id <= 0) {
 try {
     // Obtener datos del producto con información de almacén
     $query = "SELECT 
-                p.id, p.nombre, p.descripcion, p.categoria, p.precio, 
+                p.id, p.nombre, p.descripcion, c.nombre as categoria, p.precio, 
                 p.activo, p.sku, p.imagen, 
                 p.fecha_creacion, p.fecha_actualizacion,
                 ia.stock_actual, ia.stock_minimo, ia.stock_maximo,
                 a.id as almacen_id, a.nombre as almacen_nombre,
                 a.codigo as almacen_codigo
               FROM productos p
+              LEFT JOIN categorias_productos c ON p.categoria_id = c.id
               LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id
               LEFT JOIN almacenes a ON ia.almacen_id = a.id
               WHERE p.id = ? 

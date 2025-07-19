@@ -16,8 +16,8 @@ require_once 'config_almacenes.php';
 // Configurar conexión para AlmacenesConfig
 AlmacenesConfig::setConnection($conn);
 
-// Obtener categorías existentes para el selector
-$categorias_query = "SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != '' ORDER BY categoria";
+// Obtener categorías activas para el selector
+$categorias_query = "SELECT id, nombre, icono, color FROM categorias_productos WHERE activa = 1 ORDER BY orden ASC, nombre ASC";
 $categorias_result = $conn->query($categorias_query);
 $categorias = $categorias_result->fetch_all(MYSQLI_ASSOC);
 
@@ -41,7 +41,7 @@ if ($almacen_preseleccionado) {
 $valores_defecto = [
     'nombre' => '',
     'descripcion' => '',
-    'categoria' => '',
+    'categoria_id' => '',
     'precio' => '',
     'stock_actual' => '0',
     'stock_minimo' => '5',
@@ -180,25 +180,24 @@ unset($_SESSION['mensaje_exito']);
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="categoria" class="form-label">
+                                    <label for="categoria_id" class="form-label">
                                         🏷️ Categoría <span class="required">*</span>
                                     </label>
-                                    <div class="input-with-suggestions">
-                                        <input type="text" 
-                                               id="categoria" 
-                                               name="categoria" 
-                                               value="<?php echo htmlspecialchars($valores_defecto['categoria']); ?>"
-                                               class="form-input" 
-                                               required 
-                                               maxlength="50"
-                                               placeholder="Ej: Electrónicos"
-                                               list="categorias-list">
-                                        <datalist id="categorias-list">
-                                            <?php foreach ($categorias as $cat): ?>
-                                                <option value="<?php echo htmlspecialchars($cat['categoria']); ?>">
-                                            <?php endforeach; ?>
-                                        </datalist>
-                                    </div>
+                                    <select id="categoria_id" 
+                                            name="categoria_id" 
+                                            class="form-select" 
+                                            required>
+                                        <option value="">-- Seleccionar categoría --</option>
+                                        <?php foreach ($categorias as $cat): ?>
+                                            <option value="<?php echo $cat['id']; ?>" 
+                                                    <?php echo $valores_defecto['categoria_id'] == $cat['id'] ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($cat['icono'] . ' ' . $cat['nombre']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="form-help">
+                                        <a href="categorias/index.php" target="_blank">🗂️ Gestionar categorías</a>
+                                    </small>
                                 </div>
                                 
                                 <div class="form-group">

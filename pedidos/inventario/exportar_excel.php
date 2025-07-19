@@ -25,9 +25,11 @@ try {
     $stock_nivel = isset($_GET['stock_nivel']) ? $_GET['stock_nivel'] : '';
     $activo = isset($_GET['activo']) ? $_GET['activo'] : '';
     
-    // Construir query base con joins para almacenes
+    // Construir query base con joins para almacenes y categorías
     $query = "SELECT 
-                p.id, p.nombre, p.descripcion, p.categoria, p.precio, 
+                p.id, p.nombre, p.descripcion, 
+                COALESCE(c.nombre, 'Sin categoría') as categoria, 
+                p.precio, 
                 ia.stock_actual, ia.stock_minimo, ia.stock_maximo, 
                 p.activo, p.sku, 
                 p.fecha_creacion, p.fecha_actualizacion,
@@ -35,6 +37,7 @@ try {
               FROM productos p
               LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id
               LEFT JOIN almacenes a ON ia.almacen_id = a.id
+              LEFT JOIN categorias_productos c ON p.categoria_id = c.id
               WHERE 1=1";
     
     $params = [];
@@ -51,7 +54,7 @@ try {
     }
     
     if (!empty($categoria)) {
-        $query .= " AND categoria = ?";
+        $query .= " AND c.nombre = ?";
         $params[] = $categoria;
         $types .= 's';
     }

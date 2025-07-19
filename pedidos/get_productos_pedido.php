@@ -90,8 +90,19 @@ try {
         $stmt_pedido->close();
     }
 
-    // Usar prepared statement para evitar problemas
-    $stmt = $conn->prepare("SELECT nombre, precio, cantidad, talla FROM pedido_detalle WHERE pedido_id = ? ORDER BY id");
+    // Usar prepared statement para evitar problemas - Incluye información de categorías
+    $stmt = $conn->prepare("SELECT 
+        pd.nombre, 
+        pd.precio, 
+        pd.cantidad, 
+        pd.talla,
+        COALESCE(c.nombre, 'Sin categoría') as categoria,
+        c.icono as categoria_icono
+    FROM pedido_detalle pd
+    LEFT JOIN productos p ON pd.producto_id = p.id
+    LEFT JOIN categorias_productos c ON p.categoria_id = c.id
+    WHERE pd.pedido_id = ? 
+    ORDER BY c.orden ASC, pd.id ASC");
     if (!$stmt) {
         throw new Exception('Error preparando consulta: ' . $conn->error);
     }
@@ -105,7 +116,7 @@ try {
     // Usar bind_result de forma explícita y robusta
     $productos = array();
 
-    if (!$stmt->bind_result($nombre, $precio, $cantidad, $talla)) {
+    if (!$stmt->bind_result($nombre, $precio, $cantidad, $talla, $categoria, $categoria_icono)) {
         throw new Exception('Error en bind_result: ' . $stmt->error);
     }
 
@@ -116,7 +127,9 @@ try {
             'nombre' => is_null($nombre) ? 'Sin nombre' : trim((string)$nombre),
             'precio' => is_null($precio) ? 0.0 : (float)$precio,
             'cantidad' => is_null($cantidad) ? 0 : (int)$cantidad,
-            'talla' => is_null($talla) ? '' : trim((string)$talla)
+            'talla' => is_null($talla) ? '' : trim((string)$talla),
+            'categoria' => is_null($categoria) ? 'Sin categoría' : trim((string)$categoria),
+            'categoria_icono' => is_null($categoria_icono) ? '' : trim((string)$categoria_icono)
         );
 
         // Log de cada producto para debugging

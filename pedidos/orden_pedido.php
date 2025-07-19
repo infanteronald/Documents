@@ -13,10 +13,19 @@ auth_log('read', 'ventas', 'Acceso a formulario de creación de pedido');
 
 // Obtener categorías
 $categorias = [];
-$sql_cat = "SELECT DISTINCT categoria FROM productos WHERE activo = 1 ORDER BY categoria ASC";
+$sql_cat = "SELECT c.id, c.nombre, c.icono 
+            FROM categorias_productos c
+            INNER JOIN productos p ON p.categoria_id = c.id
+            WHERE c.activa = 1 AND p.activo = 1
+            GROUP BY c.id, c.nombre, c.icono, c.orden
+            ORDER BY c.orden ASC, c.nombre ASC";
 $res_cat = $conn->query($sql_cat);
 while ($row = $res_cat->fetch_assoc()) {
-    $categorias[] = $row['categoria'];
+    $categorias[] = [
+        'id' => $row['id'],
+        'nombre' => $row['nombre'],
+        'icono' => $row['icono']
+    ];
 }
 ?>
 <!DOCTYPE html>
@@ -1255,7 +1264,7 @@ while ($row = $res_cat->fetch_assoc()) {
             <select id="categoria">
                 <option value="">Selecciona una categoría</option>
                 <?php foreach ($categorias as $cat): ?>
-                    <option value="<?= h($cat) ?>"><?= h($cat) ?></option>
+                    <option value="<?= h($cat['nombre']) ?>"><?= h($cat['icono'] . ' ' . $cat['nombre']) ?></option>
                 <?php endforeach; ?>
             </select>
             <input type="text" id="busqueda" placeholder="Escribe el nombre del producto">

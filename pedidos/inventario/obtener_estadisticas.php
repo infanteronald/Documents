@@ -73,10 +73,11 @@ try {
     $estadisticas['valor_total'] = intval($result->fetch_assoc()['valor_total'] ?? 0);
     
     // Categorías con más productos
-    $query = "SELECT categoria, COUNT(*) as total 
-              FROM productos 
-              WHERE activo = 1 
-              GROUP BY categoria 
+    $query = "SELECT COALESCE(c.nombre, 'Sin categoría') as categoria, COUNT(*) as total 
+              FROM productos p
+              LEFT JOIN categorias_productos c ON p.categoria_id = c.id
+              WHERE p.activo = 1 
+              GROUP BY p.categoria_id, c.nombre 
               ORDER BY total DESC 
               LIMIT 5";
     $result = $conn->query($query);

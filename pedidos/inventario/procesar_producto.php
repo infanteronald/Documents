@@ -41,7 +41,7 @@ if (!in_array($accion, ['crear', 'editar'])) {
 // Validar campos requeridos
 $campos_requeridos = [
     'nombre' => 'El nombre del producto es requerido',
-    'categoria' => 'La categoría es requerida',
+    'categoria_id' => 'La categoría es requerida',
     'precio' => 'El precio es requerido',
     'stock_actual' => 'El stock actual es requerido',
     'stock_minimo' => 'El stock mínimo es requerido',
@@ -146,7 +146,7 @@ if (!empty($errores)) {
 $datos = [
     'nombre' => trim($_POST['nombre']),
     'descripcion' => trim($_POST['descripcion']),
-    'categoria' => trim($_POST['categoria']),
+    'categoria_id' => (int)$_POST['categoria_id'],
     'precio' => (int)$_POST['precio'],
     'stock_actual' => (int)$_POST['stock_actual'],
     'stock_minimo' => (int)$_POST['stock_minimo'],
@@ -166,14 +166,14 @@ try {
     
     if ($accion === 'crear') {
         // Crear producto (sin campos de almacén/stock en tabla principal)
-        $query = "INSERT INTO productos (nombre, descripcion, categoria, precio, activo, sku, imagen) 
+        $query = "INSERT INTO productos (nombre, descripcion, categoria_id, precio, activo, sku, imagen) 
                   VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $conn->prepare($query);
-        $stmt->bind_param('sssiiis', 
+        $stmt->bind_param('ssiiiis', 
             $datos['nombre'],
             $datos['descripcion'],
-            $datos['categoria'],
+            $datos['categoria_id'],
             $datos['precio'],
             $datos['activo'],
             $datos['sku'],
@@ -249,15 +249,15 @@ try {
         
         // Actualizar producto (sin campos stock)
         $query = "UPDATE productos SET 
-                  nombre = ?, descripcion = ?, categoria = ?, precio = ?, 
+                  nombre = ?, descripcion = ?, categoria_id = ?, precio = ?, 
                   activo = ?, sku = ?, imagen = ?
                   WHERE id = ?";
         
         $stmt = $conn->prepare($query);
-        $stmt->bind_param('sssissi', 
+        $stmt->bind_param('ssiissi', 
             $datos['nombre'],
             $datos['descripcion'],
-            $datos['categoria'],
+            $datos['categoria_id'],
             $datos['precio'],
             $datos['activo'],
             $datos['sku'],

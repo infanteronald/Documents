@@ -56,7 +56,7 @@ $params = [$almacen_id];
 $param_types = 'i';
 
 if (!empty($search)) {
-    $where_conditions[] = "(p.nombre LIKE ? OR p.categoria LIKE ? OR p.sku LIKE ?)";
+    $where_conditions[] = "(p.nombre LIKE ? OR c.nombre LIKE ? OR p.sku LIKE ?)";
     $search_param = '%' . $search . '%';
     $params = array_merge($params, [$search_param, $search_param, $search_param]);
     $param_types .= 'sss';
@@ -74,7 +74,7 @@ $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
 
 $productos_query = "
     SELECT 
-        p.id, p.nombre, p.categoria, p.sku, p.precio,
+        p.id, p.nombre, c.nombre as categoria, p.sku, p.precio,
         p.stock_actual, p.stock_minimo, p.stock_maximo,
         p.activo, p.fecha_actualizacion,
         ia.stock_actual as stock_almacen,
@@ -85,6 +85,7 @@ $productos_query = "
             ELSE 'ok'
         END as estado_stock
     FROM productos p
+    LEFT JOIN categorias_productos c ON p.categoria_id = c.id
     INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
     $where_clause
     ORDER BY 

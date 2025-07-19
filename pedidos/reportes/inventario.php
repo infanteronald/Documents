@@ -37,20 +37,21 @@ try {
     $result = $stmt->get_result();
     
     if ($result->num_rows > 0) {
-        // Consulta principal de productos
+        // Consulta principal de productos con categorías
         $stmt = $conn->prepare("
             SELECT 
-                id,
-                nombre,
-                descripcion,
-                precio,
-                stock_actual,
-                stock_minimo,
-                categoria,
-                activo,
-                fecha_creacion
-            FROM productos 
-            ORDER BY stock_actual ASC
+                p.id,
+                p.nombre,
+                p.descripcion,
+                p.precio,
+                p.stock_actual,
+                p.stock_minimo,
+                COALESCE(c.nombre, 'Sin categoría') as categoria,
+                p.activo,
+                p.fecha_creacion
+            FROM productos p
+            LEFT JOIN categorias_productos c ON p.categoria_id = c.id
+            ORDER BY p.stock_actual ASC
         ");
         $stmt->execute();
         $result = $stmt->get_result();

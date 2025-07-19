@@ -165,6 +165,7 @@ class AlmacenesConfig {
                 SUM(ia.stock_actual * p.precio) as valor_inventario,
                 MAX(ia.fecha_actualizacion) as ultima_actualizacion
             FROM productos p
+            LEFT JOIN categorias_productos c ON p.categoria_id = c.id
             INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
             WHERE ia.almacen_id = ?
         ";
@@ -211,7 +212,7 @@ class AlmacenesConfig {
         
         // Filtro por búsqueda
         if (!empty($filtros['search'])) {
-            $where_conditions[] = "(p.nombre LIKE ? OR p.descripcion LIKE ? OR p.categoria LIKE ? OR p.sku LIKE ?)";
+            $where_conditions[] = "(p.nombre LIKE ? OR p.descripcion LIKE ? OR c.nombre LIKE ? OR p.sku LIKE ?)";
             $search_param = '%' . $filtros['search'] . '%';
             $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param]);
             $param_types .= 'ssss';
@@ -219,7 +220,7 @@ class AlmacenesConfig {
         
         // Filtro por categoría
         if (!empty($filtros['categoria'])) {
-            $where_conditions[] = 'p.categoria = ?';
+            $where_conditions[] = 'c.nombre = ?';
             $params[] = $filtros['categoria'];
             $param_types .= 's';
         }
@@ -251,7 +252,7 @@ class AlmacenesConfig {
         
         $query = "
             SELECT 
-                p.id, p.nombre, p.descripcion, p.categoria, p.precio, p.sku, p.imagen, p.activo,
+                p.id, p.nombre, p.descripcion, c.nombre as categoria, p.precio, p.sku, p.imagen, p.activo,
                 p.fecha_creacion, p.fecha_actualizacion,
                 ia.stock_actual, ia.stock_minimo, ia.stock_maximo, ia.ubicacion_fisica,
                 ia.fecha_ultima_entrada, ia.fecha_ultima_salida,
@@ -268,6 +269,7 @@ class AlmacenesConfig {
                     ELSE '🟢'
                 END as icono_stock
             FROM productos p
+            LEFT JOIN categorias_productos c ON p.categoria_id = c.id
             INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
             $where_clause
             ORDER BY 
@@ -314,11 +316,12 @@ class AlmacenesConfig {
     public static function getCategoriasAlmacen($almacen_id) {
         $conn = self::getConnection();
         $query = "
-            SELECT DISTINCT p.categoria 
+            SELECT DISTINCT c.nombre as categoria
             FROM productos p
+            LEFT JOIN categorias_productos c ON p.categoria_id = c.id
             INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
-            WHERE ia.almacen_id = ? AND p.activo = 1 AND p.categoria IS NOT NULL
-            ORDER BY p.categoria
+            WHERE ia.almacen_id = ? AND p.activo = 1 AND c.nombre IS NOT NULL
+            ORDER BY c.nombre
         ";
         
         try {
@@ -387,8 +390,8 @@ class AlmacenesConfig {
         $conn = self::getConnection();
         
         try {
-            // Verificar si existe la tabla consolidada
-            $result = $conn->query("SHOW TABLES LIKE 'almacenes_consolidado'");
+            // Verificar si existe la tabla de almacenes
+            $result = $conn->query("SHOW TABLES LIKE 'almacenes'");
             if ($result->num_rows === 0) {
                 return false;
             }
@@ -427,7 +430,7 @@ class AlmacenesConfig {
             ];
             
             // Contar almacenes
-            $result = $conn->query("SELECT COUNT(*) as count FROM almacenes_consolidado");
+            $result = $conn->query("SELECT COUNT(*) as count FROM almacenes");
             if ($result && $row = $result->fetch_assoc()) {
                 $info['almacenes_consolidados'] = $row['count'];
             }

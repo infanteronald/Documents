@@ -224,7 +224,14 @@ foreach ($carrito as $item) {
             // Verificar que el nombre no sea demasiado largo
             $nombre_truncado = substr($item['nombre'], 0, 255); // Asegurar que no exceda límites
 
-            $insertProductStmt = $conn->prepare("INSERT INTO productos (nombre, precio, activo, categoria) VALUES (?, ?, 1, 'Personalizado')");
+            // Obtener ID de categoría Personalizado
+            $catQuery = $conn->prepare("SELECT id FROM categorias_productos WHERE nombre = 'Personalizado' LIMIT 1");
+            $catQuery->execute();
+            $catResult = $catQuery->get_result();
+            $categoria_id = $catResult->num_rows > 0 ? $catResult->fetch_assoc()['id'] : null;
+            $catQuery->close();
+            
+            $insertProductStmt = $conn->prepare("INSERT INTO productos (nombre, precio, activo, categoria_id) VALUES (?, ?, 1, ?)");
             if ($insertProductStmt === false) {
                 // Log del error para el administrador del servidor
                 error_log("Error al preparar la consulta para insertar nuevo producto personalizado: " . $conn->error);
@@ -233,7 +240,7 @@ foreach ($carrito as $item) {
                 $checkStmt->close(); // Cerrar la declaración anterior si esta falla
                 exit;
             }
-            $insertProductStmt->bind_param("sd", $nombre_truncado, $item['precio']);
+            $insertProductStmt->bind_param("sdi", $nombre_truncado, $item['precio'], $categoria_id);
 
             if ($insertProductStmt->execute() === false) {
                 // Log detallado del error para el administrador del servidor

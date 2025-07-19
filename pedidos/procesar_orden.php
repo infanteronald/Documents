@@ -231,9 +231,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if (is_array($productos_personalizados)) {
             foreach ($productos_personalizados as $producto_custom) {
+                // Obtener ID de categoría Personalizado
+                $catQuery = $conn->prepare("SELECT id FROM categorias_productos WHERE nombre = 'Personalizado' LIMIT 1");
+                $catQuery->execute();
+                $catResult = $catQuery->get_result();
+                $categoria_id = $catResult->num_rows > 0 ? $catResult->fetch_assoc()['id'] : null;
+                $catQuery->close();
+                
                 // Insertar producto personalizado en la tabla productos
-                $stmt_producto = $conn->prepare("INSERT INTO productos (nombre, precio, categoria, activo) VALUES (?, ?, 'Personalizado', 1)");
-                $stmt_producto->bind_param("sd", $producto_custom['nombre'], $producto_custom['precio']);
+                $stmt_producto = $conn->prepare("INSERT INTO productos (nombre, precio, categoria_id, activo) VALUES (?, ?, ?, 1)");
+                $stmt_producto->bind_param("sdi", $producto_custom['nombre'], $producto_custom['precio'], $categoria_id);
 
                 if ($stmt_producto->execute()) {
                     $producto_id = $conn->insert_id;

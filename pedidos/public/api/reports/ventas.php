@@ -57,6 +57,7 @@ try {
         FROM pedidos p
         LEFT JOIN pedido_productos pp ON p.id = pp.pedido_id
         LEFT JOIN productos pr ON pp.producto_id = pr.id
+        LEFT JOIN categorias_productos c ON pr.categoria_id = c.id
         WHERE p.fecha_pedido BETWEEN ? AND ?
     ";
     
@@ -64,7 +65,7 @@ try {
     
     // Filtro por categoría si se especifica
     if ($categoria) {
-        $sql .= " AND pr.categoria = ?";
+        $sql .= " AND c.nombre = ?";
         $params[] = $categoria;
     }
     
@@ -98,7 +99,8 @@ try {
             SELECT DISTINCT pp.pedido_id 
             FROM pedido_productos pp 
             JOIN productos pr ON pp.producto_id = pr.id 
-            WHERE pr.categoria = ?
+            JOIN categorias_productos c ON pr.categoria_id = c.id
+            WHERE c.nombre = ?
         )";
         $params_resumen[] = $categoria;
     }
@@ -111,11 +113,12 @@ try {
     $sql_productos = "
         SELECT 
             pr.nombre,
-            pr.categoria,
+            c.nombre as categoria,
             SUM(pp.cantidad) as total_vendido,
             SUM(pp.cantidad * pp.precio_unitario) as total_ingresos
         FROM pedido_productos pp
         JOIN productos pr ON pp.producto_id = pr.id
+        LEFT JOIN categorias_productos c ON pr.categoria_id = c.id
         JOIN pedidos p ON pp.pedido_id = p.id
         WHERE p.fecha_pedido BETWEEN ? AND ?
     ";
@@ -123,12 +126,12 @@ try {
     $params_productos = [$fecha_inicio, $fecha_fin . ' 23:59:59'];
     
     if ($categoria) {
-        $sql_productos .= " AND pr.categoria = ?";
+        $sql_productos .= " AND c.nombre = ?";
         $params_productos[] = $categoria;
     }
     
     $sql_productos .= "
-        GROUP BY pr.id, pr.nombre, pr.categoria
+        GROUP BY pr.id, pr.nombre, c.nombre
         ORDER BY total_vendido DESC
         LIMIT 10
     ";

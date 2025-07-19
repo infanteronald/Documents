@@ -79,12 +79,17 @@ class PedidoService
             return null;
         }
         
-        // Obtener detalles del pedido
+        // Obtener detalles del pedido con información de categorías
         $stmt = $this->conn->prepare("
-            SELECT pd.*, p.nombre as producto_nombre 
+            SELECT pd.*, 
+                   p.nombre as producto_nombre,
+                   COALESCE(c.nombre, 'Sin categoría') as categoria,
+                   c.icono as categoria_icono
             FROM pedido_detalle pd 
             LEFT JOIN productos p ON pd.producto_id = p.id 
+            LEFT JOIN categorias_productos c ON p.categoria_id = c.id
             WHERE pd.pedido_id = ?
+            ORDER BY c.orden ASC, pd.id ASC
         ");
         $stmt->bind_param("i", $id);
         $stmt->execute();

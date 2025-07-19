@@ -58,7 +58,7 @@ if (!empty($buscar)) {
 }
 
 if (!empty($categoria)) {
-    $where_conditions[] = "p.categoria = ?";
+    $where_conditions[] = "c.nombre = ?";
     $params[] = $categoria;
     $types .= 's';
 }
@@ -119,7 +119,8 @@ $query = "SELECT
     END as icono_stock
 FROM productos p
 INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
-INNER JOIN almacenes a ON ia.almacen_id = a.id 
+INNER JOIN almacenes a ON ia.almacen_id = a.id
+LEFT JOIN categorias_productos c ON p.categoria_id = c.id 
 $where_clause 
 ORDER BY fecha_creacion DESC 
 LIMIT ? OFFSET ?";
@@ -140,7 +141,8 @@ $productos = $result->fetch_all(MYSQLI_ASSOC);
 $count_query = "SELECT COUNT(*) as total 
 FROM productos p
 INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
-INNER JOIN almacenes a ON ia.almacen_id = a.id 
+INNER JOIN almacenes a ON ia.almacen_id = a.id
+LEFT JOIN categorias_productos c ON p.categoria_id = c.id 
 $where_clause";
 $count_stmt = $conn->prepare($count_query);
 if (!empty($where_conditions)) {
@@ -155,7 +157,10 @@ $total_productos = $count_stmt->get_result()->fetch_assoc()['total'];
 $total_paginas = ceil($total_productos / $limite);
 
 // Obtener categorías para filtro
-$categorias_query = "SELECT DISTINCT categoria FROM productos WHERE categoria IS NOT NULL AND categoria != '' ORDER BY categoria";
+$categorias_query = "SELECT c.id, c.nombre, c.icono 
+                     FROM categorias_productos c
+                     WHERE c.activa = 1
+                     ORDER BY c.orden ASC, c.nombre ASC";
 $categorias_result = $conn->query($categorias_query);
 $categorias = $categorias_result->fetch_all(MYSQLI_ASSOC);
 
@@ -256,9 +261,9 @@ function generar_badge_stock($stock_actual, $stock_minimo, $nivel_stock, $icono_
                         <select name="categoria" class="filter-select">
                             <option value="">🏷️ Todas las categorías</option>
                             <?php foreach ($categorias as $cat): ?>
-                                <option value="<?php echo htmlspecialchars($cat['categoria']); ?>" 
-                                        <?php echo $categoria === $cat['categoria'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($cat['categoria']); ?>
+                                <option value="<?php echo htmlspecialchars($cat['nombre']); ?>" 
+                                        <?php echo $categoria === $cat['nombre'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($cat['icono'] . ' ' . $cat['nombre']); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

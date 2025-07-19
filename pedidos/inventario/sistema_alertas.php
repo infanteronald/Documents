@@ -83,7 +83,7 @@ class SistemaAlertas {
         $query = "SELECT 
             p.id as producto_id,
             p.nombre as producto_nombre,
-            p.categoria,
+            c.nombre as categoria,
             ia.almacen_id,
             a.nombre as almacen_nombre,
             ia.stock_actual,
@@ -91,6 +91,7 @@ class SistemaAlertas {
             ia.stock_maximo,
             ROUND((ia.stock_actual / ia.stock_maximo) * 100, 2) as porcentaje_stock
         FROM productos p
+        LEFT JOIN categorias_productos c ON p.categoria_id = c.id
         INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
         INNER JOIN almacenes a ON ia.almacen_id = a.id
         WHERE a.activo = 1 
@@ -143,12 +144,13 @@ class SistemaAlertas {
         $query = "SELECT 
             p.id as producto_id,
             p.nombre as producto_nombre,
-            p.categoria,
+            c.nombre as categoria,
             ia.almacen_id,
             a.nombre as almacen_nombre,
             ia.stock_actual,
             ia.stock_minimo
         FROM productos p
+        LEFT JOIN categorias_productos c ON p.categoria_id = c.id
         INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
         INNER JOIN almacenes a ON ia.almacen_id = a.id
         WHERE a.activo = 1 
@@ -196,7 +198,7 @@ class SistemaAlertas {
         $query = "SELECT 
             p.id as producto_id,
             p.nombre as producto_nombre,
-            p.categoria,
+            c.nombre as categoria,
             ia.almacen_id,
             a.nombre as almacen_nombre,
             ia.stock_actual,
@@ -204,6 +206,7 @@ class SistemaAlertas {
             ia.stock_maximo,
             ROUND((ia.stock_actual / ia.stock_maximo) * 100, 2) as porcentaje_stock
         FROM productos p
+        LEFT JOIN categorias_productos c ON p.categoria_id = c.id
         INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
         INNER JOIN almacenes a ON ia.almacen_id = a.id
         WHERE a.activo = 1 
@@ -256,13 +259,14 @@ class SistemaAlertas {
         $query = "SELECT 
             p.id as producto_id,
             p.nombre as producto_nombre,
-            p.categoria,
+            c.nombre as categoria,
             ia.almacen_id,
             a.nombre as almacen_nombre,
             ia.stock_actual,
             MAX(m.fecha_movimiento) as ultimo_movimiento,
             DATEDIFF(NOW(), MAX(m.fecha_movimiento)) as dias_sin_movimiento
         FROM productos p
+        LEFT JOIN categorias_productos c ON p.categoria_id = c.id
         INNER JOIN inventario_almacen ia ON p.id = ia.producto_id
         INNER JOIN almacenes a ON ia.almacen_id = a.id
         LEFT JOIN movimientos_inventario m ON p.id = m.producto_id AND a.id = m.almacen_id

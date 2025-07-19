@@ -130,8 +130,19 @@ if ($id && $id > 0) {
             // Debug: Mostrar campos disponibles (comentar en producción)
             // echo "<pre>DEBUG - Campos disponibles: " . print_r(array_keys($p), true) . "</pre>";
 
-            // Obtener productos del pedido
-            $detalle_query = "SELECT nombre, precio, cantidad, talla FROM pedido_detalle WHERE pedido_id = $id_safe";
+            // Obtener productos del pedido con información de categorías
+            $detalle_query = "SELECT 
+                pd.nombre, 
+                pd.precio, 
+                pd.cantidad, 
+                pd.talla,
+                COALESCE(c.nombre, 'Sin categoría') as categoria,
+                c.icono as categoria_icono
+            FROM pedido_detalle pd
+            LEFT JOIN productos p ON pd.producto_id = p.id
+            LEFT JOIN categorias_productos c ON p.categoria_id = c.id
+            WHERE pd.pedido_id = $id_safe
+            ORDER BY c.orden ASC, pd.id ASC";
             $result_detalle = mysqli_query($conn, $detalle_query);
 
             if ($result_detalle) {
