@@ -49,7 +49,7 @@ $params = [$almacen_actual['id']];
 $types = 'i';
 
 if (!empty($buscar)) {
-    $where_conditions[] = "(p.nombre LIKE ? OR p.descripcion LIKE ? OR p.categoria LIKE ?)";
+    $where_conditions[] = "(p.nombre LIKE ? OR p.descripcion LIKE ? OR c.nombre LIKE ?)";
     $search_term = "%$buscar%";
     $params[] = $search_term;
     $params[] = $search_term;
@@ -91,7 +91,7 @@ $query = "SELECT
     p.id,
     p.nombre,
     p.descripcion,
-    p.categoria,
+    COALESCE(c.nombre, 'Sin categoría') as categoria,
     p.precio,
     p.sku,
     p.imagen,

@@ -166,19 +166,20 @@ try {
 
         <!-- Panel de filtros avanzados (oculto por defecto) -->
         <div class="filtros-avanzados-panel" id="filtrosAvanzados" style="display: none;">
-            <form method="get" class="filtros-avanzados-form">
+            <form method="get" class="filtros-avanzados-form" id="formFiltros">
                 <div class="filtros-row">
-                    <select name="metodo_pago" class="select-avanzado" onchange="aplicarFiltros()">
+                    <select name="metodo_pago" class="select-avanzado">
                         <?php echo generate_filter_options($metodos_pago, $metodo_pago, 'Método de pago', '💳'); ?>
                     </select>
 
-                    <select name="ciudad" class="select-avanzado" onchange="aplicarFiltros()">
+                    <select name="ciudad" class="select-avanzado">
                         <?php echo generate_filter_options($ciudades, $ciudad, 'Ciudad', '🏙️'); ?>
                     </select>
 
-                    <input type="date" name="fecha_desde" value="<?php echo htmlspecialchars($fecha_desde); ?>" class="input-avanzado" placeholder="Desde" onchange="aplicarFiltros()">
-                    <input type="date" name="fecha_hasta" value="<?php echo htmlspecialchars($fecha_hasta); ?>" class="input-avanzado" placeholder="Hasta" onchange="aplicarFiltros()">
+                    <input type="date" name="fecha_desde" value="<?php echo htmlspecialchars($fecha_desde); ?>" class="input-avanzado" placeholder="Desde">
+                    <input type="date" name="fecha_hasta" value="<?php echo htmlspecialchars($fecha_hasta); ?>" class="input-avanzado" placeholder="Hasta">
 
+                    <button type="submit" class="btn-aplicar">✅ Aplicar</button>
                     <button type="button" onclick="limpiarTodosFiltros()" class="btn-limpiar">🗑️ Limpiar</button>
                 </div>
             </form>
@@ -421,8 +422,7 @@ try {
                                                 <!-- Tabla de productos del carrito -->
                                                 <div id="productos-container-<?php echo $p['id']; ?>">
                                                     <div class="productos-loading">
-                                                        <div class="spinner-small"></div>
-                                                        <p>Cargando productos...</p>
+                                                        Cargando productos...
                                                     </div>
                                                 </div>
                                             </div>
@@ -2691,9 +2691,17 @@ function toggleDetallesPedido(pedidoId) {
         filaDetalle.style.display = 'none';
         boton.innerHTML = '👁️';
         boton.title = 'Ver detalles completos del pedido';
+        // No hacer nada especial, simplemente ocultar
     } else {
-        // Mostrar la fila con animación
-        filaDetalle.style.display = 'table-row';
+        // Mostrar la fila
+        if (window.innerWidth <= 768) {
+            // En móvil, usar display: block
+            filaDetalle.style.display = 'block';
+        } else {
+            // En PC, usar display: table-row
+            filaDetalle.style.display = 'table-row';
+        }
+        
         boton.innerHTML = '👁️';
         boton.title = 'Ocultar detalles del pedido';
         
@@ -2701,6 +2709,28 @@ function toggleDetallesPedido(pedidoId) {
         if (productosContainer && productosContainer.innerHTML.includes('Cargando productos')) {
             cargarProductosPedido(pedidoId);
         }
+    }
+}
+
+// Función para cerrar detalles desde el botón de cerrar móvil
+function cerrarDetallesMobile(pedidoId) {
+    const filaDetalle = document.getElementById(`detalle-${pedidoId}`);
+    const boton = document.querySelector(`button[onclick="toggleDetallesPedido(${pedidoId})"]`);
+    
+    if (filaDetalle) {
+        filaDetalle.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    if (boton) {
+        boton.innerHTML = '👁️';
+        boton.title = 'Ver detalles completos del pedido';
+    }
+    
+    // Remover botón de cerrar móvil
+    const closeBtnMobile = document.querySelector('.mobile-close-btn');
+    if (closeBtnMobile) {
+        closeBtnMobile.remove();
     }
 }
 
@@ -2715,9 +2745,31 @@ function cargarProductosPedido(pedidoId) {
     const descuentoPedido = filaPedido ? parseFloat(filaPedido.getAttribute('data-descuento')) : 0;
     
     fetch(`get_productos_pedido.php?id=${pedidoId}`)
-        .then(response => response.json())
-        .then(data => {
-            console.log('Datos recibidos:', data); // Debug
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers.get('content-type'));
+            
+            // Primero obtener el texto para ver qué está devolviendo
+            return response.text();
+        })
+        .then(text => {
+            console.log('Response raw text:', text);
+            
+            // Intentar parsear como JSON
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                throw new Error('Invalid JSON response: ' + text.substring(0, 100));
+            }
+            
+            // Continuar con el procesamiento normal
+            console.log('Datos recibidos para pedido', pedidoId, ':', data); // Debug mejorado
+            console.log('Success:', data.success);
+            console.log('Productos:', data.productos);
+            console.log('Cantidad de productos:', data.productos ? data.productos.length : 0);
+            
             if (data.success && data.productos && data.productos.length > 0) {
                 let html = `
                     <div class="carrito-tabla-container">
@@ -2814,11 +2866,13 @@ function cargarProductosPedido(pedidoId) {
             }
         })
         .catch(error => {
-            console.error('Error cargando productos:', error);
+            console.error('Error cargando productos para pedido', pedidoId, ':', error);
             container.innerHTML = `
                 <div class="error-productos" style="text-align: center; padding: 20px; color: var(--apple-red);">
-                    <p>Error al cargar productos</p>
+                    <p>Error al cargar productos del pedido ${pedidoId}</p>
                     <small>${error.message}</small>
+                    <br>
+                    <small>URL: get_productos_pedido.php?id=${pedidoId}</small>
                 </div>
             `;
         });
@@ -2832,6 +2886,39 @@ function formatNumber(num) {
         return '0';
     }
     return new Intl.NumberFormat('es-CO').format(numero);
+}
+
+// Función para remover un filtro específico
+function removerFiltro(filtroTipo) {
+    console.log('Removiendo filtro:', filtroTipo);
+    
+    // Obtener parámetros actuales
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Caso especial para fechas (remover ambos parámetros)
+    if (filtroTipo === 'fechas') {
+        urlParams.delete('fecha_desde');
+        urlParams.delete('fecha_hasta');
+    } else {
+        urlParams.delete(filtroTipo);
+    }
+    
+    // Construir nueva URL
+    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+    
+    console.log('URL antes:', window.location.href);
+    console.log('URL después:', newUrl);
+    
+    // Redirigir
+    window.location.href = newUrl;
+}
+
+// Función para limpiar todos los filtros
+function limpiarTodosFiltros() {
+    const url = new URL(window.location);
+    // Mantener solo la página base sin parámetros de filtro
+    const nuevaUrl = url.pathname;
+    window.location.href = nuevaUrl;
 }
 
 </script>

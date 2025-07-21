@@ -59,19 +59,20 @@ if ($orden_id) {
     $stmt->close();
       // Obtener detalles individuales si existen - USAR SOLO LAS COLUMNAS QUE NECESITAS
     $total_calculado = 0;
-    $sql_det = "SELECT nombre, precio, cantidad FROM pedido_detalle WHERE pedido_id = ?";
+    $sql_det = "SELECT nombre, precio, cantidad, talla FROM pedido_detalle WHERE pedido_id = ?";
     $stmt_det = $conn->prepare($sql_det);
     if ($stmt_det) {
         $stmt_det->bind_param("i", $orden_id);
         if ($stmt_det->execute()) {
-            // Solo 3 variables para 3 columnas
-            $stmt_det->bind_result($det_nombre, $det_precio, $det_cantidad);
+            // 4 variables para 4 columnas
+            $stmt_det->bind_result($det_nombre, $det_precio, $det_cantidad, $det_talla);
 
             while ($stmt_det->fetch()) {
                 $detalles[] = [
                     'nombre' => $det_nombre,
                     'precio' => $det_precio,
-                    'cantidad' => $det_cantidad
+                    'cantidad' => $det_cantidad,
+                    'talla' => $det_talla
                 ];
                 // Calcular el total sumando cada producto
                 $total_calculado += ($det_precio * $det_cantidad);
@@ -297,6 +298,7 @@ echo "<!-- DEBUG MONTOS: Total calculado: $total_calculado, Monto original: " . 
                 <thead>
                     <tr>
                         <th>Producto</th>
+                        <th class="talla">Talla</th>
                         <th class="cantidad">Cant</th>
                         <th class="precio">Precio</th>
                         <th class="precio">Total</th>
@@ -306,6 +308,7 @@ echo "<!-- DEBUG MONTOS: Total calculado: $total_calculado, Monto original: " . 
                     <?php foreach ($detalles as $item): ?>
                     <tr>
                         <td><?= h($item['nombre']) ?></td>
+                        <td class="talla"><?= !empty($item['talla']) ? h($item['talla']) : '-' ?></td>
                         <td class="cantidad"><?= $item['cantidad'] ?></td>
                         <td class="precio">$<?= number_format($item['precio'], 0, ',', '.') ?></td>
                         <td class="precio">$<?= number_format($item['precio'] * $item['cantidad'], 0, ',', '.') ?></td>

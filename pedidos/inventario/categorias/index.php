@@ -17,6 +17,58 @@ $current_user = auth_require('inventario', 'leer');
 defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 require_once '../../config_secure.php';
 
+// Verificar si existe la tabla categorias_productos
+$tabla_existe = false;
+try {
+    $check_tabla = $conn->query("SHOW TABLES LIKE 'categorias_productos'");
+    if ($check_tabla && $check_tabla->num_rows > 0) {
+        $tabla_existe = true;
+    }
+} catch (Exception $e) {
+    // Ignorar error
+}
+
+// Si no existe la tabla, crearla
+if (!$tabla_existe) {
+    try {
+        $create_table = "CREATE TABLE IF NOT EXISTS categorias_productos (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            nombre VARCHAR(100) NOT NULL UNIQUE,
+            descripcion TEXT,
+            icono VARCHAR(10) DEFAULT '🏷️',
+            color VARCHAR(7) DEFAULT '#58a6ff',
+            activa BOOLEAN DEFAULT TRUE,
+            orden INT DEFAULT 0,
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            
+            INDEX idx_nombre (nombre),
+            INDEX idx_activa (activa),
+            INDEX idx_orden (orden)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+        
+        $conn->query($create_table);
+        
+        // Insertar algunas categorías por defecto
+        $categorias_default = [
+            ['Repuestos', 'Repuestos y partes automotrices', '🔧', '#ff6b6b'],
+            ['Accesorios', 'Accesorios para vehículos', '✨', '#4ecdc4'],
+            ['Filtros', 'Filtros de aire, aceite y combustible', '🛡️', '#45b7d1'],
+            ['Aceites', 'Aceites y lubricantes', '🛢️', '#f9ca24'],
+            ['Neumáticos', 'Llantas y neumáticos', '🛞', '#6c5ce7']
+        ];
+        
+        $stmt_insert = $conn->prepare("INSERT IGNORE INTO categorias_productos (nombre, descripcion, icono, color, orden) VALUES (?, ?, ?, ?, ?)");
+        foreach ($categorias_default as $index => $cat) {
+            $stmt_insert->bind_param("ssssi", $cat[0], $cat[1], $cat[2], $cat[3], ($index + 1) * 10);
+            $stmt_insert->execute();
+        }
+        
+    } catch (Exception $e) {
+        error_log("Error creando tabla categorias_productos: " . $e->getMessage());
+    }
+}
+
 // Obtener filtros
 $search = $_GET['search'] ?? '';
 $filter_activa = $_GET['activa'] ?? '';
@@ -28,7 +80,7 @@ $params = [];
 $param_types = '';
 
 if (!empty($search)) {
-    $where_conditions[] = "(nombre LIKE ? OR descripcion LIKE ?)";
+    $where_conditions[] = "(cp.nombre LIKE ? OR cp.descripcion LIKE ?)";
     $search_param = "%$search%";
     $params[] = $search_param;
     $params[] = $search_param;
@@ -36,7 +88,7 @@ if (!empty($search)) {
 }
 
 if ($filter_activa !== '') {
-    $where_conditions[] = "activa = ?";
+    $where_conditions[] = "cp.activa = ?";
     $params[] = (int)$filter_activa;
     $param_types .= 'i';
 }
@@ -52,26 +104,66 @@ if (!in_array($order_by, $valid_orders)) {
     $order_by = 'orden';
 }
 
-// Obtener categorías con estadísticas
-$query = "SELECT * FROM vista_categorias_estadisticas 
-          $where_clause 
-          ORDER BY $order_by ASC, nombre ASC";
+// Usar consulta directa simplificada para evitar problemas con la vista
+$query = "SELECT 
+    cp.id,
+    cp.nombre,
+    cp.descripcion,
+    cp.icono,
+    cp.color,
+    cp.activa,
+    cp.orden,
+    cp.fecha_creacion,
+    cp.fecha_actualizacion,
+    COALESCE(COUNT(p.id), 0) as total_productos,
+    COALESCE(COUNT(CASE WHEN p.activo = 1 THEN 1 END), 0) as productos_activos,
+    0 as stock_total,
+    COALESCE(AVG(CASE WHEN p.activo = 1 THEN p.precio END), 0) as precio_promedio
+FROM categorias_productos cp
+LEFT JOIN productos p ON cp.id = p.categoria_id
+$where_clause 
+GROUP BY cp.id, cp.nombre, cp.descripcion, cp.icono, cp.color, cp.activa, cp.orden, cp.fecha_creacion, cp.fecha_actualizacion
+ORDER BY cp.$order_by ASC, cp.nombre ASC";
 
-$stmt = $conn->prepare($query);
-if (!empty($params)) {
-    $stmt->bind_param($param_types, ...$params);
+try {
+    $stmt = $conn->prepare($query);
+    if (!empty($params)) {
+        $stmt->bind_param($param_types, ...$params);
+    }
+    $stmt->execute();
+    $categorias = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    
+    // Debug: Log the number of categories found
+    error_log("Categorías encontradas: " . count($categorias));
+    
+} catch (Exception $e) {
+    // Si hay error en la consulta, usar arreglo vacío
+    $categorias = [];
+    error_log("Error en consulta de categorías: " . $e->getMessage());
+    error_log("SQL Query: " . $query);
 }
-$stmt->execute();
-$categorias = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Obtener estadísticas generales
+// Obtener estadísticas generales usando consulta directa
 $stats_query = "SELECT 
-    COUNT(*) as total_categorias,
-    COUNT(CASE WHEN activa = 1 THEN 1 END) as categorias_activas,
-    COALESCE(SUM(total_productos), 0) as total_productos_asignados,
-    COUNT(CASE WHEN total_productos = 0 THEN 1 END) as categorias_vacias
-    FROM vista_categorias_estadisticas";
-$stats = $conn->query($stats_query)->fetch_assoc();
+    COUNT(DISTINCT cp.id) as total_categorias,
+    COUNT(DISTINCT CASE WHEN cp.activa = 1 THEN cp.id END) as categorias_activas,
+    COUNT(DISTINCT p.id) as total_productos_asignados,
+    COUNT(DISTINCT CASE WHEN p.id IS NULL THEN cp.id END) as categorias_vacias
+    FROM categorias_productos cp
+    LEFT JOIN productos p ON cp.id = p.categoria_id";
+
+try {
+    $stats = $conn->query($stats_query)->fetch_assoc();
+} catch (Exception $e) {
+    // Si hay error, usar valores por defecto
+    $stats = [
+        'total_categorias' => 0,
+        'categorias_activas' => 0,
+        'total_productos_asignados' => 0,
+        'categorias_vacias' => 0
+    ];
+    error_log("Error en consulta de estadísticas: " . $e->getMessage());
+}
 
 // Mensajes de sesión
 $mensaje_exito = $_SESSION['mensaje_exito'] ?? '';
@@ -223,11 +315,26 @@ unset($_SESSION['mensaje_error']);
                         <?php if (!empty($search)): ?>
                             No se encontraron categorías con el término "<?php echo htmlspecialchars($search); ?>"
                         <?php else: ?>
-                            Comienza creando tu primera categoría
+                            <?php if ($stats['total_categorias'] > 0): ?>
+                                Error cargando las categorías. Total en BD: <?php echo $stats['total_categorias']; ?>
+                            <?php else: ?>
+                                Comienza creando tu primera categoría
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                     <?php if (auth_can('inventario', 'crear')): ?>
                         <a href="crear_categoria.php" class="btn btn-primary">➕ Crear Categoría</a>
+                    <?php endif; ?>
+                    
+                    <!-- Debug info -->
+                    <?php if (isset($_GET['debug'])): ?>
+                        <div style="background: #f0f0f0; padding: 10px; margin-top: 20px; font-family: monospace; text-align: left;">
+                            <strong>Debug Info:</strong><br>
+                            Total categorías en stats: <?php echo $stats['total_categorias']; ?><br>
+                            Array categorías count: <?php echo count($categorias); ?><br>
+                            WHERE clause: <?php echo htmlspecialchars($where_clause); ?><br>
+                            Params: <?php echo htmlspecialchars(json_encode($params)); ?><br>
+                        </div>
                     <?php endif; ?>
                 </div>
             <?php else: ?>

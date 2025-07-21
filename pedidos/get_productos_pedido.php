@@ -4,9 +4,10 @@
  * Versión compatible con PHP 5.3+ y MySQLi
  */
 
-// Debug activado temporalmente
+// Desactivar display_errors para evitar salida no JSON
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 
 // Incluir helpers PHP 8.2
 require_once 'php82_helpers.php';
@@ -69,9 +70,9 @@ try {
     // Obtener datos completos del pedido (cliente + descuento)
     $stmt_pedido = $conn->prepare("SELECT 
         id, monto, descuento,
-        nombre_cliente, email_cliente, telefono_cliente, 
-        ciudad_cliente, barrio_cliente, direccion_entrega,
-        metodo_pago, fecha_pedido, nota_interna,
+        nombre, correo, telefono, 
+        ciudad, barrio, direccion,
+        metodo_pago, fecha, nota_interna,
         pagado, enviado, anulado
         FROM pedidos_detal WHERE id = ? LIMIT 1");
     
@@ -173,18 +174,18 @@ try {
         'descuento' => $descuento,
         'total_final' => $total_final,
         'cliente' => array(
-            'nombre' => $cliente_data['nombre_cliente'] ?? 'No disponible',
-            'email' => $cliente_data['email_cliente'] ?? 'No disponible',
-            'telefono' => $cliente_data['telefono_cliente'] ?? 'No disponible',
-            'ciudad' => $cliente_data['ciudad_cliente'] ?? 'No disponible',
-            'barrio' => $cliente_data['barrio_cliente'] ?? 'No disponible',
-            'direccion' => $cliente_data['direccion_entrega'] ?? 'No disponible',
+            'nombre' => $cliente_data['nombre'] ?? 'No disponible',
+            'email' => $cliente_data['correo'] ?? 'No disponible',
+            'telefono' => $cliente_data['telefono'] ?? 'No disponible',
+            'ciudad' => $cliente_data['ciudad'] ?? 'No disponible',
+            'barrio' => $cliente_data['barrio'] ?? 'No disponible',
+            'direccion' => $cliente_data['direccion'] ?? 'No disponible',
             'metodo_pago' => $cliente_data['metodo_pago'] ?? 'No disponible',
-            'fecha_pedido' => $cliente_data['fecha_pedido'] ?? 'No disponible',
+            'fecha_pedido' => $cliente_data['fecha'] ?? 'No disponible',
             'nota_interna' => $cliente_data['nota_interna'] ?? '',
             'pagado' => ($cliente_data['pagado'] ?? 0) == 1,
-            'enviado' => ($cliente_data['enviado'] ?? 0) == 1,
-            'anulado' => ($cliente_data['anulado'] ?? 0) == 1
+            'enviado' => ($cliente_data['enviado'] ?? '0') == '1',
+            'anulado' => ($cliente_data['anulado'] ?? '0') == '1'
         ),
         'debug_info' => "Pedido: $id_pedido, Descuento: $descuento, Subtotal: $subtotal"
     ));

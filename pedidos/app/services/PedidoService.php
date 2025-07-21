@@ -62,11 +62,12 @@ class PedidoService
     
     private function guardarDetallesPedido($pedidoId, $productos) 
     {
-        $stmt = $this->conn->prepare("INSERT INTO pedido_detalle (pedido_id, producto_id, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $this->conn->prepare("INSERT INTO pedido_detalle (pedido_id, producto_id, cantidad, precio_unitario, subtotal, talla) VALUES (?, ?, ?, ?, ?, ?)");
         
         foreach ($productos as $producto) {
             $subtotal = $producto["cantidad"] * $producto["precio_unitario"];
-            $stmt->bind_param("iiidd", $pedidoId, $producto["producto_id"], $producto["cantidad"], $producto["precio_unitario"], $subtotal);
+            $talla = $producto["talla"] ?? '';
+            $stmt->bind_param("iiddds", $pedidoId, $producto["producto_id"], $producto["cantidad"], $producto["precio_unitario"], $subtotal, $talla);
             $stmt->execute();
         }
     }
@@ -83,6 +84,7 @@ class PedidoService
         $stmt = $this->conn->prepare("
             SELECT pd.*, 
                    p.nombre as producto_nombre,
+                   pd.talla,
                    COALESCE(c.nombre, 'Sin categoría') as categoria,
                    c.icono as categoria_icono
             FROM pedido_detalle pd 

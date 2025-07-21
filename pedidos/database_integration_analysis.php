@@ -10,7 +10,7 @@ echo str_repeat("=", 70) . "\n";
 // Análisis de queries críticas
 $queries_analysis = [
     "productos.php - Query principal" => [
-        "query" => "SELECT p.id, p.nombre, p.descripcion, p.categoria, p.precio, p.sku, p.imagen, p.activo, p.fecha_creacion, p.fecha_actualizacion, ia.stock_actual, ia.stock_minimo, ia.stock_maximo, ia.ubicacion_fisica, a.id as almacen_id, a.nombre as almacen_nombre, a.icono as almacen_icono FROM productos p INNER JOIN inventario_almacen ia ON p.id = ia.producto_id INNER JOIN almacenes a ON ia.almacen_id = a.id WHERE ia.almacen_id = ? ORDER BY p.fecha_creacion DESC",
+        "query" => "SELECT p.id, p.nombre, p.descripcion, COALESCE(c.nombre, 'Sin categoría') as categoria, p.precio, p.sku, p.imagen, p.activo, p.fecha_creacion, p.fecha_actualizacion, ia.stock_actual, ia.stock_minimo, ia.stock_maximo, ia.ubicacion_fisica, a.id as almacen_id, a.nombre as almacen_nombre, a.icono as almacen_icono FROM productos p INNER JOIN inventario_almacen ia ON p.id = ia.producto_id INNER JOIN almacenes a ON ia.almacen_id = a.id LEFT JOIN categorias_productos c ON p.categoria_id = c.id WHERE ia.almacen_id = ? ORDER BY p.fecha_creacion DESC",
         "file" => "/Users/ronaldinfante/Documents/pedidos/inventario/productos.php",
         "lines" => "90-125",
         "joins" => [
@@ -46,7 +46,7 @@ $queries_analysis = [
     ],
     
     "obtener_producto.php - Product details" => [
-        "query" => "SELECT p.id, p.nombre, p.descripcion, p.categoria, p.precio, p.activo, p.sku, p.imagen, p.fecha_creacion, p.fecha_actualizacion, ia.stock_actual, ia.stock_minimo, ia.stock_maximo, a.id as almacen_id, a.nombre as almacen_nombre, a.codigo as almacen_codigo FROM productos p LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id LEFT JOIN almacenes a ON ia.almacen_id = a.id WHERE p.id = ? LIMIT 1",
+        "query" => "SELECT p.id, p.nombre, p.descripcion, COALESCE(c.nombre, 'Sin categoría') as categoria, p.precio, p.activo, p.sku, p.imagen, p.fecha_creacion, p.fecha_actualizacion, ia.stock_actual, ia.stock_minimo, ia.stock_maximo, a.id as almacen_id, a.nombre as almacen_nombre, a.codigo as almacen_codigo FROM productos p LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id LEFT JOIN almacenes a ON ia.almacen_id = a.id LEFT JOIN categorias_productos c ON p.categoria_id = c.id WHERE p.id = ? LIMIT 1",
         "file" => "/Users/ronaldinfante/Documents/pedidos/inventario/obtener_producto.php",
         "lines" => "33-44",
         "joins" => [
@@ -59,7 +59,7 @@ $queries_analysis = [
     ],
     
     "exportar_excel.php - Export query" => [
-        "query" => "SELECT p.id, p.nombre, p.descripcion, p.categoria, p.precio, ia.stock_actual, ia.stock_minimo, ia.stock_maximo, p.activo, p.sku, p.fecha_creacion, p.fecha_actualizacion, a.nombre as almacen_nombre, a.codigo as almacen_codigo FROM productos p LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id LEFT JOIN almacenes a ON ia.almacen_id = a.id WHERE 1=1 ORDER BY p.nombre ASC",
+        "query" => "SELECT p.id, p.nombre, p.descripcion, COALESCE(c.nombre, 'Sin categoría') as categoria, p.precio, ia.stock_actual, ia.stock_minimo, ia.stock_maximo, p.activo, p.sku, p.fecha_creacion, p.fecha_actualizacion, a.nombre as almacen_nombre, a.codigo as almacen_codigo FROM productos p LEFT JOIN inventario_almacen ia ON p.id = ia.producto_id LEFT JOIN almacenes a ON ia.almacen_id = a.id LEFT JOIN categorias_productos c ON p.categoria_id = c.id WHERE 1=1 ORDER BY p.nombre ASC",
         "file" => "/Users/ronaldinfante/Documents/pedidos/inventario/exportar_excel.php",
         "lines" => "29-86",
         "joins" => [

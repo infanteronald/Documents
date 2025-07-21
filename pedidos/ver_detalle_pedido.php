@@ -681,7 +681,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                         <table class="productos-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 50%;">Producto</th>
+                                    <th style="width: 40%;">Producto</th>
+                                    <th style="width: 10%; text-align: center;">Talla</th>
                                     <th style="width: 15%; text-align: center;">Cantidad</th>
                                     <th style="width: 20%; text-align: right;">Precio Unit.</th>
                                     <th style="width: 15%; text-align: right;">Subtotal</th>
@@ -699,6 +700,9 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
                                             <?php echo h($producto['descripcion']); ?>
                                         </div>
                                         <?php endif; ?>
+                                    </td>
+                                    <td style="text-align: center; font-weight: 600;">
+                                        <?php echo !empty($producto['talla']) ? h($producto['talla']) : '-'; ?>
                                     </td>
                                     <td style="text-align: center; font-weight: 600;">
                                         <?php echo h($producto['cantidad']); ?>

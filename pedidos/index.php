@@ -763,7 +763,7 @@ $is_manager = in_array($primary_role, ['gerente', 'supervisor']);
                         </a>
                     </li>
                     <li class="option-item">
-                        <a href="inventario/categorias.php" class="option-link">
+                        <a href="inventario/categorias/" class="option-link">
                             <div class="option-icon">🏷️</div>
                             <div class="option-text">
                                 <div class="option-title">Categorías</div>
