@@ -4,7 +4,12 @@
  * Sequoia Speed - Sistema de Accesos
  */
 
-require_once '../config_secure.php';
+// Iniciar sesión si no está iniciada
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/../config_secure.php';
 require_once 'middleware/AuthMiddleware.php';
 require_once 'models/User.php';
 require_once 'models/Role.php';
@@ -23,8 +28,8 @@ if (!$user_id) {
     exit;
 }
 
-// Obtener datos del usuario
-$usuario = $userModel->findById($user_id);
+// Obtener datos del usuario (incluyendo inactivos para poder editarlos)
+$usuario = $userModel->findByIdForEdit($user_id);
 if (!$usuario) {
     header('Location: usuarios.php?error=' . urlencode('Usuario no encontrado'));
     exit;
