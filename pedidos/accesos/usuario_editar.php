@@ -40,7 +40,7 @@ $usuario_roles = $userModel->getUserRoles($user_id);
 $roles_ids = array_column($usuario_roles, 'rol_id');
 
 // Obtener todos los roles disponibles
-$roles = $roleModel->getAll();
+$roles = $roleModel->getAllRoles();
 
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
