@@ -38,6 +38,33 @@ class User {
     }
     
     /**
+     * Buscar usuario por ID (incluyendo inactivos)
+     * Usado para edición
+     */
+    public function findByIdForEdit($id) {
+        $query = "SELECT * FROM usuarios WHERE id = ? LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->fetch_assoc();
+    }
+    
+    /**
+     * Buscar usuario por nombre de usuario
+     */
+    public function findByUsername($username) {
+        $query = "SELECT * FROM usuarios WHERE usuario = ? LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param('s', $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->fetch_assoc();
+    }
+    
+    /**
      * Crear nuevo usuario
      */
     public function create($data) {
@@ -55,11 +82,13 @@ class User {
             $query = "INSERT INTO usuarios (nombre, email, password, activo, creado_por) 
                       VALUES (?, ?, ?, 1, ?)";
             $stmt = $this->conn->prepare($query);
+            // Fix para PHP 8.2: bind_param requiere variables por referencia
+            $creado_por = $data['creado_por'] ?? null;
             $stmt->bind_param('sssi', 
                 $data['nombre'], 
                 $data['email'], 
                 $password_hash, 
-                $data['creado_por'] ?? null
+                $creado_por
             );
             
             if (!$stmt->execute()) {
@@ -70,7 +99,8 @@ class User {
             
             // Asignar rol por defecto si se especifica
             if (!empty($data['rol_id'])) {
-                $this->assignRole($usuario_id, $data['rol_id'], $data['creado_por'] ?? null);
+                $creado_por = $data['creado_por'] ?? null;
+                $this->assignRole($usuario_id, $data['rol_id'], $creado_por);
             }
             
             $this->conn->commit();
@@ -354,6 +384,44 @@ class User {
             'activo' => 1,
             'modificado_por' => $activated_by
         ]);
+    }
+    
+    /**
+     * Sincronizar roles del usuario
+     */
+    public function syncRoles($user_id, $role_ids, $assigned_by = null) {
+        try {
+            $this->conn->begin_transaction();
+            
+            // Eliminar roles actuales del usuario
+            $query = "DELETE FROM usuario_roles WHERE usuario_id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute();
+            
+            // Agregar nuevos roles
+            if (!empty($role_ids) && is_array($role_ids)) {
+                $query = "INSERT INTO usuario_roles (usuario_id, rol_id, asignado_por) VALUES (?, ?, ?)";
+                $stmt = $this->conn->prepare($query);
+                
+                foreach ($role_ids as $role_id) {
+                    $role_id = (int)$role_id;
+                    if ($role_id > 0) {
+                        $stmt->bind_param('iii', $user_id, $role_id, $assigned_by);
+                        if (!$stmt->execute()) {
+                            throw new Exception('Error asignando rol ' . $role_id . ': ' . $stmt->error);
+                        }
+                    }
+                }
+            }
+            
+            $this->conn->commit();
+            return true;
+            
+        } catch (Exception $e) {
+            $this->conn->rollback();
+            throw $e;
+        }
     }
 }
 ?>
