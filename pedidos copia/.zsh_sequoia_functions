@@ -1,0 +1,191 @@
+# ====================================================
+# 🧹 FUNCIONES DE LIMPIEZA PARA SEQUOIA SPEED
+# =========    echo "📄 Archivos .md: $md_count"
+    echo "🗄️ Archivos .sql: $sql_count"
+    echo "🔍 Archivos debug_*: $debug_count"
+    echo "🧪 Archivos test/script/temp: $test_count"
+    echo "🔧 Archivos migrate/check/verificar: $migrate_count"=======================================
+
+# Función principal de limpieza completa integrada
+limpiar() {
+    local current_dir=$(pwd)
+    local project_dir="/Users/ronaldinfante/Documents/pedidos"
+
+    echo "🧹 LIMPIADOR COMPLETO DE ARCHIVOS TEMPORALES"
+    echo "📂 Cambiando al directorio del proyecto..."
+
+    cd "$project_dir" || {
+        echo "❌ Error: No se pudo acceder al directorio del proyecto"
+        return 1
+    }
+
+    echo "📂 Directorio: $(pwd)"
+    echo ""
+
+    local total=0
+
+    echo "🎯 INICIANDO LIMPIEZA POR CATEGORÍAS:"
+    echo ""
+
+    # Activar modo de expansión de nombres de archivo
+    setopt NULL_GLOB
+
+    # ====================================================
+    # 📄 ARCHIVOS .MD - OMITIDOS (PRESERVADOS)
+    # ====================================================
+    echo "📄 [1/4] Archivos .md preservados (no se borran)..."
+    local md_count=0
+    for file in *.md; do
+        if [[ -f "$file" ]]; then
+            ((md_count++))
+            echo "    ✅ Preservado: $file"
+        fi
+    done
+    echo "    ✅ Archivos .md preservados: $md_count archivos"
+
+    # ====================================================
+    # �️ BORRAR TODOS LOS ARCHIVOS .SQL
+    # ====================================================
+    echo ""
+    echo "�️ [2/4] Borrando archivos .sql..."
+    local sql_count=0
+    for file in *.sql; do
+        if [[ -f "$file" ]]; then
+            ((sql_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Archivos .sql: $sql_count archivos"
+
+    # ====================================================
+    # � BORRAR ARCHIVOS DEBUG_*
+    # ====================================================
+    echo ""
+    echo "� [3/4] Borrando archivos debug_*..."
+    local debug_count=0
+    for file in debug_*; do
+        if [[ -f "$file" ]]; then
+            ((debug_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Archivos debug_*: $debug_count archivos"
+
+    # ====================================================
+    # 🧪 BORRAR ARCHIVOS TEST_* Y SCRIPT_*
+    # ====================================================
+    echo ""
+    echo "🧪 [4/5] Borrando archivos test_* y script_*..."
+    local test_count=0
+    for file in test_* script_* temp_* prueba_*; do
+        if [[ -f "$file" ]]; then
+            ((test_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Archivos test/script/temp: $test_count archivos"
+
+    # ====================================================
+    # 🔧 BORRAR ARCHIVOS DE MIGRACIÓN Y VERIFICACIÓN
+    # ====================================================
+    echo ""
+    echo "🔧 [5/5] Borrando archivos de migración y verificación..."
+    local migrate_count=0
+    for file in migrate_* check_* verificar_* migration_*; do
+        if [[ -f "$file" ]]; then
+            ((migrate_count++))
+            ((total++))
+            rm -f "$file" && echo "    🗑️  Borrado: $file"
+        fi
+    done
+    echo "    ✅ Archivos migrate/check/verificar: $migrate_count archivos"
+
+    # Desactivar modo NULL_GLOB
+    unsetopt NULL_GLOB
+
+    # ====================================================
+    # 📊 RESUMEN FINAL
+    # ====================================================
+    echo ""
+    echo "══════════════════════════════════════════"
+    echo "📊 RESUMEN DE LIMPIEZA"
+    echo "══════════════════════════════════════════"
+    echo "📄 Archivos .md: $md_count"
+    echo "🗄️ Archivos .sql: $sql_count"
+    echo "� Archivos debug_*: $debug_count"
+    echo "🧪 Archivos test/script/temp: $test_count"
+    echo "──────────────────────────────────────────"
+    echo "✅ Total archivos borrados: $total"
+
+    if [[ $total -gt 0 ]]; then
+        echo "🚀 ¡Proyecto limpio!"
+    else
+        echo "🎉 ¡El proyecto ya estaba limpio!"
+    fi
+    echo "══════════════════════════════════════════"
+
+    # Regresar al directorio original
+    cd "$current_dir"
+}
+
+# Función para sincronización manual con limpieza previa
+sync-sequoia() {
+    echo "🧹 Ejecutando limpieza antes de sincronizar..."
+
+    # Cambiar al directorio del proyecto
+    local current_dir=$(pwd)
+    local project_dir="/Users/ronaldinfante/Documents/pedidos"
+
+    cd "$project_dir" || {
+        echo "❌ Error: No se pudo acceder al directorio del proyecto"
+        return 1
+    }
+
+    # Ejecutar limpieza de archivos temporales usando función integrada
+    echo "🗑️ Limpiando archivos temporales..."
+    limpiar
+
+    echo "📤 Sincronizando archivos con servidor (modo verboso)..."
+
+    # Configurar locale para evitar warnings de perl
+    export LC_ALL=C
+    export LANG=C
+    export LANGUAGE=
+
+    # Usar rsync para sincronización más eficiente
+    rsync -azv \
+        --exclude='.vscode/' \
+        --exclude='.git/' \
+        --exclude='.DS_Store' \
+        --exclude='*.log' \
+        --exclude='.zsh*' \
+        --exclude='CLAUDE.md' \
+        --exclude='**/check_sftp_status.sh' \
+        --exclude='**/clean-temp-files.sh' \
+        --exclude='**/test_*.html' \
+        --exclude='**/*_fixed.php' \
+        -e "ssh -i /Users/ronaldinfante/id_rsa -p 7822 -o PasswordAuthentication=no -o PreferredAuthentications=publickey" \
+        /Users/ronaldinfante/Documents/pedidos/ \
+        motodota@68.66.226.124:/home/motodota/sequoiaspeed.com.co/pedidos/
+
+    # Restaurar locale original
+    export LC_ALL=
+    export LANG="es_ES.UTF-8"
+
+    # Regresar al directorio original
+    cd "$current_dir"
+
+    if [[ $? -eq 0 ]]; then
+        echo "✅ Sincronización completada"
+    else
+        echo "❌ Error en sincronización"
+    fi
+}
+
+echo "✅ Funciones Sequoia Speed cargadas - Limpieza integrada"
+echo "💡 Comandos disponibles:"
+echo "   limpiar          - Limpieza completa"
+echo "   sync-sequoia     - Limpieza + sincronización"

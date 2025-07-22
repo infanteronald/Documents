@@ -1,0 +1,19 @@
+# Configuración específica para archivos Bold
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/javascript .js
+</IfModule>
+
+# Permitir acceso a archivos JavaScript
+<FilesMatch "\.(js)$">
+    Header unset X-Content-Type-Options
+    Header set Content-Type application/javascript
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Permitir acceso a archivos PHP
+<FilesMatch "\.(php)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>

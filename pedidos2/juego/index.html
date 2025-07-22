@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🌈 NEON CONQUEST - El Juego Más Adictivo de 2025</title>
+    <meta name="description" content="Conquista territorio en un mundo cyberpunk con música reactiva. ¡El juego web más viral de 2025!">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#00ffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌈</text></svg>">
+    
+    <style>
+        /* Reset y configuración base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 50%, #0a1a1a 100%);
+            font-family: 'Courier New', 'Monaco', monospace;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            color: #00ffff;
+        }
+        
+        /* Canvas principal */
+        #gameCanvas {
+            display: block;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            border: 2px solid #00ffff;
+            box-shadow: 
+                0 0 20px #00ffff,
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+            cursor: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* UI Overlay */
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* Panel de estadísticas */
+        .stats-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 14px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            min-width: 200px;
+        }
+        
+        .stat-label {
+            color: #888;
+        }
+        
+        .stat-value {
+            color: #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        /* Controles */
+        .controls-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #ff00ff;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 12px;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Game Over Screen */
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ff0040;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 0, 64, 0.5);
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+        
+        .game-over h2 {
+            color: #ff0040;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff0040;
+            animation: pulse 1s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.05); }
+        }
+        
+        .restart-btn {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            border: none;
+            border-radius: 25px;
+            color: #000;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .restart-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        }
+        
+        /* Efectos de partículas */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ffff;
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 0 6px #00ffff;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 1; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.5; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-panel, .controls-panel {
+                font-size: 12px;
+                padding: 10px;
+            }
+            
+            .stat-row {
+                min-width: 150px;
+            }
+            
+            .game-over {
+                padding: 20px;
+                width: 90%;
+            }
+            
+            .game-over h2 {
+                font-size: 2em;
+            }
+        }
+        
+        /* Loading screen */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .loading-text {
+            font-size: 2em;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(0, 255, 255, 0.2);
+            border-radius: 2px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            width: 0%;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading" id="loadingScreen">
+        <div class="loading-text">🌈 NEON CONQUEST</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loadingProgress"></div>
+        </div>
+        <div style="margin-top: 20px; font-size: 14px; color: #888;">
+            Cargando el futuro cyberpunk...
+        </div>
+    </div>
+    
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- UI Overlay -->
+    <div class="ui-overlay">
+        <!-- Estadísticas -->
+        <div class="stats-panel">
+            <div class="stat-row">
+                <span class="stat-label">🏆 Puntos:</span>
+                <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">🌐 Territorio:</span>
+                <span class="stat-value" id="territory">0%</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">⚡ Energía:</span>
+                <span class="stat-value" id="energy">100</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">📊 Nivel:</span>
+                <span class="stat-value" id="level">1</span>
+                <span class="stat-value" id="multiplier" style="display: none; color: #ffff00; margin-left: 5px;"></span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">👾 Enemigos:</span>
+                <span class="stat-value" id="enemyInfo">0</span>
+            </div>
+        </div>
+        
+        <!-- Controles -->
+        <div class="controls-panel">
+            <div style="color: #ff00ff; font-weight: bold; margin-bottom: 10px;">⌨️ CONTROLES</div>
+            <div>🖱️ Mouse: Mover</div>
+            <div>📱 Touch: Deslizar</div>
+            <div>🎯 Objetivo: Conquista territorio</div>
+            <div>⚠️ Evita: Enemigos y bordes</div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div class="game-over" id="gameOverScreen">
+            <h2>💀 GAME OVER 💀</h2>
+            <div id="finalStats"></div>
+            <button class="restart-btn" onclick="restartGame()">
+                🚀 JUGAR DE NUEVO
+            </button>
+        </div>
+    </div>
+    
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- Game Engine -->
+    <script src="enemy-ai.js"></script>
+    <script src="game-engine.js"></script>
+    
+    <script>
+        // Inicialización del juego
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simular carga
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                document.getElementById('loadingProgress').style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        document.getElementById('loadingScreen').style.display = 'none';
+                        initGame();
+                    }, 500);
+                }
+            }, 100);
+        });
+        
+        // Crear partículas de fondo
+        function createBackgroundParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                particle.style.animationDuration = (2 + Math.random() * 4) + 's';
+                container.appendChild(particle);
+            }
+        }
+        
+        createBackgroundParticles();
+        
+        // Prevenir zoom en móviles
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>

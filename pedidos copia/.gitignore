@@ -1,0 +1,280 @@
+# GITIGNORE DEFINITIVO SEQUOIA SPEED
+# Archivo: .gitignore
+# Propósito: Evitar que archivos borrados reaparezcan automáticamente
+
+# ==============================================================================
+# ARCHIVOS DE SISTEMA Y TEMPORALES GENERALES
+# ==============================================================================
+.DS_Store
+../.DS_Store
+copia/.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.log
+*.tmp
+*.cache
+*.bak
+*.swp
+*.swo
+*~
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================================================================
+# ARCHIVOS VS CODE Y EDITORES
+# ==============================================================================
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.idea/
+*.sublime-*
+*.sublime-project
+*.sublime-workspace
+
+# ==============================================================================
+# DIRECTORIOS EXTERNOS Y DEL SISTEMA
+# ==============================================================================
+../Desarrollo/
+../desarrollo/
+../.git/
+node_modules/
+vendor/
+
+# ==============================================================================
+# ARCHIVOS DE DESARROLLO Y DEBUG
+# ==============================================================================
+analizar_webhook.php
+debug_webhook_processing.php
+deploy_bold_fixes.php
+diagnostico_bold_completo.php
+ejecutar_retry_multi_estructura.php
+ejecutar_retry_simple.php
+forzar_creacion_pedido.php
+procesar_webhooks_directo.php
+setup_ssh_key.sh
+sync_bold_correcciones.php
+sync_bold_fixes.php
+verificacion_final_bold.php
+verificar_pedidos_bold.php
+verify_bold_fixes.php
+test_*.php
+test_*.html
+*_test.php
+debug_*.php
+
+# ==============================================================================
+# ARCHIVOS DE DOCUMENTACIÓN TEMPORAL
+# ==============================================================================
+BOLD_3_METODOS_COMPLETADO.md
+VERIFICACION_FINAL_BOLD_3_METODOS.md
+README_BOLD_3_METODOS_FINAL.md
+*_COMPLETADO.md
+*_FINAL.md
+VERIFICACION_*.md
+
+# ==============================================================================
+# DIRECTORIOS DE DESARROLLO Y ASSETS OPTIMIZADOS
+# ==============================================================================
+desarrollo/
+assets/optimized/
+assets/combined/
+assets/temp/
+public/assets/optimized/
+logs/*
+!logs/.gitkeep
+temp/
+tmp/
+
+# ==============================================================================
+# ARCHIVOS DE USUARIO Y UPLOADS
+# ==============================================================================
+uploads/*
+!uploads/.gitkeep
+comprobantes/*
+!comprobantes/.gitkeep
+guias/*
+!guias/.gitkeep
+
+# ==============================================================================
+# ARCHIVOS DE CONFIGURACIÓN Y PRODUCCIÓN - SEGURIDAD CRÍTICA
+# ==============================================================================
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.testing
+.env.backup
+.production-files
+pedidos-development/
+config.local.php
+conexion_local.php
+config_secure.php.backup
+conexion.php.backup
+
+# ==============================================================================
+# ARCHIVOS DE CREDENCIALES Y KEYS - NUNCA COMMITEAR
+# ==============================================================================
+*.key
+*.pem
+*.p12
+*.keystore
+secrets.json
+credentials.json
+service-account.json
+private_key.pem
+public_key.pem
+jwt_private.key
+jwt_public.key
+push_config.json
+.vscode/sftp.json
+conf/vscode/project/sftp.json
+
+# ==============================================================================
+# ARCHIVOS ESPECÍFICOS DEL PROYECTO A IGNORAR
+# ==============================================================================
+
+# Scripts de análisis y debug Bold
+process_retry_queue.php
+setup_bold_db.php
+test_bold_integration.php
+verify_bold_system.php
+bold_payment_enhanced_handler_v2.js
+
+# Archivos de documentación obsoletos (mantener los que ya estaban)
+ARCHIVOS_PRODUCCION.txt
+CLEANUP_REPORT.md
+CORRECCIÓN_BD_COMPLETADA.md
+CORRECCIONES_404_COMPLETADAS.md
+DEPLOYMENT_REPORT.md
+ESTADO_FINAL_SISTEMA.md
+ESTADO_FINAL_TRANSICION.md
+FASE4-COMPLETADA.md
+IMPLEMENTACION_ESTRUCTURA_PROFESIONAL.md
+NUEVA_ESTRUCTURA_PROPUESTA.md
+QUE_SIGUE_AHORA.md
+REORGANIZACION_COMPLETADA.md
+REORGANIZAR_PROYECTO.php
+RESPUESTA_REORGANIZACION.md
+RESUMEN_CORRECCION_BOLD.md
+RESUMEN_FASE3_COMPLETADA.md
+RESUMEN_FINAL_FASE2.md
+SISTEMA_MVC_FASE4_COMPLETADO.md
+SOLUCION_FINAL_BOLD.md
+SOLUCION_FINAL_COMPLETADA.md
+
+# Scripts obsoletos
+cleanup-main-directory.sh
+deploy-demo.sh
+deploy-production.sh
+deploy.sh
+deployment-demo.sh
+development-monitor.sh
+direct-optimizer.php
+finalize-phase2.php
+generate-phase3-guide.php
+legacy-bridge.php
+migration-helper.php
+phase4-guide.md
+production-deploy.sh
+production-validator.php
+reorganizar_ahora.php
+setup-phase3-env.php
+setup-production-monitor.php
+simple-validator.php
+sistema_verificacion_completa.php
+transition-guide-phase3.php
+verificacion_final.html
+verificacion-fase2.php
+verificacion-sistema-completa.php
+verificar_conectividad.php
+verification-final-system.php
+verify-env-config.sh
+verify-phase4.php
+
+# Archivos de prueba y debug
+test_bold_complete.php
+test_bold_function.html
+test_container_fix.html
+test_error_corregido_final.html
+test_error_corregido.html
+test_error_final_corregido.html
+test_final_bold.php
+test_final_solution.html
+test_function_fix.html
+test_live_debug.html
+test_produccion_final.html
+test-assets.html
+test-db-connection.php
+test-db-real-connection.php
+test-mvc-routes.php
+
+# Directorios obsoletos
+phase3/
+phase4/
+tests/
+otros/
+desarrollo/obsolete/
+desarrollo/temp/
+
+# Archivos CSS/JS obsoletos
+style.css
+app.js
+payment_ux_enhanced.js
+conexion_local.php
+database_connection.php
+composer.json
+
+# Enlaces simbólicos
+desarrollo-link
+
+# Archivos de GitHub Copilot
+.github:copilot-instructions.md
+
+# ==============================================================================
+# ARCHIVOS DE DESARROLLO ESPECÍFICOS
+# ==============================================================================
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Composer
+vendor/
+composer.lock
+
+# IDE y editores
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.sublime-*
+
+# ==============================================================================
+# ARCHIVOS DE USUARIO Y UPLOADS
+# ==============================================================================
+uploads/*
+!uploads/.gitkeep
+comprobantes/*
+!comprobantes/.gitkeep
+guias/*
+!guias/.gitkeep
+
+# ==============================================================================
+# ARCHIVOS DE PRODUCCIÓN
+# ==============================================================================
+.production-files
+.env.local
+.env.development
+pedidos-development/
