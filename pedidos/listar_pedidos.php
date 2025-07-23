@@ -78,6 +78,13 @@ try {
     <div class="header-ultra-compacto">
         <!-- Fila única con todos los elementos -->
         <div class="fila-compacta">
+            <!-- Botón Home -->
+            <div class="home-button">
+                <a href="index.php" class="btn-home" title="Ir al inicio">
+                    🏠
+                </a>
+            </div>
+            
             <!-- Filtros rápidos -->
             <div class="filtros-rapidos">
                 <div class="filtros-fila-mobile">

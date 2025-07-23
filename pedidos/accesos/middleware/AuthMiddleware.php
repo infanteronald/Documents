@@ -22,7 +22,17 @@ class AuthMiddleware {
             session_start();
         }
         
-        return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+        // Si ya hay sesión activa, verificar validez
+        if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+            return true;
+        }
+        
+        // Si no hay sesión, verificar cookie "recordarme"
+        if (isset($_COOKIE['remember_token']) && !empty($_COOKIE['remember_token'])) {
+            return $this->loginFromRememberToken($_COOKIE['remember_token']);
+        }
+        
+        return false;
     }
     
     /**
@@ -160,6 +170,11 @@ class AuthMiddleware {
         $_SESSION['login_time'] = time();
         $_SESSION['last_activity'] = time();
         
+        // Si marcó "recordarme", crear cookie persistente
+        if ($remember_me) {
+            $this->createRememberMeToken($user_id);
+        }
+        
         // Actualizar último acceso
         $this->user_model->updateLastAccess($user_id);
         
@@ -188,6 +203,9 @@ class AuthMiddleware {
             
             // Desactivar sesión en base de datos
             $this->deactivateSession($user_id);
+            
+            // Eliminar cookie remember_token si existe
+            $this->removeRememberMeToken($user_id);
         }
         
         // Limpiar sesión
@@ -383,6 +401,119 @@ class AuthMiddleware {
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $user_id);
         return $stmt->execute();
+    }
+    
+    /**
+     * Crear token "recordarme" y cookie persistente
+     */
+    private function createRememberMeToken($user_id) {
+        // Generar token único
+        $token = bin2hex(random_bytes(32));
+        $selector = bin2hex(random_bytes(12));
+        $token_hash = hash('sha256', $token);
+        
+        // Expiración: 30 días
+        $expires = time() + (30 * 24 * 60 * 60);
+        $expires_db = date('Y-m-d H:i:s', $expires);
+        
+        // Eliminar tokens anteriores del usuario
+        $delete_query = "DELETE FROM remember_tokens WHERE usuario_id = ?";
+        $delete_stmt = $this->conn->prepare($delete_query);
+        $delete_stmt->bind_param('i', $user_id);
+        $delete_stmt->execute();
+        
+        // Insertar nuevo token en la base de datos
+        $insert_query = "INSERT INTO remember_tokens (usuario_id, selector, token_hash, fecha_expiracion) VALUES (?, ?, ?, ?)";
+        $insert_stmt = $this->conn->prepare($insert_query);
+        $insert_stmt->bind_param('isss', $user_id, $selector, $token_hash, $expires_db);
+        $insert_stmt->execute();
+        
+        // Crear cookie segura (30 días)
+        $cookie_value = $selector . ':' . $token;
+        setcookie('remember_token', $cookie_value, $expires, '/', '', true, true);
+        
+        return true;
+    }
+    
+    /**
+     * Autenticar desde token "recordarme"
+     */
+    private function loginFromRememberToken($cookie_value) {
+        if (empty($cookie_value) || !str_contains($cookie_value, ':')) {
+            return false;
+        }
+        
+        list($selector, $token) = explode(':', $cookie_value, 2);
+        $token_hash = hash('sha256', $token);
+        
+        // Buscar token en la base de datos
+        $query = "SELECT usuario_id FROM remember_tokens 
+                  WHERE selector = ? AND token_hash = ? AND fecha_expiracion > NOW()";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param('ss', $selector, $token_hash);
+        $stmt->execute();
+        
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 1) {
+            $row = $result->fetch_assoc();
+            $user_id = $row['usuario_id'];
+            
+            // Verificar que el usuario sigue activo
+            $user = $this->user_model->findById($user_id);
+            if ($user && $user['activo']) {
+                // Crear nueva sesión
+                $_SESSION['user_id'] = $user_id;
+                $_SESSION['login_time'] = time();
+                $_SESSION['last_activity'] = time();
+                
+                // Actualizar último acceso
+                $this->user_model->updateLastAccess($user_id);
+                
+                // Regenerar token por seguridad
+                $this->createRememberMeToken($user_id);
+                
+                // Registrar en sesiones
+                $this->registerSession($user_id, true);
+                
+                // Registrar auditoría
+                $this->registerAudit($user_id, 'auto_login', 'usuarios', 'Usuario autenticado automáticamente por cookie');
+                
+                return true;
+            }
+        }
+        
+        // Token inválido o expirado, eliminar cookie
+        setcookie('remember_token', '', time() - 3600, '/', '', true, true);
+        
+        return false;
+    }
+    
+    /**
+     * Eliminar token "recordarme" y cookie
+     */
+    private function removeRememberMeToken($user_id) {
+        // Eliminar tokens de la base de datos
+        $query = "DELETE FROM remember_tokens WHERE usuario_id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param('i', $user_id);
+        $stmt->execute();
+        
+        // Eliminar cookie
+        if (isset($_COOKIE['remember_token'])) {
+            setcookie('remember_token', '', time() - 3600, '/', '', true, true);
+            unset($_COOKIE['remember_token']);
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Limpiar tokens expirados
+     */
+    public function cleanExpiredRememberTokens() {
+        $query = "DELETE FROM remember_tokens WHERE fecha_expiracion < NOW()";
+        $this->conn->query($query);
     }
 }
 ?>

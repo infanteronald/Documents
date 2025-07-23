@@ -209,6 +209,42 @@ h1 {
     flex-wrap: wrap;
 }
 
+/* Botón Home */
+.home-button {
+    display: flex;
+    align-items: center;
+    margin-right: var(--space-sm);
+}
+
+.btn-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--vscode-sidebar);
+    border: 1px solid var(--vscode-border);
+    border-radius: var(--radius-md);
+    color: var(--vscode-text);
+    text-decoration: none;
+    font-size: 18px;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.btn-home:hover {
+    background: var(--vscode-sidebar-hover);
+    border-color: var(--apple-blue);
+    color: var(--apple-blue);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-home:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
 .filtros-rapidos {
     display: flex;
     align-items: center;
@@ -1934,6 +1970,18 @@ h1 {
         flex-direction: column;
         gap: var(--mobile-gap);
         align-items: stretch;
+    }
+    
+    .home-button {
+        margin-right: 0;
+        margin-bottom: var(--mobile-gap);
+        align-self: flex-start;
+    }
+    
+    .btn-home {
+        width: var(--mobile-touch-target);
+        height: var(--mobile-touch-target);
+        font-size: 20px;
     }
 
     .filtros-rapidos {
