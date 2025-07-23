@@ -12,10 +12,23 @@ class User {
     }
     
     /**
-     * Buscar usuario por email
+     * Buscar usuario por email (solo activos)
      */
     public function findByEmail($email) {
         $query = "SELECT * FROM usuarios WHERE email = ? AND activo = 1 LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->fetch_assoc();
+    }
+    
+    /**
+     * Buscar usuario por email (incluye inactivos)
+     */
+    public function findByEmailIncludingInactive($email) {
+        $query = "SELECT * FROM usuarios WHERE email = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('s', $email);
         $stmt->execute();
@@ -52,9 +65,22 @@ class User {
     }
     
     /**
-     * Buscar usuario por nombre de usuario
+     * Buscar usuario por nombre de usuario (solo activos)
      */
     public function findByUsername($username) {
+        $query = "SELECT * FROM usuarios WHERE usuario = ? AND activo = 1 LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param('s', $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->fetch_assoc();
+    }
+    
+    /**
+     * Buscar usuario por nombre de usuario (incluye inactivos)
+     */
+    public function findByUsernameIncludingInactive($username) {
         $query = "SELECT * FROM usuarios WHERE usuario = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('s', $username);
@@ -71,21 +97,51 @@ class User {
         try {
             $this->conn->begin_transaction();
             
-            // Verificar que el email no exista
-            if ($this->findByEmail($data['email'])) {
-                throw new Exception('El email ya está registrado');
+            // Verificar que el email no exista (incluyendo usuarios inactivos)
+            $existing_user = $this->findByEmailIncludingInactive($data['email']);
+            if ($existing_user) {
+                if ($existing_user['activo']) {
+                    throw new Exception('El email ya está registrado con un usuario activo');
+                } else {
+                    throw new Exception('El email ya está registrado con un usuario inactivo. Contacte al administrador para reactivar la cuenta.');
+                }
+            }
+            
+            // Generar nombre de usuario desde email si no se proporciona
+            $usuario = $data['usuario'] ?? strtolower(explode('@', $data['email'])[0]);
+            
+            // Verificar que el nombre de usuario no exista (incluyendo inactivos)
+            $existing_username = $this->findByUsernameIncludingInactive($usuario);
+            if ($existing_username) {
+                // Si es el usuario proporcionado, no el generado automáticamente
+                if (isset($data['usuario']) && $data['usuario'] === $usuario) {
+                    if ($existing_username['activo']) {
+                        throw new Exception('El nombre de usuario ya está en uso por un usuario activo');
+                    } else {
+                        throw new Exception('El nombre de usuario ya está en uso por un usuario inactivo. Elija otro nombre de usuario.');
+                    }
+                } else {
+                    // Si es generado automáticamente, buscar uno disponible
+                    $counter = 1;
+                    $original_usuario = $usuario;
+                    while ($this->findByUsernameIncludingInactive($usuario)) {
+                        $usuario = $original_usuario . $counter;
+                        $counter++;
+                    }
+                }
             }
             
             // Hash de la contraseña
             $password_hash = password_hash($data['password'], PASSWORD_DEFAULT);
             
-            $query = "INSERT INTO usuarios (nombre, email, password, activo, creado_por) 
-                      VALUES (?, ?, ?, 1, ?)";
+            $query = "INSERT INTO usuarios (nombre, usuario, email, password, activo, creado_por) 
+                      VALUES (?, ?, ?, ?, 1, ?)";
             $stmt = $this->conn->prepare($query);
             // Fix para PHP 8.2: bind_param requiere variables por referencia
             $creado_por = $data['creado_por'] ?? null;
-            $stmt->bind_param('sssi', 
+            $stmt->bind_param('ssssi', 
                 $data['nombre'], 
+                $usuario,
                 $data['email'], 
                 $password_hash, 
                 $creado_por
@@ -131,12 +187,23 @@ class User {
             
             if (!empty($data['email'])) {
                 // Verificar que el email no esté en uso por otro usuario
-                $existing = $this->findByEmail($data['email']);
+                $existing = $this->findByEmailIncludingInactive($data['email']);
                 if ($existing && $existing['id'] != $id) {
                     throw new Exception('El email ya está en uso por otro usuario');
                 }
                 $fields[] = 'email = ?';
                 $values[] = $data['email'];
+                $types .= 's';
+            }
+            
+            if (!empty($data['usuario'])) {
+                // Verificar que el nombre de usuario no esté en uso por otro usuario
+                $existing = $this->findByUsernameIncludingInactive($data['usuario']);
+                if ($existing && $existing['id'] != $id) {
+                    throw new Exception('El nombre de usuario ya está en uso por otro usuario');
+                }
+                $fields[] = 'usuario = ?';
+                $values[] = $data['usuario'];
                 $types .= 's';
             }
             
@@ -202,10 +269,18 @@ class User {
     /**
      * Obtener usuarios con paginación
      */
-    public function getUsers($limit = 20, $offset = 0, $search = '', $role_filter = '') {
-        $where_conditions = ['u.activo = 1'];
+    public function getUsers($limit = 20, $offset = 0, $search = '', $role_filter = '', $status_filter = '') {
+        $where_conditions = [];
         $params = [];
         $types = '';
+        
+        // Filtro de estado
+        if ($status_filter === 'activo') {
+            $where_conditions[] = 'u.activo = 1';
+        } elseif ($status_filter === 'inactivo') {
+            $where_conditions[] = 'u.activo = 0';
+        }
+        // Si no hay filtro de estado, mostrar todos
         
         if (!empty($search)) {
             $where_conditions[] = '(u.nombre LIKE ? OR u.email LIKE ?)';
@@ -221,7 +296,7 @@ class User {
             $types .= 's';
         }
         
-        $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
+        $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
         
         $query = "SELECT DISTINCT
             u.id,
@@ -255,10 +330,18 @@ class User {
     /**
      * Contar usuarios
      */
-    public function countUsers($search = '', $role_filter = '') {
-        $where_conditions = ['u.activo = 1'];
+    public function countUsers($search = '', $role_filter = '', $status_filter = '') {
+        $where_conditions = [];
         $params = [];
         $types = '';
+        
+        // Filtro de estado
+        if ($status_filter === 'activo') {
+            $where_conditions[] = 'u.activo = 1';
+        } elseif ($status_filter === 'inactivo') {
+            $where_conditions[] = 'u.activo = 0';
+        }
+        // Si no hay filtro de estado, mostrar todos
         
         if (!empty($search)) {
             $where_conditions[] = '(u.nombre LIKE ? OR u.email LIKE ?)';
@@ -274,7 +357,7 @@ class User {
             $types .= 's';
         }
         
-        $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
+        $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
         
         $query = "SELECT COUNT(DISTINCT u.id) as total
         FROM usuarios u

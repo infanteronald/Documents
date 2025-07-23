@@ -4,7 +4,7 @@
  * Sequoia Speed - Sistema de Accesos
  */
 
-require_once '../config_secure.php';
+require_once dirname(__DIR__) . '/config_secure.php';
 require_once 'middleware/AuthMiddleware.php';
 require_once 'models/User.php';
 

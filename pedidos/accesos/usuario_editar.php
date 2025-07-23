@@ -71,16 +71,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'El nombre de usuario es requerido';
     }
     
-    // Verificar email único (excepto el usuario actual)
-    $existing = $userModel->findByEmail($email);
+    // Verificar email único (excepto el usuario actual, incluyendo inactivos)
+    $existing = $userModel->findByEmailIncludingInactive($email);
     if ($existing && $existing['id'] != $user_id) {
-        $errors[] = 'El email ya está en uso';
+        if ($existing['activo']) {
+            $errors[] = 'El email ya está en uso por un usuario activo';
+        } else {
+            $errors[] = 'El email ya está en uso por un usuario inactivo';
+        }
     }
     
-    // Verificar usuario único (excepto el usuario actual)
-    $existing_user = $userModel->findByUsername($usuario_login);
+    // Verificar usuario único (excepto el usuario actual, incluyendo inactivos)
+    $existing_user = $userModel->findByUsernameIncludingInactive($usuario_login);
     if ($existing_user && $existing_user['id'] != $user_id) {
-        $errors[] = 'El nombre de usuario ya está en uso';
+        if ($existing_user['activo']) {
+            $errors[] = 'El nombre de usuario ya está en uso por un usuario activo';
+        } else {
+            $errors[] = 'El nombre de usuario ya está en uso por un usuario inactivo';
+        }
     }
     
     if (empty($errors)) {

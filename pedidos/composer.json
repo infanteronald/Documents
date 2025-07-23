@@ -1,0 +1,20 @@
+{
+    "name": "sequoia-speed/pedidos",
+    "description": "Sistema de Gestión de Pedidos con Notificaciones Push",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "minishlink/web-push": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

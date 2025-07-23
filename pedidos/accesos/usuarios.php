@@ -7,8 +7,8 @@
 // Definir constante requerida por config_secure.php
 defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 
-require_once '../config_secure.php';
-require_once '../php82_helpers.php';
+require_once dirname(__DIR__) . '/config_secure.php';
+require_once dirname(__DIR__) . '/php82_helpers.php';
 require_once 'middleware/AuthMiddleware.php';
 require_once 'models/User.php';
 require_once 'models/Role.php';
@@ -29,11 +29,12 @@ $offset = ($pagina - 1) * $limite;
 // Parámetros de filtros
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $role_filter = isset($_GET['role_filter']) ? trim($_GET['role_filter']) : '';
-$status_filter = isset($_GET['status_filter']) ? trim($_GET['status_filter']) : '';
+// Por defecto mostrar solo activos, a menos que se especifique otro filtro
+$status_filter = isset($_GET['status_filter']) ? trim($_GET['status_filter']) : 'activo';
 
 // Obtener usuarios con filtros
-$usuarios = $user_model->getUsers($limite, $offset, $search, $role_filter);
-$total_usuarios = $user_model->countUsers($search, $role_filter);
+$usuarios = $user_model->getUsers($limite, $offset, $search, $role_filter, $status_filter);
+$total_usuarios = $user_model->countUsers($search, $role_filter, $status_filter);
 $total_paginas = ceil($total_usuarios / $limite);
 
 // Obtener roles para el filtro
@@ -178,7 +179,7 @@ function tiempo_relativo($fecha) {
                     <div class="filter-group">
                         <select name="status_filter" class="filter-select">
                             <option value="">📊 Todos los estados</option>
-                            <option value="activo" <?php echo $status_filter === 'activo' ? 'selected' : ''; ?>>✅ Activos</option>
+                            <option value="activo" <?php echo ($status_filter === 'activo' || (!isset($_GET['status_filter']) && $status_filter === 'activo')) ? 'selected' : ''; ?>>✅ Activos</option>
                             <option value="inactivo" <?php echo $status_filter === 'inactivo' ? 'selected' : ''; ?>>❌ Inactivos</option>
                         </select>
                     </div>
@@ -187,7 +188,7 @@ function tiempo_relativo($fecha) {
                         <button type="submit" class="btn btn-filter">
                             🔍 Filtrar
                         </button>
-                        <a href="?" class="btn btn-clear">
+                        <a href="?status_filter=activo" class="btn btn-clear">
                             🗑️ Limpiar
                         </a>
                     </div>

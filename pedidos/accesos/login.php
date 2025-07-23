@@ -7,8 +7,8 @@
 // Definir constante requerida por config_secure.php
 defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 
-require_once '../config_secure.php';
-require_once '../php82_helpers.php';
+require_once dirname(__DIR__) . '/config_secure.php';
+require_once dirname(__DIR__) . '/php82_helpers.php';
 require_once 'models/User.php';
 require_once 'middleware/AuthMiddleware.php';
 
@@ -31,19 +31,17 @@ $success = '';
 
 // Procesar formulario de login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
+    $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     $remember_me = isset($_POST['remember_me']);
     
     // Validaciones básicas
-    if (empty($email) || empty($password)) {
-        $error = 'Por favor ingresa email y contraseña';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Por favor ingresa un email válido';
+    if (empty($username) || empty($password)) {
+        $error = 'Por favor ingresa usuario y contraseña';
     } else {
         try {
             $user_model = new User($conn);
-            $user = $user_model->findByEmail($email);
+            $user = $user_model->findByUsername($username);
             
             if ($user && $user_model->verifyPassword($password, $user['password'])) {
                 // Verificar que el usuario esté activo
@@ -59,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
             } else {
-                $error = 'Email o contraseña incorrectos';
+                $error = 'Usuario o contraseña incorrectos';
                 
                 // Registrar intento fallido
                 if ($user) {
@@ -395,13 +393,13 @@ $csrf_token = $auth->generateCSRF();
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 
                 <div class="form-group">
-                    <label for="email" class="form-label">📧 Email</label>
-                    <input type="email" 
-                           id="email" 
-                           name="email" 
+                    <label for="username" class="form-label">👤 Usuario</label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
                            class="form-input" 
-                           placeholder="tu@email.com"
-                           value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
+                           placeholder="Tu nombre de usuario"
+                           value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
                            required>
                 </div>
                 
@@ -427,6 +425,8 @@ $csrf_token = $auth->generateCSRF();
             </form>
             
             <div class="login-footer">
+                <a href="recuperar_password.php">🔓 ¿Olvidaste tu contraseña?</a>
+                <br><br>
                 <a href="../index.php">← Volver al sistema principal</a>
             </div>
         </div>
@@ -456,8 +456,8 @@ $csrf_token = $auth->generateCSRF();
             // El loading se oculta automáticamente cuando se recarga la página
         });
         
-        // Auto-focus en el campo de email
-        document.getElementById('email').focus();
+        // Auto-focus en el campo de usuario
+        document.getElementById('username').focus();
         
         // Limpiar mensajes después de 5 segundos
         setTimeout(function() {

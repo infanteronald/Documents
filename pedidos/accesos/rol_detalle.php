@@ -7,8 +7,8 @@
 // Definir constante requerida por config_secure.php
 defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 
-require_once '../config_secure.php';
-require_once '../php82_helpers.php';
+require_once dirname(__DIR__) . '/config_secure.php';
+require_once dirname(__DIR__) . '/php82_helpers.php';
 require_once 'middleware/AuthMiddleware.php';
 require_once 'models/Role.php';
 

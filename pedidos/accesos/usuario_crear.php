@@ -7,15 +7,21 @@
 // Definir constante requerida por config_secure.php
 defined('SEQUOIA_SPEED_SYSTEM') || define('SEQUOIA_SPEED_SYSTEM', true);
 
-require_once '../config_secure.php';
-require_once '../php82_helpers.php';
+require_once dirname(__DIR__) . '/config_secure.php';
+require_once dirname(__DIR__) . '/php82_helpers.php';
 require_once 'middleware/AuthMiddleware.php';
 require_once 'models/User.php';
 require_once 'models/Role.php';
 
 // Inicializar middleware y requerir permisos
 $auth = new AuthMiddleware($conn);
-$current_user = $auth->requirePermission('usuarios', 'crear');
+try {
+    $current_user = $auth->requirePermission('usuarios', 'crear');
+} catch (Exception $e) {
+    // Si hay error de permisos, redirigir
+    header('Location: unauthorized.php');
+    exit;
+}
 
 // Inicializar modelos
 $user_model = new User($conn);
@@ -38,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $datos_formulario = [
         'nombre' => trim($_POST['nombre'] ?? ''),
         'email' => trim($_POST['email'] ?? ''),
+        'usuario' => trim($_POST['usuario'] ?? ''),
         'password' => $_POST['password'] ?? '',
         'password_confirm' => $_POST['password_confirm'] ?? '',
         'roles' => $_POST['roles'] ?? [],
@@ -57,9 +64,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($datos_formulario['email'], FILTER_VALIDATE_EMAIL)) {
         $errores[] = 'El email no tiene un formato válido';
     } else {
-        // Verificar que el email no exista
-        if ($user_model->findByEmail($datos_formulario['email'])) {
-            $errores[] = 'Ya existe un usuario con este email';
+        // Verificar que el email no exista (incluyendo inactivos)
+        $existing_email = $user_model->findByEmailIncludingInactive($datos_formulario['email']);
+        if ($existing_email) {
+            if ($existing_email['activo']) {
+                $errores[] = 'Ya existe un usuario activo con este email';
+            } else {
+                $errores[] = 'Ya existe un usuario inactivo con este email. Contacte al administrador para reactivar la cuenta.';
+            }
+        }
+    }
+
+    if (empty($datos_formulario['usuario'])) {
+        $errores[] = 'El nombre de usuario es requerido';
+    } elseif (!preg_match('/^[a-zA-Z0-9_.-]+$/', $datos_formulario['usuario'])) {
+        $errores[] = 'El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos';
+    } elseif (strlen($datos_formulario['usuario']) < 3) {
+        $errores[] = 'El nombre de usuario debe tener al menos 3 caracteres';
+    } else {
+        // Verificar que el nombre de usuario no exista (incluyendo inactivos)
+        $existing_username = $user_model->findByUsernameIncludingInactive($datos_formulario['usuario']);
+        if ($existing_username) {
+            if ($existing_username['activo']) {
+                $errores[] = 'Ya existe un usuario activo con este nombre de usuario';
+            } else {
+                $errores[] = 'Ya existe un usuario inactivo con este nombre de usuario. Por favor elija otro.';
+            }
         }
     }
 
@@ -196,6 +226,23 @@ $csrf_token = $auth->generateCSRF();
                                required 
                                maxlength="100"
                                placeholder="usuario@ejemplo.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="usuario" class="form-label">👤 Nombre de Usuario * <small style="color: var(--text-muted);">(para iniciar sesión)</small></label>
+                        <input type="text" 
+                               id="usuario" 
+                               name="usuario" 
+                               class="filter-input" 
+                               value="<?php echo htmlspecialchars($datos_formulario['usuario'] ?? ''); ?>"
+                               required 
+                               maxlength="50"
+                               pattern="[a-zA-Z0-9_.-]+"
+                               title="Solo letras, números, puntos, guiones y guiones bajos"
+                               placeholder="nombre.usuario">
+                        <small style="color: var(--text-muted); display: block; margin-top: var(--space-xs);">
+                            ⚠️ Este será el usuario para iniciar sesión (no el email)
+                        </small>
                     </div>
                     
                     <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
