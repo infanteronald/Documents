@@ -209,6 +209,9 @@ function generar_badge_stock($stock_actual, $stock_minimo, $nivel_stock, $icono_
                     </div>
                 </div>
                 <div class="header-actions">
+                    <a href="../qr/" class="btn btn-qr" title="Sistema QR para Inventario">
+                        📱 Sistema QR
+                    </a>
                     <a href="crear_producto.php?almacen_id=<?php echo $almacen_actual['id']; ?>" class="btn btn-primary">
                         ➕ Nuevo Producto
                     </a>
@@ -409,6 +412,12 @@ function generar_badge_stock($stock_actual, $stock_minimo, $nivel_stock, $icono_
                                     
                                     <td class="acciones-cell">
                                         <div class="acciones-group">
+                                            <a href="../qr/index.php?producto_id=<?php echo $producto['id']; ?>" 
+                                               class="btn-accion btn-qr" 
+                                               title="Generar código QR">
+                                                📱
+                                            </a>
+                                            
                                             <a href="editar_producto.php?id=<?php echo $producto['id']; ?>" 
                                                class="btn-accion btn-editar" 
                                                title="Editar producto">

@@ -15,7 +15,7 @@ class Module {
      * Obtener todos los módulos activos
      */
     public function getAllModules() {
-        $query = "SELECT * FROM modulos WHERE activo = 1 ORDER BY nombre";
+        $query = "SELECT * FROM acc_modulos WHERE activo = 1 ORDER BY nombre";
         $result = $this->conn->query($query);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
@@ -24,7 +24,7 @@ class Module {
      * Buscar módulo por ID
      */
     public function findById($id) {
-        $query = "SELECT * FROM modulos WHERE id = ? AND activo = 1 LIMIT 1";
+        $query = "SELECT * FROM acc_modulos WHERE id = ? AND activo = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $id);
         $stmt->execute();
@@ -37,7 +37,7 @@ class Module {
      * Buscar módulo por nombre
      */
     public function findByName($name) {
-        $query = "SELECT * FROM modulos WHERE nombre = ? AND activo = 1 LIMIT 1";
+        $query = "SELECT * FROM acc_modulos WHERE nombre = ? AND activo = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('s', $name);
         $stmt->execute();
@@ -58,7 +58,7 @@ class Module {
                 throw new Exception('Ya existe un módulo con ese nombre');
             }
             
-            $query = "INSERT INTO modulos (nombre, descripcion, activo) 
+            $query = "INSERT INTO acc_modulos (nombre, descripcion, activo) 
                       VALUES (?, ?, 1)";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param('ss', 
@@ -91,7 +91,7 @@ class Module {
         $basic_permissions = ['leer', 'crear', 'actualizar', 'eliminar'];
         
         foreach ($basic_permissions as $permission) {
-            $query = "INSERT INTO permisos (modulo_id, tipo_permiso, descripcion, activo) 
+            $query = "INSERT INTO acc_permisos (modulo_id, tipo_permiso, descripcion, activo) 
                       VALUES (?, ?, ?, 1)";
             $stmt = $this->conn->prepare($query);
             $description = "Permiso para {$permission} en el módulo";
@@ -138,7 +138,7 @@ class Module {
         $values[] = $id;
         $types .= 'i';
         
-        $query = "UPDATE modulos SET " . implode(', ', $fields) . " WHERE id = ?";
+        $query = "UPDATE acc_modulos SET " . implode(', ', $fields) . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param($types, ...$values);
         
@@ -161,9 +161,9 @@ class Module {
             m.fecha_creacion,
             COUNT(DISTINCT p.id) as total_permisos,
             COUNT(DISTINCT rp.rol_id) as roles_con_acceso
-        FROM modulos m
-        LEFT JOIN permisos p ON m.id = p.modulo_id AND p.activo = 1
-        LEFT JOIN rol_permisos rp ON p.id = rp.permiso_id
+        FROM acc_modulos m
+        LEFT JOIN acc_permisos p ON m.id = p.modulo_id AND p.activo = 1
+        LEFT JOIN acc_rol_permisos rp ON p.id = rp.permiso_id
         WHERE m.activo = 1
         GROUP BY m.id
         ORDER BY m.nombre";
@@ -182,8 +182,8 @@ class Module {
             p.descripcion,
             p.activo,
             COUNT(DISTINCT rp.rol_id) as roles_asignados
-        FROM permisos p
-        LEFT JOIN rol_permisos rp ON p.id = rp.permiso_id
+        FROM acc_permisos p
+        LEFT JOIN acc_rol_permisos rp ON p.id = rp.permiso_id
         WHERE p.modulo_id = ? AND p.activo = 1
         GROUP BY p.id
         ORDER BY 
@@ -208,8 +208,8 @@ class Module {
     public function canDelete($module_id) {
         // Verificar si hay permisos asignados a roles
         $query = "SELECT COUNT(*) as count 
-                  FROM rol_permisos rp 
-                  INNER JOIN permisos p ON rp.permiso_id = p.id 
+                  FROM acc_rol_permisos rp 
+                  INNER JOIN acc_permisos p ON rp.permiso_id = p.id 
                   WHERE p.modulo_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $module_id);
@@ -250,7 +250,7 @@ class Module {
                 'icon' => '📦',
                 'color' => 'info'
             ],
-            'usuarios' => [
+            'acc_usuarios' => [
                 'name' => 'Usuarios',
                 'description' => 'Administración de usuarios y accesos',
                 'icon' => '👥',
@@ -299,8 +299,8 @@ class Module {
             if ($user_id) {
                 // Obtener permisos del usuario para este módulo
                 $query = "SELECT DISTINCT p.tipo_permiso
-                          FROM vista_permisos_usuario vpu
-                          INNER JOIN permisos p ON vpu.modulo = ? AND vpu.tipo_permiso = p.tipo_permiso
+                          FROM acc_vista_permisos_usuario vpu
+                          INNER JOIN acc_permisos p ON vpu.modulo = ? AND vpu.tipo_permiso = p.tipo_permiso
                           WHERE vpu.usuario_id = ?";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bind_param('si', $module['nombre'], $user_id);

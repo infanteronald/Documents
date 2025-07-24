@@ -754,6 +754,16 @@ $is_manager = in_array($primary_role, ['gerente', 'supervisor']);
                         </a>
                     </li>
                     <li class="option-item">
+                        <a href="qr/" class="option-link priority" <?php echo !canAccess('qr') ? 'style="opacity: 0.6; pointer-events: none;"' : ''; ?>>
+                            <div class="option-icon">📱</div>
+                            <div class="option-text">
+                                <div class="option-title">Sistema QR</div>
+                                <div class="option-desc">Gestión de códigos QR para inventario</div>
+                            </div>
+                            <span class="option-badge info">QR</span>
+                        </a>
+                    </li>
+                    <li class="option-item">
                         <a href="inventario/almacenes/" class="option-link">
                             <div class="option-icon">🏪</div>
                             <div class="option-text">

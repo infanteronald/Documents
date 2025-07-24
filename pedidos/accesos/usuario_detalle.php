@@ -46,7 +46,7 @@ try {
     // Obtener actividad reciente
     $query_actividad = "SELECT 
         accion, modulo, descripcion, fecha_accion, ip_address
-    FROM auditoria_accesos 
+    FROM acc_auditoria_accesos 
     WHERE usuario_id = ? 
     ORDER BY fecha_accion DESC 
     LIMIT 10";
@@ -210,7 +210,7 @@ try {
                                     Expira: <?php echo formatear_fecha($sesion['fecha_expiracion']); ?>
                                 </div>
                             </div>
-                            <?php if ($auth->hasPermission('usuarios', 'actualizar') && $user_id != $current_user['id']): ?>
+                            <?php if ($auth->hasPermission('acc_usuarios', 'actualizar') && $user_id != $current_user['id']): ?>
                                 <button onclick="cerrarSesion(<?php echo $sesion['id']; ?>)" 
                                         class="btn-accion btn-desactivar" 
                                         style="margin-left: var(--space-sm);"
@@ -266,7 +266,7 @@ try {
     </div>
     
     <!-- Acciones -->
-    <?php if ($auth->hasPermission('usuarios', 'actualizar')): ?>
+    <?php if ($auth->hasPermission('acc_usuarios', 'actualizar')): ?>
         <div class="detail-actions" style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 2px solid var(--border-color); display: flex; gap: var(--space-md); justify-content: center;">
             <a href="usuario_editar.php?id=<?php echo $usuario['id']; ?>" class="btn btn-primary">
                 ✏️ Editar Usuario

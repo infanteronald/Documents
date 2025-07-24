@@ -87,7 +87,7 @@ class AuthMiddleware {
     /**
      * Requerir permiso específico
      */
-    public function requirePermission($module, $permission, $redirect_url = '/accesos/unauthorized.php') {
+    public function requirePermission($module, $permission, $redirect_url = '/pedidos/accesos/unauthorized.php') {
         $user = $this->requireAuth();
         
         if (!$this->hasPermission($module, $permission)) {
@@ -182,7 +182,7 @@ class AuthMiddleware {
         $this->registerSession($user_id, $remember_me);
         
         // Registrar auditoría
-        $this->registerAudit($user_id, 'login', 'usuarios', 'Usuario inició sesión');
+        $this->registerAudit($user_id, 'login', 'acc_usuarios', 'Usuario inició sesión');
         
         return true;
     }
@@ -199,7 +199,7 @@ class AuthMiddleware {
         
         if ($user_id) {
             // Registrar auditoría
-            $this->registerAudit($user_id, 'logout', 'usuarios', 'Usuario cerró sesión');
+            $this->registerAudit($user_id, 'logout', 'acc_usuarios', 'Usuario cerró sesión');
             
             // Desactivar sesión en base de datos
             $this->deactivateSession($user_id);
@@ -228,7 +228,7 @@ class AuthMiddleware {
             date('Y-m-d H:i:s', strtotime('+30 days')) : 
             date('Y-m-d H:i:s', strtotime('+8 hours'));
         
-        $query = "INSERT INTO sesiones (usuario_id, token, ip_address, user_agent, fecha_expiracion) 
+        $query = "INSERT INTO acc_sesiones (usuario_id, token, ip_address, user_agent, fecha_expiracion) 
                   VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('issss', $user_id, $token, $ip_address, $user_agent, $expiration);
@@ -244,7 +244,7 @@ class AuthMiddleware {
         $token = $_SESSION['session_token'] ?? '';
         
         if ($token) {
-            $query = "UPDATE sesiones SET activa = 0 WHERE usuario_id = ? AND token = ?";
+            $query = "UPDATE acc_sesiones SET activa = 0 WHERE usuario_id = ? AND token = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param('is', $user_id, $token);
             $stmt->execute();
@@ -264,7 +264,7 @@ class AuthMiddleware {
             return false;
         }
         
-        $query = "SELECT id FROM sesiones 
+        $query = "SELECT id FROM acc_sesiones 
                   WHERE usuario_id = ? AND token = ? AND activa = 1 AND fecha_expiracion > NOW()";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('is', $_SESSION['user_id'], $token);
@@ -300,7 +300,7 @@ class AuthMiddleware {
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         
-        $query = "INSERT INTO auditoria_accesos (usuario_id, accion, modulo, descripcion, ip_address, user_agent) 
+        $query = "INSERT INTO acc_auditoria_accesos (usuario_id, accion, modulo, descripcion, ip_address, user_agent) 
                   VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('isssss', $user_id, $action, $module, $description, $ip_address, $user_agent);
@@ -335,7 +335,7 @@ class AuthMiddleware {
         
         return [
             'user' => $user,
-            'roles' => $roles,
+            'acc_roles' => $roles,
             'permissions' => $permissions,
             'login_time' => $_SESSION['login_time'] ?? null,
             'last_activity' => $_SESSION['last_activity'] ?? null
@@ -371,10 +371,10 @@ class AuthMiddleware {
      * Limpiar sesiones expiradas
      */
     public function cleanExpiredSessions() {
-        $query = "UPDATE sesiones SET activa = 0 WHERE fecha_expiracion < NOW() AND activa = 1";
+        $query = "UPDATE acc_sesiones SET activa = 0 WHERE fecha_expiracion < NOW() AND activa = 1";
         $this->conn->query($query);
         
-        $query = "DELETE FROM sesiones WHERE fecha_expiracion < DATE_SUB(NOW(), INTERVAL 7 DAY)";
+        $query = "DELETE FROM acc_sesiones WHERE fecha_expiracion < DATE_SUB(NOW(), INTERVAL 7 DAY)";
         $this->conn->query($query);
     }
     
@@ -383,7 +383,7 @@ class AuthMiddleware {
      */
     public function getActiveSessions($user_id) {
         $query = "SELECT id, ip_address, user_agent, fecha_inicio, fecha_expiracion 
-                  FROM sesiones 
+                  FROM acc_sesiones 
                   WHERE usuario_id = ? AND activa = 1 AND fecha_expiracion > NOW()
                   ORDER BY fecha_inicio DESC";
         $stmt = $this->conn->prepare($query);
@@ -397,7 +397,7 @@ class AuthMiddleware {
      * Cerrar todas las sesiones de un usuario
      */
     public function logoutAllSessions($user_id) {
-        $query = "UPDATE sesiones SET activa = 0 WHERE usuario_id = ?";
+        $query = "UPDATE acc_sesiones SET activa = 0 WHERE usuario_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $user_id);
         return $stmt->execute();
@@ -417,13 +417,13 @@ class AuthMiddleware {
         $expires_db = date('Y-m-d H:i:s', $expires);
         
         // Eliminar tokens anteriores del usuario
-        $delete_query = "DELETE FROM remember_tokens WHERE usuario_id = ?";
+        $delete_query = "DELETE FROM acc_remember_tokens WHERE usuario_id = ?";
         $delete_stmt = $this->conn->prepare($delete_query);
         $delete_stmt->bind_param('i', $user_id);
         $delete_stmt->execute();
         
         // Insertar nuevo token en la base de datos
-        $insert_query = "INSERT INTO remember_tokens (usuario_id, selector, token_hash, fecha_expiracion) VALUES (?, ?, ?, ?)";
+        $insert_query = "INSERT INTO acc_remember_tokens (usuario_id, selector, token_hash, fecha_expiracion) VALUES (?, ?, ?, ?)";
         $insert_stmt = $this->conn->prepare($insert_query);
         $insert_stmt->bind_param('isss', $user_id, $selector, $token_hash, $expires_db);
         $insert_stmt->execute();
@@ -447,7 +447,7 @@ class AuthMiddleware {
         $token_hash = hash('sha256', $token);
         
         // Buscar token en la base de datos
-        $query = "SELECT usuario_id FROM remember_tokens 
+        $query = "SELECT usuario_id FROM acc_remember_tokens 
                   WHERE selector = ? AND token_hash = ? AND fecha_expiracion > NOW()";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('ss', $selector, $token_hash);
@@ -477,7 +477,7 @@ class AuthMiddleware {
                 $this->registerSession($user_id, true);
                 
                 // Registrar auditoría
-                $this->registerAudit($user_id, 'auto_login', 'usuarios', 'Usuario autenticado automáticamente por cookie');
+                $this->registerAudit($user_id, 'auto_login', 'acc_usuarios', 'Usuario autenticado automáticamente por cookie');
                 
                 return true;
             }
@@ -494,7 +494,7 @@ class AuthMiddleware {
      */
     private function removeRememberMeToken($user_id) {
         // Eliminar tokens de la base de datos
-        $query = "DELETE FROM remember_tokens WHERE usuario_id = ?";
+        $query = "DELETE FROM acc_remember_tokens WHERE usuario_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $user_id);
         $stmt->execute();
@@ -512,7 +512,7 @@ class AuthMiddleware {
      * Limpiar tokens expirados
      */
     public function cleanExpiredRememberTokens() {
-        $query = "DELETE FROM remember_tokens WHERE fecha_expiracion < NOW()";
+        $query = "DELETE FROM acc_remember_tokens WHERE fecha_expiracion < NOW()";
         $this->conn->query($query);
     }
 }

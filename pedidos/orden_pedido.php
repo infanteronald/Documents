@@ -138,6 +138,32 @@ while ($row = $res_cat->fetch_assoc()) {
             align-items: center;
             justify-content: center;
             gap: var(--spacing-sm);
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent-blue);
+            color: white;
+            text-decoration: none;
+            width: var(--touch-target);
+            height: var(--touch-target);
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-lg);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .back-btn:hover,
+        .back-btn:active {
+            background: var(--accent-blue-hover);
+            transform: translateY(-50%) scale(1.05);
         }
 
         .logo {
@@ -901,19 +927,52 @@ while ($row = $res_cat->fetch_assoc()) {
             .desktop-header {
                 display: flex !important;
                 align-items: center;
+                justify-content: space-between;
                 margin-bottom: 24px;
                 padding-bottom: 16px;
                 border-bottom: 1px solid var(--vscode-border);
             }
 
-            .desktop-header .logo {
+            .desktop-header-left,
+            .desktop-header-right {
+                flex: 0 0 200px;
+            }
+
+            .desktop-header-center {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex: 1;
+            }
+
+            .desktop-back-btn {
+                background: var(--apple-blue);
+                color: white;
+                text-decoration: none;
+                padding: 10px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .desktop-back-btn:hover {
+                background: var(--apple-blue-hover);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+            }
+
+            .desktop-header-center .logo {
                 height: 50px;
                 width: auto;
                 margin-right: 15px;
                 object-fit: contain;
             }
 
-            .desktop-header h1 {
+            .desktop-header-center h1 {
                 font-size: 2rem;
                 font-weight: 600;
                 margin: 0;
@@ -1179,6 +1238,9 @@ while ($row = $res_cat->fetch_assoc()) {
         <!-- Header -->
         <header class="mobile-header">
             <div class="header-content">
+                <a href="index.php" class="back-btn" title="Volver al inicio">
+                    🏠
+                </a>
                 <img src="logo.png" class="logo" alt="Sequoia Speed">
                 <h1 class="header-title">Crear Pedido</h1>
             </div>
@@ -1334,8 +1396,18 @@ while ($row = $res_cat->fetch_assoc()) {
     <!-- DESKTOP INTERFACE -->
     <div class="desktop-container" style="display: none;">
         <div class="desktop-header">
-            <img src="logo.png" class="logo" alt="Sequoia Speed">
-            <h1>Orden de Pedido Manual</h1>
+            <div class="desktop-header-left">
+                <a href="index.php" class="desktop-back-btn" title="Volver al inicio">
+                    🏠 Inicio
+                </a>
+            </div>
+            <div class="desktop-header-center">
+                <img src="logo.png" class="logo" alt="Sequoia Speed">
+                <h1>Orden de Pedido Manual</h1>
+            </div>
+            <div class="desktop-header-right">
+                <!-- Espacio para futuros botones -->
+            </div>
         </div>
 
         <div class="desktop-search">

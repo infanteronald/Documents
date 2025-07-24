@@ -15,7 +15,7 @@ class User {
      * Buscar usuario por email (solo activos)
      */
     public function findByEmail($email) {
-        $query = "SELECT * FROM usuarios WHERE email = ? AND activo = 1 LIMIT 1";
+        $query = "SELECT * FROM acc_usuarios WHERE email = ? AND activo = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('s', $email);
         $stmt->execute();
@@ -28,7 +28,7 @@ class User {
      * Buscar usuario por email (incluye inactivos)
      */
     public function findByEmailIncludingInactive($email) {
-        $query = "SELECT * FROM usuarios WHERE email = ? LIMIT 1";
+        $query = "SELECT * FROM acc_usuarios WHERE email = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('s', $email);
         $stmt->execute();
@@ -41,7 +41,7 @@ class User {
      * Buscar usuario por ID
      */
     public function findById($id) {
-        $query = "SELECT * FROM usuarios WHERE id = ? AND activo = 1 LIMIT 1";
+        $query = "SELECT * FROM acc_usuarios WHERE id = ? AND activo = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $id);
         $stmt->execute();
@@ -55,7 +55,7 @@ class User {
      * Usado para edición
      */
     public function findByIdForEdit($id) {
-        $query = "SELECT * FROM usuarios WHERE id = ? LIMIT 1";
+        $query = "SELECT * FROM acc_usuarios WHERE id = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $id);
         $stmt->execute();
@@ -68,7 +68,7 @@ class User {
      * Buscar usuario por nombre de usuario (solo activos)
      */
     public function findByUsername($username) {
-        $query = "SELECT * FROM usuarios WHERE usuario = ? AND activo = 1 LIMIT 1";
+        $query = "SELECT * FROM acc_usuarios WHERE usuario = ? AND activo = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('s', $username);
         $stmt->execute();
@@ -81,7 +81,7 @@ class User {
      * Buscar usuario por nombre de usuario (incluye inactivos)
      */
     public function findByUsernameIncludingInactive($username) {
-        $query = "SELECT * FROM usuarios WHERE usuario = ? LIMIT 1";
+        $query = "SELECT * FROM acc_usuarios WHERE usuario = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('s', $username);
         $stmt->execute();
@@ -134,7 +134,7 @@ class User {
             // Hash de la contraseña
             $password_hash = password_hash($data['password'], PASSWORD_DEFAULT);
             
-            $query = "INSERT INTO usuarios (nombre, usuario, email, password, activo, creado_por) 
+            $query = "INSERT INTO acc_usuarios (nombre, usuario, email, password, activo, creado_por) 
                       VALUES (?, ?, ?, ?, 1, ?)";
             $stmt = $this->conn->prepare($query);
             // Fix para PHP 8.2: bind_param requiere variables por referencia
@@ -232,7 +232,7 @@ class User {
             $values[] = $id;
             $types .= 'i';
             
-            $query = "UPDATE usuarios SET " . implode(', ', $fields) . " WHERE id = ?";
+            $query = "UPDATE acc_usuarios SET " . implode(', ', $fields) . " WHERE id = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param($types, ...$values);
             
@@ -260,7 +260,7 @@ class User {
      * Actualizar último acceso
      */
     public function updateLastAccess($id) {
-        $query = "UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?";
+        $query = "UPDATE acc_usuarios SET ultimo_acceso = NOW() WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $id);
         return $stmt->execute();
@@ -306,9 +306,9 @@ class User {
             u.ultimo_acceso,
             u.fecha_creacion,
             GROUP_CONCAT(r.nombre SEPARATOR ', ') as roles
-        FROM usuarios u
-        LEFT JOIN usuario_roles ur ON u.id = ur.usuario_id
-        LEFT JOIN roles r ON ur.rol_id = r.id
+        FROM acc_usuarios u
+        LEFT JOIN acc_usuario_roles ur ON u.id = ur.usuario_id
+        LEFT JOIN acc_roles r ON ur.rol_id = r.id
         $where_clause
         GROUP BY u.id
         ORDER BY u.fecha_creacion DESC
@@ -360,9 +360,9 @@ class User {
         $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
         
         $query = "SELECT COUNT(DISTINCT u.id) as total
-        FROM usuarios u
-        LEFT JOIN usuario_roles ur ON u.id = ur.usuario_id
-        LEFT JOIN roles r ON ur.rol_id = r.id
+        FROM acc_usuarios u
+        LEFT JOIN acc_usuario_roles ur ON u.id = ur.usuario_id
+        LEFT JOIN acc_roles r ON ur.rol_id = r.id
         $where_clause";
         
         $stmt = $this->conn->prepare($query);
@@ -379,8 +379,8 @@ class User {
      */
     public function getUserRoles($user_id) {
         $query = "SELECT r.id, r.nombre, r.descripcion
-        FROM roles r
-        INNER JOIN usuario_roles ur ON r.id = ur.rol_id
+        FROM acc_roles r
+        INNER JOIN acc_usuario_roles ur ON r.id = ur.rol_id
         WHERE ur.usuario_id = ? AND r.activo = 1";
         
         $stmt = $this->conn->prepare($query);
@@ -394,7 +394,7 @@ class User {
      * Asignar rol a usuario
      */
     public function assignRole($user_id, $role_id, $assigned_by = null) {
-        $query = "INSERT INTO usuario_roles (usuario_id, rol_id, asignado_por) 
+        $query = "INSERT INTO acc_usuario_roles (usuario_id, rol_id, asignado_por) 
                   VALUES (?, ?, ?)
                   ON DUPLICATE KEY UPDATE asignado_por = VALUES(asignado_por)";
         $stmt = $this->conn->prepare($query);
@@ -406,7 +406,7 @@ class User {
      * Remover rol de usuario
      */
     public function removeRole($user_id, $role_id) {
-        $query = "DELETE FROM usuario_roles WHERE usuario_id = ? AND rol_id = ?";
+        $query = "DELETE FROM acc_usuario_roles WHERE usuario_id = ? AND rol_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('ii', $user_id, $role_id);
         return $stmt->execute();
@@ -420,9 +420,9 @@ class User {
             m.nombre as modulo,
             p.tipo_permiso,
             p.descripcion
-        FROM vista_permisos_usuario vpu
-        INNER JOIN modulos m ON vpu.modulo = m.nombre
-        INNER JOIN permisos p ON m.id = p.modulo_id AND vpu.tipo_permiso = p.tipo_permiso
+        FROM acc_vista_permisos_usuario vpu
+        INNER JOIN acc_modulos m ON vpu.modulo = m.nombre
+        INNER JOIN acc_permisos p ON m.id = p.modulo_id AND vpu.tipo_permiso = p.tipo_permiso
         WHERE vpu.usuario_id = ?
         ORDER BY m.nombre, p.tipo_permiso";
         
@@ -438,7 +438,7 @@ class User {
      */
     public function hasPermission($user_id, $module, $permission) {
         $query = "SELECT COUNT(*) as count
-        FROM vista_permisos_usuario
+        FROM acc_vista_permisos_usuario
         WHERE usuario_id = ? AND modulo = ? AND tipo_permiso = ?";
         
         $stmt = $this->conn->prepare($query);
@@ -477,14 +477,14 @@ class User {
             $this->conn->begin_transaction();
             
             // Eliminar roles actuales del usuario
-            $query = "DELETE FROM usuario_roles WHERE usuario_id = ?";
+            $query = "DELETE FROM acc_usuario_roles WHERE usuario_id = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param('i', $user_id);
             $stmt->execute();
             
             // Agregar nuevos roles
             if (!empty($role_ids) && is_array($role_ids)) {
-                $query = "INSERT INTO usuario_roles (usuario_id, rol_id, asignado_por) VALUES (?, ?, ?)";
+                $query = "INSERT INTO acc_usuario_roles (usuario_id, rol_id, asignado_por) VALUES (?, ?, ?)";
                 $stmt = $this->conn->prepare($query);
                 
                 foreach ($role_ids as $role_id) {

@@ -23,8 +23,8 @@ class Permission {
             m.id as modulo_id,
             m.nombre as modulo_nombre,
             m.descripcion as modulo_descripcion
-        FROM permisos p
-        INNER JOIN modulos m ON p.modulo_id = m.id
+        FROM acc_permisos p
+        INNER JOIN acc_modulos m ON p.modulo_id = m.id
         WHERE p.activo = 1 AND m.activo = 1
         ORDER BY m.nombre, 
             CASE p.tipo_permiso 
@@ -53,11 +53,11 @@ class Permission {
                     'modulo_id' => $permission['modulo_id'],
                     'modulo_nombre' => $permission['modulo_nombre'],
                     'modulo_descripcion' => $permission['modulo_descripcion'],
-                    'permisos' => []
+                    'acc_permisos' => []
                 ];
             }
             
-            $grouped[$module]['permisos'][] = [
+            $grouped[$module]['acc_permisos'][] = [
                 'id' => $permission['id'],
                 'tipo_permiso' => $permission['tipo_permiso'],
                 'descripcion' => $permission['descripcion'],
@@ -80,8 +80,8 @@ class Permission {
             m.id as modulo_id,
             m.nombre as modulo_nombre,
             m.descripcion as modulo_descripcion
-        FROM permisos p
-        INNER JOIN modulos m ON p.modulo_id = m.id
+        FROM acc_permisos p
+        INNER JOIN acc_modulos m ON p.modulo_id = m.id
         WHERE p.id = ? AND p.activo = 1 LIMIT 1";
         
         $stmt = $this->conn->prepare($query);
@@ -96,7 +96,7 @@ class Permission {
      * Buscar permiso por módulo y tipo
      */
     public function findByModuleAndType($module_id, $tipo_permiso) {
-        $query = "SELECT * FROM permisos 
+        $query = "SELECT * FROM acc_permisos 
                   WHERE modulo_id = ? AND tipo_permiso = ? AND activo = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('is', $module_id, $tipo_permiso);
@@ -116,8 +116,8 @@ class Permission {
             p.descripcion,
             p.activo,
             m.nombre as modulo_nombre
-        FROM permisos p
-        INNER JOIN modulos m ON p.modulo_id = m.id
+        FROM acc_permisos p
+        INNER JOIN acc_modulos m ON p.modulo_id = m.id
         WHERE p.modulo_id = ? AND p.activo = 1
         ORDER BY 
             CASE p.tipo_permiso 
@@ -147,7 +147,7 @@ class Permission {
                 throw new Exception('Ya existe un permiso de este tipo para el módulo');
             }
             
-            $query = "INSERT INTO permisos (modulo_id, tipo_permiso, descripcion, activo) 
+            $query = "INSERT INTO acc_permisos (modulo_id, tipo_permiso, descripcion, activo) 
                       VALUES (?, ?, ?, 1)";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param('iss', 
@@ -198,7 +198,7 @@ class Permission {
         $values[] = $id;
         $types .= 'i';
         
-        $query = "UPDATE permisos SET " . implode(', ', $fields) . " WHERE id = ?";
+        $query = "UPDATE acc_permisos SET " . implode(', ', $fields) . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param($types, ...$values);
         
@@ -218,8 +218,8 @@ class Permission {
             r.nombre,
             r.descripcion,
             rp.fecha_asignacion
-        FROM roles r
-        INNER JOIN rol_permisos rp ON r.id = rp.rol_id
+        FROM acc_roles r
+        INNER JOIN acc_rol_permisos rp ON r.id = rp.rol_id
         WHERE rp.permiso_id = ? AND r.activo = 1
         ORDER BY r.nombre";
         
@@ -239,9 +239,9 @@ class Permission {
             m.descripcion as modulo_descripcion,
             COUNT(p.id) as total_permisos,
             COUNT(DISTINCT rp.rol_id) as roles_con_permisos
-        FROM modulos m
-        LEFT JOIN permisos p ON m.id = p.modulo_id AND p.activo = 1
-        LEFT JOIN rol_permisos rp ON p.id = rp.permiso_id
+        FROM acc_modulos m
+        LEFT JOIN acc_permisos p ON m.id = p.modulo_id AND p.activo = 1
+        LEFT JOIN acc_rol_permisos rp ON p.id = rp.permiso_id
         WHERE m.activo = 1
         GROUP BY m.id
         ORDER BY m.nombre";
@@ -255,7 +255,7 @@ class Permission {
      */
     public function canDelete($permission_id) {
         // Verificar si hay roles asignados
-        $query = "SELECT COUNT(*) as count FROM rol_permisos WHERE permiso_id = ?";
+        $query = "SELECT COUNT(*) as count FROM acc_rol_permisos WHERE permiso_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $permission_id);
         $stmt->execute();
@@ -331,7 +331,7 @@ class Permission {
         
         if ($role_id) {
             // Obtener permisos del rol
-            $query = "SELECT permiso_id FROM rol_permisos WHERE rol_id = ?";
+            $query = "SELECT permiso_id FROM acc_rol_permisos WHERE rol_id = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param('i', $role_id);
             $stmt->execute();
@@ -344,7 +344,7 @@ class Permission {
             
             // Marcar permisos asignados
             foreach ($permissions as $module => &$module_data) {
-                foreach ($module_data['permisos'] as &$permiso) {
+                foreach ($module_data['acc_permisos'] as &$permiso) {
                     $permiso['assigned'] = in_array($permiso['id'], $role_permissions);
                 }
             }

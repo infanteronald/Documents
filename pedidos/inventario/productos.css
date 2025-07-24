@@ -163,6 +163,18 @@ body {
     background: var(--bg-hover);
 }
 
+.btn-qr {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border-color: #6366f1;
+    font-weight: 600;
+}
+
+.btn-qr:hover {
+    background: linear-gradient(135deg, #5b5bf6, #7c3aed);
+    border-color: #5b5bf6;
+}
+
 .btn-filter {
     background: var(--color-info);
     color: white;
@@ -537,6 +549,17 @@ body {
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: white;
+}
+
+.btn-accion.btn-qr {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-color: #6366f1;
+    color: white;
+}
+
+.btn-accion.btn-qr:hover {
+    background: linear-gradient(135deg, #5b5bf6, #7c3aed);
+    border-color: #5b5bf6;
 }
 
 /* Estado vacío */

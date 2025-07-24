@@ -29,7 +29,7 @@ $stats_query = "SELECT
     COUNT(*) as total_roles,
     SUM(CASE WHEN activo = 1 THEN 1 ELSE 0 END) as activos,
     SUM(CASE WHEN activo = 0 THEN 1 ELSE 0 END) as inactivos
-FROM roles";
+FROM acc_roles";
 
 $stats_result = $conn->query($stats_query);
 $estadisticas = $stats_result->fetch_assoc();
@@ -95,7 +95,7 @@ function formatear_fecha($fecha) {
                     </div>
                 </div>
                 <div class="header-actions">
-                    <?php if ($auth->hasPermission('usuarios', 'crear')): ?>
+                    <?php if ($auth->hasPermission('acc_usuarios', 'crear')): ?>
                         <a href="rol_crear.php" class="btn btn-primary">
                             ➕ Nuevo Rol
                         </a>
@@ -169,7 +169,7 @@ function formatear_fecha($fecha) {
                         <div class="empty-subtitle">
                             Crea el primer rol para comenzar
                         </div>
-                        <?php if ($auth->hasPermission('usuarios', 'crear')): ?>
+                        <?php if ($auth->hasPermission('acc_usuarios', 'crear')): ?>
                             <a href="rol_crear.php" class="btn btn-primary">
                                 ➕ Crear Primer Rol
                             </a>
@@ -259,7 +259,7 @@ function formatear_fecha($fecha) {
                                                 👁️
                                             </button>
                                             
-                                            <?php if ($auth->hasPermission('usuarios', 'actualizar')): ?>
+                                            <?php if ($auth->hasPermission('acc_usuarios', 'actualizar')): ?>
                                                 <a href="rol_editar.php?id=<?php echo $role['id']; ?>" 
                                                    class="btn-accion btn-editar" 
                                                    title="Editar rol">
@@ -267,7 +267,7 @@ function formatear_fecha($fecha) {
                                                 </a>
                                             <?php endif; ?>
                                             
-                                            <?php if ($auth->hasPermission('usuarios', 'actualizar')): ?>
+                                            <?php if ($auth->hasPermission('acc_usuarios', 'actualizar')): ?>
                                                 <a href="rol_permisos.php?id=<?php echo $role['id']; ?>" 
                                                    class="btn-accion btn-info" 
                                                    title="Gestionar permisos">
@@ -275,7 +275,7 @@ function formatear_fecha($fecha) {
                                                 </a>
                                             <?php endif; ?>
                                             
-                                            <?php if ($auth->hasPermission('usuarios', 'actualizar')): ?>
+                                            <?php if ($auth->hasPermission('acc_usuarios', 'actualizar')): ?>
                                                 <?php if ($role['activo']): ?>
                                                     <button onclick="toggleRolEstado(<?php echo $role['id']; ?>, 'desactivar')" 
                                                             class="btn-accion btn-desactivar" 
@@ -390,7 +390,7 @@ function formatear_fecha($fecha) {
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'n') {
                 e.preventDefault();
-                <?php if ($auth->hasPermission('usuarios', 'crear')): ?>
+                <?php if ($auth->hasPermission('acc_usuarios', 'crear')): ?>
                     window.location.href = 'rol_crear.php';
                 <?php endif; ?>
             }

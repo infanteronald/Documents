@@ -69,7 +69,7 @@ try {
     
     if ($result) {
         // Registrar auditoría
-        $auth->logActivity('update', 'usuarios', $descripcion);
+        $auth->logActivity('update', 'acc_usuarios', $descripcion);
         
         echo json_encode([
             'success' => true,

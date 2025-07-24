@@ -15,7 +15,7 @@ require_once 'models/User.php';
 require_once 'models/Role.php';
 
 $auth = new AuthMiddleware($conn);
-$current_user = $auth->requirePermission('usuarios', 'actualizar', '/accesos/unauthorized.php');
+$current_user = $auth->requirePermission('usuarios', 'actualizar', '/pedidos/accesos/unauthorized.php');
 
 $userModel = new User($conn);
 $roleModel = new Role($conn);
@@ -35,9 +35,9 @@ if (!$usuario) {
     exit;
 }
 
-// Obtener roles del usuario
+// Obtener rol del usuario (solo uno)
 $usuario_roles = $userModel->getUserRoles($user_id);
-$roles_ids = array_column($usuario_roles, 'rol_id');
+$rol_actual = !empty($usuario_roles) ? $usuario_roles[0]['id'] : '';
 
 // Obtener todos los roles disponibles
 $roles = $roleModel->getAllRoles();
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario_login = trim($_POST['usuario'] ?? '');
     $password = $_POST['password'] ?? '';
     $activo = isset($_POST['activo']) ? 1 : 0;
-    $roles_seleccionados = $_POST['roles'] ?? [];
+    $roles_seleccionados = $_POST['acc_roles'] ?? '';
     
     $errors = [];
     
@@ -112,13 +112,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Actualizar usuario
             if ($userModel->update($user_id, $data)) {
-                // Actualizar roles
-                $userModel->syncRoles($user_id, $roles_seleccionados);
+                // Actualizar rol (eliminar actual y asignar nuevo)
+                if (!empty($roles_seleccionados)) {
+                    // Primero eliminar rol actual si existe
+                    if ($rol_actual) {
+                        $userModel->removeRole($user_id, $rol_actual);
+                    }
+                    // Asignar nuevo rol
+                    $userModel->assignRole($user_id, $roles_seleccionados, $current_user['id']);
+                }
                 
                 // Registrar en auditoría
                 $auth->logActivity(
                     'update',
-                    'usuarios',
+                    'acc_usuarios',
                     "Usuario actualizado: {$nombre} (ID: {$user_id})"
                 );
                 
@@ -201,40 +208,7 @@ $csrf_token = $auth->generateCSRF();
             cursor: pointer;
         }
         
-        .roles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-top: 0.5rem;
-        }
-        
-        .role-item {
-            background: var(--bg-primary);
-            padding: 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-        
-        .role-item:hover {
-            border-color: var(--color-primary);
-        }
-        
-        .role-item.selected {
-            border-color: var(--color-primary);
-            background: rgba(88, 166, 255, 0.1);
-        }
-        
-        .role-name {
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-        
-        .role-description {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
+        /* CSS simplificado ya que ahora usamos select simple */
         
         .form-actions {
             display: flex;
@@ -363,24 +337,17 @@ $csrf_token = $auth->generateCSRF();
                     </div>
                     
                     <div class="form-group">
-                        <label>Roles asignados</label>
-                        <div class="roles-grid">
+                        <label for="acc_roles">Rol asignado</label>
+                        <select id="acc_roles" name="acc_roles" style="width: 100%; padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 1rem;">
+                            <option value="">Sin rol asignado</option>
                             <?php foreach ($roles as $role): ?>
-                                <div class="role-item <?php echo in_array($role['id'], $roles_ids) ? 'selected' : ''; ?>">
-                                    <div class="checkbox-group">
-                                        <input type="checkbox" 
-                                               id="role_<?php echo $role['id']; ?>" 
-                                               name="roles[]" 
-                                               value="<?php echo $role['id']; ?>"
-                                               <?php echo in_array($role['id'], $roles_ids) ? 'checked' : ''; ?>>
-                                        <label for="role_<?php echo $role['id']; ?>" style="cursor: pointer;">
-                                            <div class="role-name"><?php echo htmlspecialchars($role['nombre']); ?></div>
-                                            <div class="role-description"><?php echo htmlspecialchars($role['descripcion']); ?></div>
-                                        </label>
-                                    </div>
-                                </div>
+                                <option value="<?php echo $role['id']; ?>"
+                                        <?php echo ($rol_actual == $role['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($role['nombre']); ?> - <?php echo htmlspecialchars($role['descripcion']); ?>
+                                </option>
                             <?php endforeach; ?>
-                        </div>
+                        </select>
+                        <small>Cada usuario puede tener únicamente un rol asignado</small>
                     </div>
                     
                     <div class="form-actions">
@@ -397,18 +364,6 @@ $csrf_token = $auth->generateCSRF();
     </div>
 
     <script>
-        // Marcar visualmente los roles seleccionados
-        document.querySelectorAll('.role-item input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const roleItem = this.closest('.role-item');
-                if (this.checked) {
-                    roleItem.classList.add('selected');
-                } else {
-                    roleItem.classList.remove('selected');
-                }
-            });
-        });
-
         // Confirmación antes de guardar
         document.querySelector('form').addEventListener('submit', function(e) {
             const password = document.getElementById('password').value;

@@ -80,8 +80,8 @@ $query = "SELECT
     aa.*,
     u.nombre as usuario_nombre,
     u.email as usuario_email
-FROM auditoria_accesos aa
-INNER JOIN usuarios u ON aa.usuario_id = u.id
+FROM acc_auditoria_accesos aa
+INNER JOIN acc_usuarios u ON aa.usuario_id = u.id
 $where_clause
 ORDER BY aa.fecha_accion DESC
 LIMIT ? OFFSET ?";
@@ -100,8 +100,8 @@ $actividades = $result->fetch_all(MYSQLI_ASSOC);
 
 // Consulta para contar total de actividades
 $count_query = "SELECT COUNT(*) as total 
-FROM auditoria_accesos aa
-INNER JOIN usuarios u ON aa.usuario_id = u.id
+FROM acc_auditoria_accesos aa
+INNER JOIN acc_usuarios u ON aa.usuario_id = u.id
 $where_clause";
 
 $count_stmt = $conn->prepare($count_query);
@@ -126,8 +126,8 @@ $stats_query = "SELECT
     COUNT(CASE WHEN DATE(fecha_accion) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as semana,
     COUNT(CASE WHEN accion = 'login' THEN 1 END) as logins,
     COUNT(CASE WHEN accion = 'login_failed' THEN 1 END) as login_fallidos
-FROM auditoria_accesos aa
-INNER JOIN usuarios u ON aa.usuario_id = u.id
+FROM acc_auditoria_accesos aa
+INNER JOIN acc_usuarios u ON aa.usuario_id = u.id
 $where_clause";
 
 $stats_stmt = $conn->prepare($stats_query);
@@ -139,17 +139,17 @@ $estadisticas = $stats_stmt->get_result()->fetch_assoc();
 
 // Obtener usuarios para filtro
 $usuarios_query = "SELECT DISTINCT u.id, u.nombre, u.email 
-FROM usuarios u 
-INNER JOIN auditoria_accesos aa ON u.id = aa.usuario_id 
+FROM acc_usuarios u 
+INNER JOIN acc_auditoria_accesos aa ON u.id = aa.usuario_id 
 ORDER BY u.nombre LIMIT 50";
 $usuarios = $conn->query($usuarios_query)->fetch_all(MYSQLI_ASSOC);
 
 // Obtener acciones para filtro
-$acciones_query = "SELECT DISTINCT accion FROM auditoria_accesos ORDER BY accion";
+$acciones_query = "SELECT DISTINCT accion FROM acc_auditoria_accesos ORDER BY accion";
 $acciones = $conn->query($acciones_query)->fetch_all(MYSQLI_ASSOC);
 
 // Obtener módulos para filtro
-$modulos_query = "SELECT DISTINCT modulo FROM auditoria_accesos ORDER BY modulo";
+$modulos_query = "SELECT DISTINCT modulo FROM acc_auditoria_accesos ORDER BY modulo";
 $modulos = $conn->query($modulos_query)->fetch_all(MYSQLI_ASSOC);
 
 // Función para formatear fecha
@@ -177,7 +177,7 @@ function formatear_accion($accion) {
 // Función para formatear módulo
 function formatear_modulo($modulo) {
     $modulos = [
-        'usuarios' => ['👥', 'Usuarios', 'primary'],
+        'acc_usuarios' => ['👥', 'Usuarios', 'primary'],
         'ventas' => ['🛒', 'Ventas', 'success'],
         'inventario' => ['📦', 'Inventario', 'info'],
         'reportes' => ['📊', 'Reportes', 'warning'],

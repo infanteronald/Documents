@@ -41,7 +41,7 @@ function get_module_icon($module_name) {
     $icons = [
         'ventas' => '🛒',
         'inventario' => '📦',
-        'usuarios' => '👥',
+        'acc_usuarios' => '👥',
         'reportes' => '📊',
         'configuracion' => '⚙️'
     ];
@@ -148,7 +148,7 @@ function get_module_icon($module_name) {
                     </div>
                     
                     <div class="permissions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
-                        <?php foreach ($modulo_data['permisos'] as $permiso): ?>
+                        <?php foreach ($modulo_data['acc_permisos'] as $permiso): ?>
                             <?php $permiso_info = $permission_model->formatPermissionType($permiso['tipo_permiso']); ?>
                             <div class="permission-card" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: var(--space-md); position: relative;">
                                 <div class="permission-header" style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);">

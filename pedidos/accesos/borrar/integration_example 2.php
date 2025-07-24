@@ -119,7 +119,7 @@ if ($current_user) {
 
 /*
 // Al inicio del archivo listar_pedidos.php
-require_once 'accesos/auth_helper.php';
+require_once '/pedidos/accesos/auth_helper.php';
 
 // Proteger la página
 $current_user = auth_require('ventas', 'leer');

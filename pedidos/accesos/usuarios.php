@@ -47,7 +47,7 @@ $stats_query = "SELECT
     SUM(CASE WHEN activo = 0 THEN 1 ELSE 0 END) as inactivos,
     SUM(CASE WHEN ultimo_acceso >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as activos_semana,
     SUM(CASE WHEN fecha_creacion >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as nuevos_mes
-FROM usuarios";
+FROM acc_usuarios";
 
 $stats_result = $conn->query($stats_query);
 $estadisticas = $stats_result->fetch_assoc();
@@ -101,7 +101,7 @@ function tiempo_relativo($fecha) {
                     </div>
                 </div>
                 <div class="header-actions">
-                    <?php if ($auth->hasPermission('usuarios', 'crear')): ?>
+                    <?php if ($auth->hasPermission('acc_usuarios', 'crear')): ?>
                         <a href="usuario_crear.php" class="btn btn-primary">
                             ➕ Nuevo Usuario
                         </a>
@@ -206,7 +206,7 @@ function tiempo_relativo($fecha) {
                         <div class="empty-subtitle">
                             No hay usuarios para los filtros seleccionados
                         </div>
-                        <?php if ($auth->hasPermission('usuarios', 'crear')): ?>
+                        <?php if ($auth->hasPermission('acc_usuarios', 'crear')): ?>
                             <a href="usuario_crear.php" class="btn btn-primary">
                                 ➕ Crear Primer Usuario
                             </a>
@@ -281,7 +281,7 @@ function tiempo_relativo($fecha) {
                                                 👁️
                                             </button>
                                             
-                                            <?php if ($auth->hasPermission('usuarios', 'actualizar')): ?>
+                                            <?php if ($auth->hasPermission('acc_usuarios', 'actualizar')): ?>
                                                 <a href="usuario_editar.php?id=<?php echo $usuario['id']; ?>" 
                                                    class="btn-accion btn-editar" 
                                                    title="Editar usuario">
@@ -289,7 +289,7 @@ function tiempo_relativo($fecha) {
                                                 </a>
                                             <?php endif; ?>
                                             
-                                            <?php if ($auth->hasPermission('usuarios', 'actualizar') && $usuario['id'] != $current_user['id']): ?>
+                                            <?php if ($auth->hasPermission('acc_usuarios', 'actualizar') && $usuario['id'] != $current_user['id']): ?>
                                                 <?php if ($usuario['activo']): ?>
                                                     <button onclick="toggleUsuarioEstado(<?php echo $usuario['id']; ?>, 'desactivar')" 
                                                             class="btn-accion btn-desactivar" 
@@ -434,7 +434,7 @@ function tiempo_relativo($fecha) {
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'n') {
                 e.preventDefault();
-                <?php if ($auth->hasPermission('usuarios', 'crear')): ?>
+                <?php if ($auth->hasPermission('acc_usuarios', 'crear')): ?>
                     window.location.href = 'usuario_crear.php';
                 <?php endif; ?>
             }

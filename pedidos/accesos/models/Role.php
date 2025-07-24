@@ -15,7 +15,7 @@ class Role {
      * Obtener todos los roles activos
      */
     public function getAllRoles() {
-        $query = "SELECT * FROM roles WHERE activo = 1 ORDER BY 
+        $query = "SELECT * FROM acc_roles WHERE activo = 1 ORDER BY 
             CASE nombre 
                 WHEN 'super_admin' THEN 1 
                 WHEN 'admin' THEN 2 
@@ -34,7 +34,7 @@ class Role {
      * Buscar rol por ID
      */
     public function findById($id) {
-        $query = "SELECT * FROM roles WHERE id = ? AND activo = 1 LIMIT 1";
+        $query = "SELECT * FROM acc_roles WHERE id = ? AND activo = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $id);
         $stmt->execute();
@@ -47,7 +47,7 @@ class Role {
      * Buscar rol por nombre
      */
     public function findByName($name) {
-        $query = "SELECT * FROM roles WHERE nombre = ? AND activo = 1 LIMIT 1";
+        $query = "SELECT * FROM acc_roles WHERE nombre = ? AND activo = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('s', $name);
         $stmt->execute();
@@ -68,7 +68,7 @@ class Role {
                 throw new Exception('Ya existe un rol con ese nombre');
             }
             
-            $query = "INSERT INTO roles (nombre, descripcion, activo, creado_por) 
+            $query = "INSERT INTO acc_roles (nombre, descripcion, activo, creado_por) 
                       VALUES (?, ?, 1, ?)";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param('ssi', 
@@ -84,8 +84,8 @@ class Role {
             $rol_id = $this->conn->insert_id;
             
             // Asignar permisos si se especifican
-            if (!empty($data['permisos'])) {
-                foreach ($data['permisos'] as $permiso_id) {
+            if (!empty($data['acc_permisos'])) {
+                foreach ($data['acc_permisos'] as $permiso_id) {
                     $this->assignPermission($rol_id, $permiso_id, $data['creado_por'] ?? null);
                 }
             }
@@ -146,7 +146,7 @@ class Role {
             $values[] = $id;
             $types .= 'i';
             
-            $query = "UPDATE roles SET " . implode(', ', $fields) . " WHERE id = ?";
+            $query = "UPDATE acc_roles SET " . implode(', ', $fields) . " WHERE id = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param($types, ...$values);
             
@@ -173,9 +173,9 @@ class Role {
             p.descripcion,
             m.nombre as modulo_nombre,
             m.descripcion as modulo_descripcion
-        FROM permisos p
-        INNER JOIN rol_permisos rp ON p.id = rp.permiso_id
-        INNER JOIN modulos m ON p.modulo_id = m.id
+        FROM acc_permisos p
+        INNER JOIN acc_rol_permisos rp ON p.id = rp.permiso_id
+        INNER JOIN acc_modulos m ON p.modulo_id = m.id
         WHERE rp.rol_id = ? AND p.activo = 1 AND m.activo = 1
         ORDER BY m.nombre, p.tipo_permiso";
         
@@ -190,7 +190,7 @@ class Role {
      * Asignar permiso a rol
      */
     public function assignPermission($role_id, $permission_id, $assigned_by = null) {
-        $query = "INSERT INTO rol_permisos (rol_id, permiso_id, asignado_por) 
+        $query = "INSERT INTO acc_rol_permisos (rol_id, permiso_id, asignado_por) 
                   VALUES (?, ?, ?)
                   ON DUPLICATE KEY UPDATE asignado_por = VALUES(asignado_por)";
         $stmt = $this->conn->prepare($query);
@@ -202,7 +202,7 @@ class Role {
      * Remover permiso de rol
      */
     public function removePermission($role_id, $permission_id) {
-        $query = "DELETE FROM rol_permisos WHERE rol_id = ? AND permiso_id = ?";
+        $query = "DELETE FROM acc_rol_permisos WHERE rol_id = ? AND permiso_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('ii', $role_id, $permission_id);
         return $stmt->execute();
@@ -219,8 +219,8 @@ class Role {
             u.activo,
             u.ultimo_acceso,
             ur.fecha_asignacion
-        FROM usuarios u
-        INNER JOIN usuario_roles ur ON u.id = ur.usuario_id
+        FROM acc_usuarios u
+        INNER JOIN acc_usuario_roles ur ON u.id = ur.usuario_id
         WHERE ur.rol_id = ? AND u.activo = 1
         ORDER BY u.nombre";
         
@@ -243,9 +243,9 @@ class Role {
             r.fecha_creacion,
             COUNT(DISTINCT ur.usuario_id) as total_usuarios,
             COUNT(DISTINCT rp.permiso_id) as total_permisos
-        FROM roles r
-        LEFT JOIN usuario_roles ur ON r.id = ur.rol_id
-        LEFT JOIN rol_permisos rp ON r.id = rp.rol_id
+        FROM acc_roles r
+        LEFT JOIN acc_usuario_roles ur ON r.id = ur.rol_id
+        LEFT JOIN acc_rol_permisos rp ON r.id = rp.rol_id
         WHERE r.activo = 1
         GROUP BY r.id
         ORDER BY 
@@ -271,7 +271,7 @@ class Role {
             $this->conn->begin_transaction();
             
             // Eliminar permisos actuales
-            $query = "DELETE FROM rol_permisos WHERE rol_id = ?";
+            $query = "DELETE FROM acc_rol_permisos WHERE rol_id = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param('i', $role_id);
             $stmt->execute();
@@ -297,9 +297,9 @@ class Role {
      */
     public function hasPermission($role_id, $module, $permission) {
         $query = "SELECT COUNT(*) as count
-        FROM rol_permisos rp
-        INNER JOIN permisos p ON rp.permiso_id = p.id
-        INNER JOIN modulos m ON p.modulo_id = m.id
+        FROM acc_rol_permisos rp
+        INNER JOIN acc_permisos p ON rp.permiso_id = p.id
+        INNER JOIN acc_modulos m ON p.modulo_id = m.id
         WHERE rp.rol_id = ? AND m.nombre = ? AND p.tipo_permiso = ?";
         
         $stmt = $this->conn->prepare($query);
@@ -335,7 +335,7 @@ class Role {
      */
     public function canDelete($role_id) {
         // Verificar si hay usuarios asignados
-        $query = "SELECT COUNT(*) as count FROM usuario_roles WHERE rol_id = ?";
+        $query = "SELECT COUNT(*) as count FROM acc_usuario_roles WHERE rol_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param('i', $role_id);
         $stmt->execute();

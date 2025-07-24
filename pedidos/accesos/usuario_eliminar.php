@@ -9,7 +9,7 @@ require_once 'middleware/AuthMiddleware.php';
 require_once 'models/User.php';
 
 $auth = new AuthMiddleware($conn);
-$current_user = $auth->requirePermission('usuarios', 'eliminar', '/accesos/unauthorized.php');
+$current_user = $auth->requirePermission('usuarios', 'eliminar', '/pedidos/accesos/unauthorized.php');
 
 $userModel = new User($conn);
 
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Registrar en auditoría
                 $auth->logActivity(
                     'delete',
-                    'usuarios',
+                    'acc_usuarios',
                     "Usuario eliminado: {$usuario['nombre']} ({$usuario['email']})"
                 );
                 

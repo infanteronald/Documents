@@ -19,7 +19,7 @@ try {
     $current_user = $auth->requirePermission('usuarios', 'crear');
 } catch (Exception $e) {
     // Si hay error de permisos, redirigir
-    header('Location: unauthorized.php');
+    header('Location: /pedidos/accesos/unauthorized.php');
     exit;
 }
 
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'usuario' => trim($_POST['usuario'] ?? ''),
         'password' => $_POST['password'] ?? '',
         'password_confirm' => $_POST['password_confirm'] ?? '',
-        'roles' => $_POST['roles'] ?? [],
+        'acc_roles' => $_POST['acc_roles'] ?? '',
         'activo' => isset($_POST['activo']) ? 1 : 0,
         'creado_por' => $current_user['id']
     ];
@@ -103,15 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errores[] = 'Las contraseñas no coinciden';
     }
 
-    if (empty($datos_formulario['roles'])) {
-        $errores[] = 'Debe seleccionar al menos un rol';
+    if (empty($datos_formulario['acc_roles'])) {
+        $errores[] = 'Debe seleccionar un rol';
     } else {
-        // Verificar que los roles existen
-        foreach ($datos_formulario['roles'] as $rol_id) {
-            if (!$role_model->findById($rol_id)) {
-                $errores[] = 'Uno o más roles seleccionados no son válidos';
-                break;
-            }
+        // Verificar que el rol existe
+        if (!$role_model->findById($datos_formulario['acc_roles'])) {
+            $errores[] = 'El rol seleccionado no es válido';
         }
     }
 
@@ -120,13 +117,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $usuario_id = $user_model->create($datos_formulario);
             
-            // Asignar roles adicionales
-            foreach ($datos_formulario['roles'] as $rol_id) {
-                $user_model->assignRole($usuario_id, $rol_id, $current_user['id']);
-            }
+            // Asignar rol seleccionado
+            $user_model->assignRole($usuario_id, $datos_formulario['acc_roles'], $current_user['id']);
 
             // Registrar auditoría
-            $auth->logActivity('create', 'usuarios', 'Usuario creado: ' . $datos_formulario['email']);
+            $auth->logActivity('create', 'acc_usuarios', 'Usuario creado: ' . $datos_formulario['email']);
 
             $_SESSION['mensaje_exito'] = 'Usuario creado exitosamente';
             header('Location: usuarios.php');
@@ -272,30 +267,27 @@ $csrf_token = $auth->generateCSRF();
 
                 <div class="form-section" style="margin-top: var(--space-xl);">
                     <h3 style="color: var(--text-primary); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 2px solid var(--border-color);">
-                        🎭 Roles y Permisos
+                        🎭 Rol y Permisos
                     </h3>
                     
                     <div class="form-group">
-                        <label class="form-label">🎭 Roles Asignados *</label>
-                        <div class="roles-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin-top: var(--space-sm);">
+                        <label for="acc_roles" class="form-label">🎭 Rol Asignado *</label>
+                        <select id="acc_roles" 
+                                name="acc_roles" 
+                                class="filter-select" 
+                                required 
+                                style="width: 100%;">
+                            <option value="">Selecciona un rol...</option>
                             <?php foreach ($roles as $role): ?>
-                                <label class="role-card" style="display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-md); background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--border-radius); cursor: pointer; transition: all var(--transition-fast);">
-                                    <input type="checkbox" 
-                                           name="roles[]" 
-                                           value="<?php echo $role['id']; ?>"
-                                           <?php echo in_array($role['id'], $datos_formulario['roles'] ?? []) ? 'checked' : ''; ?>
-                                           style="width: 16px; height: 16px; accent-color: var(--color-primary);">
-                                    <div style="flex: 1;">
-                                        <div style="font-weight: 500; color: var(--text-primary); margin-bottom: var(--space-xs);">
-                                            <?php echo htmlspecialchars($role['nombre']); ?>
-                                        </div>
-                                        <div style="font-size: 12px; color: var(--text-secondary);">
-                                            <?php echo htmlspecialchars($role['descripcion']); ?>
-                                        </div>
-                                    </div>
-                                </label>
+                                <option value="<?php echo $role['id']; ?>"
+                                        <?php echo ($datos_formulario['acc_roles'] ?? '') == $role['id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($role['nombre']); ?> - <?php echo htmlspecialchars($role['descripcion']); ?>
+                                </option>
                             <?php endforeach; ?>
-                        </div>
+                        </select>
+                        <small style="color: var(--text-muted); display: block; margin-top: var(--space-xs);">
+                            ℹ️ Cada usuario puede tener únicamente un rol asignado
+                        </small>
                     </div>
                 </div>
 
@@ -349,34 +341,15 @@ $csrf_token = $auth->generateCSRF();
             }
         });
 
-        // Hover effect para role cards
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = 'var(--bg-hover)';
-                this.style.borderColor = 'var(--color-primary)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.backgroundColor = 'var(--bg-tertiary)';
-                this.style.borderColor = 'var(--border-color)';
-            });
-
-            // Cambiar estado al hacer clic en la card
-            card.addEventListener('click', function(e) {
-                if (e.target.type !== 'checkbox') {
-                    const checkbox = this.querySelector('input[type="checkbox"]');
-                    checkbox.checked = !checkbox.checked;
-                }
-            });
-        });
+        // Sin efectos especiales para role cards ya que ahora es un select
 
         // Validación del formulario
         document.querySelector('form').addEventListener('submit', function(e) {
-            const rolesSeleccionados = document.querySelectorAll('input[name="roles[]"]:checked');
+            const rolSeleccionado = document.getElementById('acc_roles').value;
             
-            if (rolesSeleccionados.length === 0) {
+            if (!rolSeleccionado) {
                 e.preventDefault();
-                mostrarNotificacion('Debe seleccionar al menos un rol', 'error');
+                mostrarNotificacion('Debe seleccionar un rol', 'error');
                 return;
             }
 
