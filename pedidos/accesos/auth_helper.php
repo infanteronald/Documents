@@ -53,7 +53,7 @@ class AuthHelper {
      */
     public static function requireAuth() {
         $auth = self::init();
-        return $auth->requireAuth('/pedidos/accesos/login.php');
+        return $auth->requireAuth('/accesos/login.php');
     }
     
     /**
@@ -69,7 +69,7 @@ class AuthHelper {
      */
     public static function requirePermission($module, $permission) {
         $auth = self::init();
-        return $auth->requirePermission($module, $permission, '/pedidos/accesos/unauthorized.php');
+        return $auth->requirePermission($module, $permission, '/accesos/unauthorized.php');
     }
     
     /**

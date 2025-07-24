@@ -57,7 +57,7 @@ class AuthMiddleware {
     /**
      * Requerir autenticación
      */
-    public function requireAuth($redirect_url = '/pedidos/accesos/login.php') {
+    public function requireAuth($redirect_url = '/accesos/login.php') {
         if (!$this->isAuthenticated()) {
             header("Location: $redirect_url");
             exit;
@@ -87,7 +87,7 @@ class AuthMiddleware {
     /**
      * Requerir permiso específico
      */
-    public function requirePermission($module, $permission, $redirect_url = '/pedidos/accesos/unauthorized.php') {
+    public function requirePermission($module, $permission, $redirect_url = '/accesos/unauthorized.php') {
         $user = $this->requireAuth();
         
         if (!$this->hasPermission($module, $permission)) {
