@@ -78,6 +78,9 @@ if ($producto_id > 0) {
                     </div>
                 </div>
                 <div class="header-actions">
+                    <a href="print_manager.php" class="btn btn-outline">
+                        🖨️ Ver/Imprimir QR
+                    </a>
                     <a href="scanner.php" class="btn btn-primary">
                         📸 Escanear QR
                     </a>
@@ -146,6 +149,12 @@ if ($producto_id > 0) {
                     <div class="card-icon">📋</div>
                     <div class="card-title">Workflows</div>
                     <div class="card-description">Configurar flujos de trabajo</div>
+                </a>
+                
+                <a href="print_manager.php" class="quick-access-card">
+                    <div class="card-icon">🖨️</div>
+                    <div class="card-title">Imprimir QR</div>
+                    <div class="card-description">Ver e imprimir códigos QR generados</div>
                 </a>
                 
                 <a href="alerts.php" class="quick-access-card">

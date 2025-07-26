@@ -1,147 +1,169 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Este archivo proporciona instrucciones específicas para Claude Code cuando trabaja con el código en este repositorio.
 
-## Project Overview
-Sequoia Speed - Sistema de Gestión de Pedidos is a PHP-based order management system with inventory control, shipping management, payment processing (Bold PSE), and real-time notifications.
+## Resumen del Proyecto
 
-## Common Development Commands
+Este repositorio contiene el sistema Sequoia Speed de gestión de pedidos, una plataforma PHP e-commerce para manejar pedidos, inventario, envíos y pagos. El desarrollo principal está en `/Documents/pedidos/` con varias versiones de respaldo en `/Desktop/`.
 
-### Initial Setup
+## Comandos de Desarrollo Comunes
 
+### Configuración Inicial
 ```bash
-# Install PHP dependencies
+# Instalar dependencias PHP (requiere PHP 8.0+)
+cd Documents/pedidos
 composer install
 
-# Create required directories
+# Crear directorios necesarios
 mkdir -p logs uploads/photos storage cache inventario/uploads/temp inventario/uploads/products reportes/exports
 
-# Set proper permissions
+# Establecer permisos apropiados
 chmod -R 755 logs uploads storage cache inventario/uploads reportes/exports
 ```
 
-### Database Setup
+### Ejecutar la Aplicación
+
+**IMPORTANTE**: Debido a conflictos con .htaccess en el servidor de desarrollo PHP, usa estas URLs específicas:
 
 ```bash
-# Execute database migrations in order
-mysql -u [user] -p [database] < app/sql/0001_initial_schema.sql
-mysql -u [user] -p [database] < app/sql/0002_rbac_tables.sql
-mysql -u [user] -p [database] < app/sql/0003_security_enhancements.sql
-mysql -u [user] -p [database] < inventario/sql/setup_inventario.sql
-mysql -u [user] -p [database] < inventario/almacenes/sql/almacenes_setup.sql
-mysql -u [user] -p [database] < inventario/categorias/sql/categorias_setup.sql
+# Iniciar servidor de desarrollo (recomendado)
+./start_dev_server.sh
+
+# O manualmente:
+cd Documents/pedidos
+php -S localhost:8000
+
+# URLs para desarrollo:
+# - Principal: http://localhost:8000/index.php (NO uses http://localhost:8000/)
+# - Login: http://localhost:8000/accesos/login.php
 ```
 
-### Running the Application
+**Problema conocido**: `http://localhost:8000/` (raíz) causa errores debido al archivo .htaccess que contiene directivas de Apache no compatibles con el servidor de desarrollo PHP. Siempre accede directamente a `/index.php`.
 
+### Operaciones de Base de Datos
 ```bash
-# Start PHP development server
-php -S localhost:8000 -t public/
+# Conectar a base de datos MySQL
+mysql -u [user] -p [database]
 
-# Monitor application logs
-tail -f logs/app_*.log
-tail -f logs/error_*.log
-tail -f logs/sse_*.log
-
-# Monitor SSE processes
-php notifications/monitor_processes.php
+# Ejecutar migraciones (desde directorio del proyecto)
+mysql -u [user] -p [database] < accesos/setup_accesos.sql
+mysql -u [user] -p [database] < inventario/setup_productos.sql
 ```
 
-### Testing
+### Operaciones Git
 ```bash
-# Test database connection
-php test_db_connection.php
-
-# Test email configuration
-php app/services/test_email.php
-
-# Monitor SSE events
-php notifications/monitor_processes.php
-```
-
-## High-Level Architecture
-
-### Directory Structure
-- `/accesos/` - Complete RBAC authentication system with 6 hierarchical roles
-- `/inventario/` - Inventory management with products, warehouses, and categories
-- `/transporte/` - VitalCarga delivery management system
-- `/reportes/` - Reporting and analytics with Excel/PDF export
-- `/bold/` - Bold PSE payment gateway integration
-- `/notifications/` - Real-time push notifications and SSE
-- `/app/` - Core MVC framework with controllers, models, and services
-- `/public/` - Web root with API endpoints
-
-### Key Technologies
-- PHP 8.0+ with PSR-4 autoloading
-- MySQL/MariaDB database
-- Vanilla JavaScript with responsive dark theme UI
-- Server-Sent Events (SSE) for real-time updates
-- Web Push notifications via minishlink/web-push
-
-### Security Features
-- CSRF protection on all forms
-- Session-based authentication with secure cookies
-- Role-based access control with hierarchical permissions
-- Comprehensive audit logging
-- Input validation and SQL injection prevention
-
-### Important Routes
-- `/` - Main dashboard (requires login)
-- `/login` - Authentication entry point
-- `/api/` - RESTful API endpoints
-- `/accesos/` - User and role management
-- `/inventario/` - Product and warehouse management
-- `/reportes/` - Reports and analytics
-
-### Environment Configuration
-Create `.env` file with:
-```
-DB_HOST=localhost
-DB_NAME=your_database
-DB_USER=your_user
-DB_PASS=your_password
-SMTP_HOST=smtp.gmail.com
-SMTP_USER=your_email
-SMTP_PASS=your_password
-VAPID_PUBLIC_KEY=your_key
-VAPID_PRIVATE_KEY=your_key
-```
-
-### Git Workflow
-```bash
-# Check current branch (usually nueva-interfaz)
+# Ver estado actual
 git status
 
-# Stage and commit changes
+# Preparar y confirmar cambios
 git add .
-git commit -m "✨ feat: description" # Use gitmoji conventions
+git commit -m "feat: descripción"
 
-# Common branch operations
-git checkout main
-git merge nueva-interfaz
+# Ver commits recientes
+git log --oneline -5
 ```
 
-### VSCode Configuration
+## Arquitectura de Alto Nivel
+
+### Ubicaciones del Proyecto
+- **Desarrollo Principal**: `/Users/ronaldinfante/Documents/pedidos/` - Desarrollo principal con CLAUDE.md
+- **Versiones de Respaldo**: `/Users/ronaldinfante/Desktop/pedidos_*` - Varios respaldos fechados
+- **Ambiente de Pruebas**: `/Users/ronaldinfante/Desktop/pedidos copia/` - Copia de pruebas
+
+### Tecnologías Principales
+- **Backend**: PHP 8.0+ con gestión de dependencias Composer
+- **Base de Datos**: MySQL/MariaDB
+- **Frontend**: JavaScript vanilla, tema oscuro responsivo
+- **Tiempo Real**: Server-Sent Events (SSE), notificaciones Web Push
+- **Librerías**: minishlink/web-push (notificaciones), endroid/qr-code (generación QR)
+
+### Módulos Clave
+- **Autenticación** (`/accesos/`): Control de acceso basado en roles con 6 roles jerárquicos
+- **Inventario** (`/inventario/`): Gestión de productos, almacenes y categorías
+- **Transporte** (`/transporte/`): Integración VitalCarga para entregas
+- **Pagos** (`/bold/`): Integración con pasarela de pagos Bold PSE
+- **Reportes** (`/reportes/`): Analíticas con exportación Excel/PDF
+- **Notificaciones** (`/notifications/`): Notificaciones push y SSE
+
+### Características de Seguridad
+- Protección CSRF en todos los formularios
+- Autenticación basada en sesiones
+- Jerarquía de roles: super_admin > admin > supervisor > vendedor > bodeguero > transportista
+- Registro de auditoría comprensivo
+- Validación de entrada y declaraciones preparadas
+
+### Notas de Desarrollo
+- Idioma principal: Español
+- Moneda: Peso colombiano (COP)
+- Zona horaria: America/Bogota (UTC-5)
+- Tema UI: Tema oscuro estilo VS Code
+- Diseño responsivo mobile-first
+
+## Tareas Comunes
+
+### Probar Integración de Pagos
 ```bash
-# Restore VSCode settings
-bash conf/restore_vscode.sh
+# Probar pasarela de pagos Bold
+php bold/bold_diagnostico.php
+
+# Monitorear logs de pagos
+tail -f logs/bold_*.log
 ```
 
-## Development Notes
+### Gestionar Inventario
+```bash
+# Ejecutar verificación de alertas de inventario
+php inventario/verificar_alertas.php
 
-- Always check user permissions before implementing features
-- The system uses Spanish as the primary language
-- Mobile-first responsive design is mandatory
-- Dark theme (VS Code Dark) is the standard UI theme
-- All monetary values use Colombian peso (COP)
-- Timezone is America/Bogota (UTC-5)
-- File uploads go to `/uploads/` with subfolders for different types
-- Logs rotate daily with format: `type_YYYY-MM-DD.log`
+# Procesar tareas diarias
+php tareas_diarias.php
+```
 
-## Common Issues and Solutions
+### Depurar SSE/Notificaciones
+```bash
+# Monitorear procesos SSE
+php notifications/monitor_processes.php
 
-1. **Session errors**: Check `/logs/` directory permissions
-2. **Upload failures**: Verify `/uploads/` directory exists and has write permissions
-3. **SSE not working**: Ensure `monitor_processes.php` is running
-4. **Database connection**: Verify `.env` file and MySQL service status
-5. **Push notifications**: Check VAPID keys in `.env`
+# Limpiar procesos obsoletos
+php notifications/cleanup_processes.php
+```
+
+## Variables de Ambiente Importantes
+Crear archivo `.env` en la raíz del proyecto:
+```
+DB_HOST=localhost
+DB_NAME=tu_base_de_datos
+DB_USER=tu_usuario
+DB_PASS=tu_contraseña
+SMTP_HOST=smtp.gmail.com
+SMTP_USER=tu_email
+SMTP_PASS=tu_contraseña
+VAPID_PUBLIC_KEY=tu_clave
+VAPID_PRIVATE_KEY=tu_clave
+```
+
+## Solución de Problemas
+
+### Problema: Error 500 al acceder a localhost:8000/
+**Causa**: Conflicto del archivo .htaccess con el servidor de desarrollo PHP
+**Solución**: 
+1. Usa `http://localhost:8000/index.php` en lugar de `http://localhost:8000/`
+2. O usa el script `./start_dev_server.sh` que maneja esto automáticamente
+
+### Problema: Error de timezone MySQL
+**Causa**: Formato de zona horaria incorrecto
+**Solución**: El sistema usa `-05:00` en lugar de `America/Bogota` para compatibilidad con MySQL
+
+### Problema: Permisos de super admin no funcionan
+**Causa**: Vista `acc_vista_permisos_usuario` corrupta
+**Solución**: Ejecutar `fix_view_final.sql` para recrear la vista
+
+## Credenciales de Desarrollo
+- Usuario super admin: `infanteronald`
+- La contraseña debe configurarse en la base de datos
+
+## Recordatorios Importantes
+- Haz lo que se solicita; nada más, nada menos
+- NUNCA crear archivos a menos que sean absolutamente necesarios
+- SIEMPRE preferir editar un archivo existente a crear uno nuevo
+- NUNCA crear proactivamente archivos de documentación (*.md) o README. Solo crear archivos de documentación si el Usuario lo solicita explícitamente

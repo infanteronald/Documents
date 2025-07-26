@@ -109,9 +109,9 @@ try {
         exit;
     }
 
-    // Configurar timezone de MySQL
-    $timezone = env('DB_TIMEZONE', 'America/Bogota');
-    $conn->query("SET time_zone = '$timezone'");
+    // Configurar timezone de MySQL (usar offset en lugar de nombre de zona)
+    $timezone_offset = env('DB_TIMEZONE', '-05:00'); // Colombia UTC-5
+    $conn->query("SET time_zone = '$timezone_offset'");
 
     // Configurar modo SQL para mayor compatibilidad
     $conn->query("SET sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO'");
